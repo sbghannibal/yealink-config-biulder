@@ -90,19 +90,24 @@ try {
     if ($hasDeviceTypeId) {
         // Use device_type_id (new schema)
         echo "Using device_type_id column (new schema)..." . PHP_EOL;
+        
+        // Fetch all device types once to avoid N+1 query
+        $stmt = $pdo->query('SELECT id, type_name FROM device_types');
+        $deviceTypes = [];
+        while ($row = $stmt->fetch()) {
+            $deviceTypes[$row['type_name']] = $row['id'];
+        }
+        
         foreach ($devices as $d) {
-            // Lookup device_type_id by type_name
-            $stmt = $pdo->prepare('SELECT id FROM device_types WHERE type_name = ? LIMIT 1');
-            $stmt->execute([$d[1]]);
-            $typeRow = $stmt->fetch();
-            $deviceTypeId = $typeRow ? $typeRow['id'] : null;
+            $typeName = $d[1];
+            $deviceTypeId = $deviceTypes[$typeName] ?? null;
             
             if ($deviceTypeId) {
                 $stmtDev = $pdo->prepare('INSERT IGNORE INTO devices (device_name, device_type_id, mac_address, description) VALUES (?, ?, ?, ?)');
                 $stmtDev->execute([$d[0], $deviceTypeId, $d[2], $d[3]]);
                 echo "Ensured device: {$d[0]} (device_type_id: $deviceTypeId)" . PHP_EOL;
             } else {
-                echo "WARNING: Device type '{$d[1]}' not found. Skipping device: {$d[0]}" . PHP_EOL;
+                echo "WARNING: Device type '{$typeName}' not found. Skipping device: {$d[0]}" . PHP_EOL;
             }
         }
     } else {

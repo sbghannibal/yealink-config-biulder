@@ -60,8 +60,11 @@ if ($dryRun) {
     echo "EXECUTING MIGRATION..." . PHP_EOL;
     
     try {
-        // Split SQL statements (simple approach - won't handle all edge cases but works for our migration)
-        // The migration file uses START TRANSACTION and COMMIT, so we'll execute it as a whole
+        // Split SQL statements
+        // NOTE: This simple parser works for our specific migration file which uses
+        // START TRANSACTION/COMMIT blocks and simple semicolon-terminated statements.
+        // Limitations: Does not handle semicolons in string literals, complex multi-line
+        // comments, or nested transactions. The migration file must be structured accordingly.
         $statements = [];
         $lines = explode("\n", $sqlContent);
         $currentStatement = '';
