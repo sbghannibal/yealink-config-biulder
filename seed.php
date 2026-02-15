@@ -72,6 +72,9 @@ try {
     echo "Ensured PABX (id: $pabxId)" . PHP_EOL;
 
     // Sample devices
+    // NOTE: These still use the legacy 'model' column for backward compatibility with older schemas.
+    // After running the migration (db/migrations/2026_02_migrate_devices_to_device_type_id.sql),
+    // consider updating this seed to use device_type_id instead of model.
     $devices = [
         ['Reception Phone','T48P','00:15:65:AA:BB:01','Main reception desk'],
         ['Manager Phone','T46P','00:15:65:AA:BB:02','Manager office'],

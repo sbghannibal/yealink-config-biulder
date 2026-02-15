@@ -35,7 +35,7 @@ if ($device_id <= 0) {
 
 // Fetch device for confirmation/display
 try {
-    $stmt = $pdo->prepare('SELECT id, device_name, model, mac_address, description FROM devices WHERE id = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT d.id, d.device_name, d.mac_address, d.description, dt.type_name AS model_name FROM devices d LEFT JOIN device_types dt ON d.device_type_id = dt.id WHERE d.id = ? LIMIT 1');
     $stmt->execute([$device_id]);
     $device = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$device) {
@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p>Weet je zeker dat je het volgende device wilt verwijderen?</p>
         <ul>
             <li><strong>Naam:</strong> <?php echo htmlspecialchars($device['device_name']); ?></li>
-            <li><strong>Model:</strong> <?php echo htmlspecialchars($device['model']); ?></li>
+            <li><strong>Model:</strong> <?php echo htmlspecialchars($device['model_name'] ?? '-'); ?></li>
             <li><strong>MAC:</strong> <?php echo htmlspecialchars($device['mac_address'] ?? '-'); ?></li>
             <li><strong>Beschrijving:</strong> <?php echo htmlspecialchars($device['description'] ?? '-'); ?></li>
         </ul>
