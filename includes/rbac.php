@@ -5,40 +5,35 @@
  */
 
 function has_permission($pdo, $admin_id, $permission) {
-    $stmt = $pdo->prepare(''
-        SELECT COUNT(*) as count FROM role_permissions rp
-        INNER JOIN admin_roles ar ON rp.role_id = ar.role_id
-        WHERE ar.admin_id = ? AND rp.permission = ?
-    ');
-    
+    $sql = 'SELECT COUNT(*) as count
+            FROM role_permissions rp
+            INNER JOIN admin_roles ar ON rp.role_id = ar.role_id
+            WHERE ar.admin_id = ? AND rp.permission = ?';
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$admin_id, $permission]);
     $result = $stmt->fetch();
-    
-    return $result['count'] > 0;
+    return ($result && $result['count'] > 0);
 }
 
 function get_admin_roles($pdo, $admin_id) {
-    $stmt = $pdo->prepare(''
-        SELECT r.* FROM roles r
-        INNER JOIN admin_roles ar ON r.id = ar.role_id
-        WHERE ar.admin_id = ?
-    ');
-    
+    $sql = 'SELECT r.* FROM roles r
+            INNER JOIN admin_roles ar ON r.id = ar.role_id
+            WHERE ar.admin_id = ?';
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$admin_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function get_admin_permissions($pdo, $admin_id) {
-    $stmt = $pdo->prepare(''
-        SELECT DISTINCT rp.permission FROM role_permissions rp
-        INNER JOIN admin_roles ar ON rp.role_id = ar.role_id
-        WHERE ar.admin_id = ?
-        ORDER BY rp.permission
-    ');
-    
+    $sql = 'SELECT DISTINCT rp.permission
+            FROM role_permissions rp
+            INNER JOIN admin_roles ar ON rp.role_id = ar.role_id
+            WHERE ar.admin_id = ?
+            ORDER BY rp.permission';
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$admin_id]);
     $permissions = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    return $permissions;
+    return $permissions ?: [];
 }
 
 function check_permission($admin_id, $required_permission) {
