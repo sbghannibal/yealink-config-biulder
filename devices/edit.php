@@ -3,21 +3,18 @@ session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
-// Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
     exit;
 }
 $admin_id = (int) $_SESSION['admin_id'];
 
-// Permission
 if (!has_permission($pdo, $admin_id, 'devices.manage')) {
     http_response_code(403);
     echo 'Toegang geweigerd.';
     exit;
 }
 
-// CSRF token ensure
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 }
@@ -26,20 +23,18 @@ $csrf = $_SESSION['csrf_token'];
 $error = '';
 $success = '';
 
-// Get device id from GET or POST
 $device_id = isset($_GET['id']) ? (int) $_GET['id'] : (int) ($_POST['id'] ?? 0);
 if ($device_id <= 0) {
     header('Location: /devices/list.php');
     exit;
 }
 
-// Fetch device
+// Fetch device with model name
 try {
-    $stmt = $pdo->prepare('SELECT * FROM devices WHERE id = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT d.*, dt.type_name AS model_name FROM devices d LEFT JOIN device_types dt ON d.device_type_id = dt.id WHERE d.id = ? LIMIT 1');
     $stmt->execute([$device_id]);
     $device = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$device) {
-        // Not found
         header('Location: /devices/list.php?notfound=1');
         exit;
     }
@@ -49,7 +44,7 @@ try {
     exit;
 }
 
-// Fetch device types for dropdown (optional)
+// Fetch device types for dropdown
 try {
     $stmt = $pdo->query('SELECT id, type_name FROM device_types ORDER BY type_name ASC');
     $types = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -58,35 +53,31 @@ try {
     error_log('devices/edit fetch types error: ' . $e->getMessage());
 }
 
-// Handle POST (update)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = 'Ongeldige aanvraag (CSRF).';
     } else {
         $name = trim((string)($_POST['device_name'] ?? ''));
-        $model = trim((string)($_POST['model'] ?? ''));
+        $device_type_id = (int)($_POST['device_type_id'] ?? 0);
         $mac_raw = trim((string)($_POST['mac_address'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
         $is_active = isset($_POST['is_active']) && $_POST['is_active'] == '1' ? 1 : 0;
 
-        if ($name === '' || $model === '') {
+        if ($name === '' || $device_type_id <= 0) {
             $error = 'Vul minimaal naam en model in.';
         } else {
-            // Normalize MAC if provided
+            $mac = null;
             if ($mac_raw !== '') {
                 $normalized = strtoupper(preg_replace('/[^0-9A-F]/i', '', $mac_raw));
                 if (!preg_match('/^[0-9A-F]{12}$/', $normalized)) {
-                    $error = 'Ongeldig MAC-adres formaat.';
+                    $error = 'Ongeldig MAC-adres.';
                 } else {
                     $mac = implode(':', str_split($normalized, 2));
                 }
-            } else {
-                $mac = null;
             }
 
             if ($error === '') {
                 try {
-                    // Check duplicate MAC (exclude current device)
                     if ($mac !== null) {
                         $chk = $pdo->prepare('SELECT id FROM devices WHERE mac_address = ? AND id != ? LIMIT 1');
                         $chk->execute([$mac, $device_id]);
@@ -96,10 +87,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     if ($error === '') {
-                        $stmt = $pdo->prepare('UPDATE devices SET device_name = ?, model = ?, mac_address = ?, description = ?, is_active = ?, updated_at = NOW() WHERE id = ?');
-                        $stmt->execute([$name, $model, $mac, $description, $is_active, $device_id]);
+                        $stmt = $pdo->prepare('UPDATE devices SET device_name = ?, device_type_id = ?, mac_address = ?, description = ?, is_active = ?, updated_at = NOW() WHERE id = ?');
+                        $stmt->execute([$name, $device_type_id, $mac, $description, $is_active, $device_id]);
 
-                        // Audit log
+                        // audit
                         try {
                             $alog = $pdo->prepare('INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, old_value, new_value, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
                             $alog->execute([
@@ -108,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'device',
                                 $device_id,
                                 json_encode($device),
-                                json_encode(['device_name' => $name, 'model' => $model, 'mac_address' => $mac, 'description' => $description, 'is_active' => $is_active]),
+                                json_encode(['device_name' => $name, 'device_type_id' => $device_type_id, 'mac_address' => $mac, 'description' => $description, 'is_active' => $is_active]),
                                 $_SERVER['REMOTE_ADDR'] ?? null,
                                 $_SERVER['HTTP_USER_AGENT'] ?? null
                             ]);
@@ -117,8 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
 
                         $success = 'Device bijgewerkt.';
-                        // Refresh device data for display
-                        $stmt = $pdo->prepare('SELECT * FROM devices WHERE id = ? LIMIT 1');
+
+                        // Refresh device
+                        $stmt = $pdo->prepare('SELECT d.*, dt.type_name AS model_name FROM devices d LEFT JOIN device_types dt ON d.device_type_id = dt.id WHERE d.id = ? LIMIT 1');
                         $stmt->execute([$device_id]);
                         $device = $stmt->fetch(PDO::FETCH_ASSOC);
                     }
@@ -158,24 +150,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group">
                 <label>Model</label>
-                <select name="model" required>
+                <select name="device_type_id" required>
                     <option value="">-- Kies model --</option>
-                    <?php
-                    // Show device types or fallback samples
-                    if (empty($types)) {
-                        $fallback = ['T19P','T21P','T23P','T27P','T29P','T41P','T46P','T48P'];
-                        foreach ($fallback as $f) {
-                            $sel = ((isset($_POST['model']) && $_POST['model'] === $f) || (!isset($_POST['model']) && $device['model'] === $f)) ? 'selected' : '';
-                            echo "<option value=\"" . htmlspecialchars($f) . "\" $sel>" . htmlspecialchars($f) . "</option>";
-                        }
-                    } else {
-                        foreach ($types as $t) {
-                            $value = $t['type_name'];
-                            $sel = ((isset($_POST['model']) && $_POST['model'] === $value) || (!isset($_POST['model']) && $device['model'] === $value)) ? 'selected' : '';
-                            echo '<option value="' . htmlspecialchars($value) . '" ' . $sel . '>' . htmlspecialchars($value) . '</option>';
-                        }
-                    }
-                    ?>
+                    <?php foreach ($types as $t): ?>
+                        <?php $sel = ((isset($_POST['device_type_id']) && $_POST['device_type_id'] == $t['id']) || (!isset($_POST['device_type_id']) && $device['device_type_id'] == $t['id'])) ? 'selected' : ''; ?>
+                        <option value="<?php echo (int)$t['id']; ?>" <?php echo $sel; ?>><?php echo htmlspecialchars($t['type_name']); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -191,8 +171,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group">
                 <label>Actief</label>
+                <?php $cur_active = isset($_POST['is_active']) ? (int)$_POST['is_active'] : (int)$device['is_active']; ?>
                 <select name="is_active">
-                    <?php $cur_active = isset($_POST['is_active']) ? (int)$_POST['is_active'] : (int)$device['is_active']; ?>
                     <option value="1" <?php echo $cur_active ? 'selected' : ''; ?>>Ja</option>
                     <option value="0" <?php echo !$cur_active ? 'selected' : ''; ?>>Nee</option>
                 </select>
