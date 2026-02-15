@@ -1,0 +1,104 @@
+<?php
+session_start();
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/rbac.php';
+
+if (!isset($_SESSION['admin_id'])) {
+    header('Location: /login.php');
+    exit;
+}
+$admin_id = (int) $_SESSION['admin_id'];
+
+if (!has_permission($pdo, $admin_id, 'devices.manage')) {
+    http_response_code(403);
+    echo 'Toegang geweigerd.';
+    exit;
+}
+
+// CSRF ensure
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+}
+$csrf = $_SESSION['csrf_token'];
+
+$error = '';
+$success = '';
+
+try {
+    $stmt = $pdo->query('SELECT id, type_name FROM device_types ORDER BY type_name ASC');
+    $types = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $types = [];
+    error_log('devices/create fetch types error: ' . $e->getMessage());
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '')) {
+        $error = 'Ongeldige aanvraag (CSRF)';
+    } else {
+        $name = trim($_POST['device_name'] ?? '');
+        $model = trim($_POST['model'] ?? '');
+        $mac = trim($_POST['mac_address'] ?? '');
+        $desc = trim($_POST['description'] ?? '');
+
+        if ($name === '' || $model === '') {
+            $error = 'Vul minimaal naam en model in.';
+        } else {
+            try {
+                $stmt = $pdo->prepare('INSERT INTO devices (device_name, model, mac_address, description, is_active) VALUES (?, ?, ?, ?, 1)');
+                $stmt->execute([$name, $model, $mac ?: null, $desc ?: null]);
+                $success = 'Device aangemaakt.';
+            } catch (Exception $e) {
+                error_log('devices/create insert error: ' . $e->getMessage());
+                $error = 'Kon device niet aanmaken.';
+            }
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>Nieuw device</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<?php include __DIR__ . '/../admin/_admin_nav.php'; ?>
+<main class="container">
+    <h2>Nieuw device</h2>
+
+    <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+    <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
+
+    <div class="card">
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+            <div class="form-group">
+                <label>Naam</label>
+                <input name="device_name" type="text" required>
+            </div>
+            <div class="form-group">
+                <label>Model</label>
+                <select name="model" required>
+                    <option value="">-- Kies model --</option>
+                    <?php foreach ($types as $t): ?>
+                        <option value="<?php echo htmlspecialchars($t['type_name']); ?>"><?php echo htmlspecialchars($t['type_name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>MAC-adres (optioneel)</label>
+                <input name="mac_address" type="text" placeholder="00:11:22:33:44:55">
+            </div>
+            <div class="form-group">
+                <label>Beschrijving</label>
+                <textarea name="description"></textarea>
+            </div>
+            <button class="btn" type="submit">Aanmaken</button>
+            <a class="btn" href="/devices/list.php" style="background:#6c757d;">Annuleren</a>
+        </form>
+    </div>
+</main>
+</body>
+</html>
