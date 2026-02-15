@@ -37,16 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Ongeldige aanvraag (CSRF)';
     } else {
         $name = trim($_POST['device_name'] ?? '');
-        $model = trim($_POST['model'] ?? '');
+        $device_type_id = (int)($_POST['device_type_id'] ?? 0);
         $mac = trim($_POST['mac_address'] ?? '');
         $desc = trim($_POST['description'] ?? '');
 
-        if ($name === '' || $model === '') {
+        if ($name === '' || $device_type_id <= 0) {
             $error = 'Vul minimaal naam en model in.';
         } else {
             try {
-                $stmt = $pdo->prepare('INSERT INTO devices (device_name, model, mac_address, description, is_active) VALUES (?, ?, ?, ?, 1)');
-                $stmt->execute([$name, $model, $mac ?: null, $desc ?: null]);
+                $stmt = $pdo->prepare('INSERT INTO devices (device_name, device_type_id, mac_address, description, is_active) VALUES (?, ?, ?, ?, 1)');
+                $stmt->execute([$name, $device_type_id, $mac ?: null, $desc ?: null]);
                 $success = 'Device aangemaakt.';
             } catch (Exception $e) {
                 error_log('devices/create insert error: ' . $e->getMessage());
@@ -80,10 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="form-group">
                 <label>Model</label>
-                <select name="model" required>
+                <select name="device_type_id" required>
                     <option value="">-- Kies model --</option>
                     <?php foreach ($types as $t): ?>
-                        <option value="<?php echo htmlspecialchars($t['type_name']); ?>"><?php echo htmlspecialchars($t['type_name']); ?></option>
+                        <option value="<?php echo (int)$t['id']; ?>"><?php echo htmlspecialchars($t['type_name']); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
