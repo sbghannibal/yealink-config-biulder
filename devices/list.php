@@ -3,23 +3,20 @@ session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
-// Ensure user is logged in
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
     exit;
 }
+$admin_id = (int) $_SESSION['admin_id'];
 
-// Permission check (adjust permission key if different)
-$admin_id = $_SESSION['admin_id'];
 if (!has_permission($pdo, $admin_id, 'devices.manage')) {
     http_response_code(403);
     echo 'Toegang geweigerd.';
     exit;
 }
 
-// Fetch devices
 try {
-    $stmt = $pdo->query('SELECT id, device_name, model, mac_address, description, is_active, created_at FROM devices ORDER BY device_name ASC');
+    $stmt = $pdo->query('SELECT d.id, d.device_name, d.mac_address, d.description, d.is_active, d.created_at, d.updated_at, dt.type_name AS model_name FROM devices d LEFT JOIN device_types dt ON d.device_type_id = dt.id ORDER BY d.device_name ASC');
     $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('Failed to fetch devices: ' . $e->getMessage());
@@ -34,82 +31,54 @@ try {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Devices - Yealink Config Builder</title>
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .actions a { margin-right: 8px; }
-        .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-    </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="navbar">
-                <h1>🔧 Yealink Config Builder</h1>
-                <nav>
-                    <a href="/index.php">Dashboard</a>
-                    <a href="/admin/dashboard.php">Admin</a>
-                    <a href="/devices/list.php">Devices</a>
-                    <a href="/config/builder.php">Config Builder</a>
-                    <a href="/logout.php">Logout</a>
-                </nav>
-            </div>
-        </div>
-    </header>
+<?php if (file_exists(__DIR__ . '/../admin/_admin_nav.php')) include __DIR__ . '/../admin/_admin_nav.php'; ?>
+<main class="container">
+    <div class="topbar">
+        <h2>Devices</h2>
+        <div><a class="btn" href="/devices/create.php">➕ Nieuw Device</a></div>
+    </div>
 
-    <main class="container">
-        <div class="topbar">
-            <h2>Devices</h2>
-            <div>
-                <a class="btn" href="/devices/create.php">➕ Nieuw Device</a>
-            </div>
-        </div>
+    <?php if (!empty($error)): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
-        <?php if (!empty($error)): ?>
-            <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
-
-        <div class="card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Naam</th>
-                        <th>Model</th>
-                        <th>MAC</th>
-                        <th>Beschrijving</th>
-                        <th>Actief</th>
-                        <th>Aangemaakt</th>
-                        <th>Acties</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (count($devices) === 0): ?>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Naam</th>
+                    <th>Model</th>
+                    <th>MAC</th>
+                    <th>Beschrijving</th>
+                    <th>Actief</th>
+                    <th>Aangemaakt</th>
+                    <th>Acties</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (count($devices) === 0): ?>
+                    <tr><td colspan="8" style="text-align:center">Geen devices gevonden. <a href="/devices/create.php">Maak er een aan</a>.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($devices as $d): ?>
                         <tr>
-                            <td colspan="8" style="text-align:center">Geen devices gevonden. <a href="/devices/create.php">Maak er een aan</a>.</td>
+                            <td><?php echo (int)$d['id']; ?></td>
+                            <td><?php echo htmlspecialchars($d['device_name']); ?></td>
+                            <td><?php echo htmlspecialchars($d['model_name'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($d['mac_address'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($d['description'] ?? '-'); ?></td>
+                            <td><?php echo $d['is_active'] ? 'Ja' : 'Nee'; ?></td>
+                            <td><?php echo htmlspecialchars($d['created_at']); ?></td>
+                            <td>
+                                <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>">Bewerken</a>
+                                <a class="btn" href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>" onclick="return confirm('Weet je het zeker dat je dit device wilt verwijderen?');" style="background:#dc3545;">Verwijderen</a>
+                            </td>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($devices as $d): ?>
-                            <tr>
-                                <td><?php echo (int)$d['id']; ?></td>
-                                <td><?php echo htmlspecialchars($d['device_name']); ?></td>
-                                <td><?php echo htmlspecialchars($d['model']); ?></td>
-                                <td><?php echo htmlspecialchars($d['mac_address'] ?? '-'); ?></td>
-                                <td><?php echo htmlspecialchars($d['description'] ?? '-'); ?></td>
-                                <td><?php echo $d['is_active'] ? 'Ja' : 'Nee'; ?></td>
-                                <td><?php echo htmlspecialchars($d['created_at']); ?></td>
-                                <td class="actions">
-                                    <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>">Bewerken</a>
-                                    <a class="btn" href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>" onclick="return confirm('Weet je het zeker dat je dit device wilt verwijderen?');" style="background:#dc3545;">Verwijderen</a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; <?php echo date('Y'); ?> Yealink Config Builder. All rights reserved.</p>
-    </footer>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</main>
 </body>
 </html>
