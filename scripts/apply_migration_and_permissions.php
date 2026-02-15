@@ -62,7 +62,7 @@ if ($dryRun) {
     try {
         // Split SQL statements
         // NOTE: This simple parser works for our specific migration file which uses
-        // START TRANSACTION/COMMIT blocks and simple semicolon-terminated statements.
+        // START TRANSACTION (or BEGIN) / COMMIT blocks and simple semicolon-terminated statements.
         // Limitations: Does not handle semicolons in string literals, complex multi-line
         // comments, or nested transactions. The migration file must be structured accordingly.
         $statements = [];
@@ -80,8 +80,8 @@ if ($dryRun) {
             
             $currentStatement .= $line . "\n";
             
-            // Check for transaction boundaries
-            if (stripos($trimmed, 'START TRANSACTION') !== false) {
+            // Check for transaction boundaries (both START TRANSACTION and BEGIN)
+            if (stripos($trimmed, 'START TRANSACTION') !== false || stripos($trimmed, 'BEGIN') === 0) {
                 $inTransaction = true;
             }
             if (stripos($trimmed, 'COMMIT') !== false) {
