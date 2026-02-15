@@ -28,9 +28,13 @@ $_SESSION['login_attempts'] = array_filter(
     }
 );
 
+// Ensure a CSRF token exists, but don't overwrite it on POST
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
 $error = '';
-$csrf_token = bin2hex(random_bytes(16));
-$_SESSION['csrf_token'] = $csrf_token;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Basic CSRF check
@@ -58,6 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['username'] = $admin['username'];
                     // Reset attempts
                     $_SESSION['login_attempts'] = [];
+                    // Invalidate CSRF token after successful login
+                    unset($_SESSION['csrf_token']);
                     header('Location: index.php');
                     exit;
                 } else {
