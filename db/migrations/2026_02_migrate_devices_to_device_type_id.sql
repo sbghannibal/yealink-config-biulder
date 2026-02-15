@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS variables (
 
 -- 1) Add device_type_id to devices (nullable for safety)
 ALTER TABLE devices
-  ADD COLUMN IF NOT EXISTS device_type_id INT NULL DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS device_type_id INT DEFAULT NULL,
   ADD INDEX idx_device_type_id (device_type_id);
 
 -- 2) Ensure device_types exist for distinct model strings (insert missing)
