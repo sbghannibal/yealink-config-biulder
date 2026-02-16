@@ -96,20 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } elseif ($action === 'delete') {
             try {
-                // Controleer of er devices zijn die dit model gebruiken.
-                // We ondersteunen twee mogelijke referenties voor compatibiliteit:
-                // - devices.device_type_id = id (nieuwe schema)
-                // - devices.model = type_name (oud schema)
-                $chk = $pdo->prepare(
-                    'SELECT 
-                        SUM(cnt) AS total
-                     FROM (
-                        SELECT COUNT(*) AS cnt FROM devices WHERE device_type_id = :id
-                        UNION ALL
-                        SELECT COUNT(*) AS cnt FROM devices WHERE model = :type_name
-                     ) x'
-                );
-                $chk->execute([':id' => $id, ':type_name' => $type['type_name']]);
+                // Check if any devices are using this device type
+                $chk = $pdo->prepare('SELECT COUNT(*) FROM devices WHERE device_type_id = ?');
+                $chk->execute([$id]);
                 $count = (int) $chk->fetchColumn();
 
                 if ($count > 0) {
