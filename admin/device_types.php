@@ -138,7 +138,6 @@ require_once __DIR__ . '/_header.php';
                             <td style="font-size:13px;color:#666;"><?php echo date('M d, Y', strtotime($t['created_at'])); ?></td>
                             <td style="white-space:nowrap;">
                                 <a class="btn" href="/admin/device_types_edit.php?id=<?php echo (int)$t['id']; ?>" style="padding:6px 12px;font-size:13px;">Edit</a>
-                                <a class="btn btn-danger" href="/admin/device_types_edit.php?id=<?php echo (int)$t['id']; ?>" style="padding:6px 12px;font-size:13px;" onclick="return confirm('Are you sure you want to delete this device type?');">Delete</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
