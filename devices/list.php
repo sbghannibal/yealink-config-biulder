@@ -15,8 +15,10 @@ if (!has_permission($pdo, $admin_id, 'devices.manage')) {
     exit;
 }
 
+$devices = [];
+$error = '';
+
 try {
-    // Optimized query - avoid duplicate rows from multiple JOINs
     $stmt = $pdo->query('
         SELECT d.id, d.device_name, d.mac_address, d.description, d.is_active, 
                d.created_at, d.updated_at, dt.type_name AS model_name,
@@ -24,7 +26,8 @@ try {
                 JOIN device_config_assignments dca ON dca.config_version_id = cv.id 
                 WHERE dca.device_id = d.id 
                 ORDER BY cv.id DESC LIMIT 1) as latest_version,
-               (SELECT COUNT(*) FROM config_download_history cdh WHERE cdh.device_id = d.id) as download_count
+               (SELECT COUNT(*) FROM config_download_history cdh 
+                WHERE cdh.mac_address = d.mac_address) as download_count
         FROM devices d 
         LEFT JOIN device_types dt ON d.device_type_id = dt.id
         ORDER BY d.device_name ASC
@@ -32,8 +35,7 @@ try {
     $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('Failed to fetch devices: ' . $e->getMessage());
-    $devices = [];
-    $error = 'Kon devices niet ophalen.';
+    $error = 'Kon devices niet ophalen: ' . $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -120,12 +122,6 @@ try {
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
     </style>
 </head>
 <body>
@@ -142,7 +138,7 @@ try {
     <?php endif; ?>
 
     <div class="card">
-        <?php if (count($devices) === 0): ?>
+        <?php if (empty($devices)): ?>
             <div style="padding: 40px; text-align: center;">
                 <p style="color: #6c757d; font-size: 16px;">
                     Geen devices gevonden. 
