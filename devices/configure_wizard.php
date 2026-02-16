@@ -246,21 +246,21 @@ try {
         error_log('Variables submitted: ' . json_encode($wizard_data['variables']));
         
         // Check template exists
-        $debug_stmt = $pdo->prepare('SELECT id, template_name, config_template FROM config_templates WHERE id = ?');
+        $debug_stmt = $pdo->prepare('SELECT id, template_name, template_content FROM config_templates WHERE id = ?');
         $debug_stmt->execute([$wizard_data['template_id']]);
         $debug_tpl = $debug_stmt->fetch(PDO::FETCH_ASSOC);
         error_log('Template found: ' . ($debug_tpl ? 'YES' : 'NO'));
         if ($debug_tpl) {
             error_log('Template name: ' . $debug_tpl['template_name']);
-            error_log('Config length: ' . strlen($debug_tpl['config_template'] ?? ''));
-            error_log('Config content (first 500 chars): ' . substr($debug_tpl['config_template'], 0, 500));
+            error_log('Config length: ' . strlen($debug_tpl['template_content'] ?? ''));
+            error_log('Config content (first 500 chars): ' . substr($debug_tpl['template_content'], 0, 500));
             
             // Display debug info on page
             $debug_info = '<div style="background:#fff3cd;border:1px solid #ffc107;padding:12px;border-radius:4px;margin:16px 0;">
                 <strong>🔍 DEBUG INFO:</strong><br>
                 <code>Template: ' . htmlspecialchars($debug_tpl['template_name']) . '</code><br>
-                <code>Content length: ' . strlen($debug_tpl['config_template'] ?? '') . ' chars</code><br>
-                <code>First 300 chars: ' . htmlspecialchars(substr($debug_tpl['config_template'], 0, 300)) . '</code>
+                <code>Content length: ' . strlen($debug_tpl['template_content'] ?? '') . ' chars</code><br>
+                <code>First 300 chars: ' . htmlspecialchars(substr($debug_tpl['template_content'], 0, 300)) . '</code>
             </div>';
         }
         
