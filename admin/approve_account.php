@@ -40,6 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if (!$suggested_username) {
                     $error = 'Voer een gebruikersnaam in.';
+                } elseif (!preg_match('/^[a-zA-Z0-9._-]+$/', $suggested_username)) {
+                    $error = 'Gebruikersnaam mag alleen letters, cijfers, punten, underscores en streepjes bevatten.';
                 } else {
                     $stmt = $pdo->prepare('SELECT id FROM admins WHERE username = ?');
                     $stmt->execute([$suggested_username]);
@@ -52,8 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         if (!$request) {
                             $error = 'Verzoek niet gevonden.';
+                        } elseif ($request['status'] !== 'pending') {
+                            $error = 'Dit verzoek is al verwerkt.';
                         } else {
-                            $password = bin2hex(random_bytes(8));
+                            // Use transaction for atomicity
+                            $pdo->beginTransaction();
+                            
+                            // Generate a strong 24-character password (12 bytes in hex)
+                            $password = bin2hex(random_bytes(12));
                             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                             
                             $stmt = $pdo->prepare('INSERT INTO admins (username, password, email, is_active, created_by, created_at) VALUES (?, ?, ?, 1, ?, NOW())');
@@ -61,6 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             
                             $stmt = $pdo->prepare('UPDATE account_requests SET status = ?, approved_by = ?, approved_at = NOW() WHERE id = ?');
                             $stmt->execute(['approved', $admin_id, $request_id]);
+                            
+                            $pdo->commit();
                             
                             $subject = '✅ Account Goedgekeurd - Yealink Config Builder';
                             $message = "Hallo {$request['full_name']},\n\nGoed nieuws! Je verzoek is goedgekeurd!\n\nLogin URL: https://{$_SERVER['HTTP_HOST']}/login.php\nGebruikersnaam: $suggested_username\nWachtwoord: $password\n\nBewaar dit veilig!";
@@ -73,6 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             } catch (Exception $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 error_log('Account approval error: ' . $e->getMessage());
                 $error = 'Fout bij goedkeuren: ' . $e->getMessage();
             }
@@ -92,6 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     if (!$request) {
                         $error = 'Verzoek niet gevonden.';
+                    } elseif ($request['status'] !== 'pending') {
+                        $error = 'Dit verzoek is al verwerkt.';
                     } else {
                         $stmt = $pdo->prepare('UPDATE account_requests SET status = ?, rejection_reason = ?, approved_by = ?, approved_at = NOW() WHERE id = ?');
                         $stmt->execute(['rejected', $rejection_reason, $admin_id, $request_id]);
@@ -214,7 +229,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 </div>
                 <div class="request-actions">
                     <?php if ($req['status'] === 'pending'): ?>
-                        <button class="btn-small btn-approve" onclick="showApproveModal(<?php echo (int)$req['id']; ?>, '<?php echo addslashes($req['full_name']); ?>')">✅ Goedkeuren</button>
+                        <button class="btn-small btn-approve" onclick="showApproveModal(<?php echo (int)$req['id']; ?>, <?php echo json_encode($req['full_name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)">✅ Goedkeuren</button>
                         <button class="btn-small btn-reject" onclick="showRejectModal(<?php echo (int)$req['id']; ?>)">❌ Afwijzen</button>
                     <?php endif; ?>
                     <button class="btn-small btn-delete" onclick="showDeleteModal(<?php echo (int)$req['id']; ?>)">🗑️ Verwijder</button>
