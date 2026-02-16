@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Devices';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -37,15 +38,11 @@ try {
     error_log('Failed to fetch devices: ' . $e->getMessage());
     $error = 'Kon devices niet ophalen: ' . $e->getMessage();
 }
+
+require_once __DIR__ . '/../admin/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Devices - Yealink Config Builder</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
+
+<style>
         .badge { 
             display: inline-block; 
             padding: 4px 8px; 
@@ -123,11 +120,7 @@ try {
             border: 1px solid #f5c6cb;
         }
     </style>
-</head>
-<body>
-<?php if (file_exists(__DIR__ . '/../admin/_admin_nav.php')) include __DIR__ . '/../admin/_admin_nav.php'; ?>
 
-<main class="container">
     <div class="topbar">
         <h2>📱 Devices</h2>
         <a class="btn" href="/devices/create.php" style="background: #28a745; color: white;">➕ Nieuw Device</a>
@@ -204,6 +197,7 @@ try {
             </table>
         <?php endif; ?>
     </div>
+
 </main>
 
 </body>
