@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Admin Dashboard';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -12,17 +13,17 @@ if (!isset($_SESSION['admin_id'])) {
 $admin_id = (int) $_SESSION['admin_id'];
 $username = $_SESSION['username'] ?? 'Admin';
 
-// Optioneel: check of gebruiker een admin-rol heeft (je kunt dit naar wens aanpassen)
-// $roles = get_admin_roles($pdo, $admin_id);
-// if (count($roles) === 0) { http_response_code(403); echo 'Toegang geweigerd.'; exit; }
-
 $stats = [
     'admins' => 0,
     'devices' => 0,
     'config_versions' => 0,
     'active_tokens' => 0,
+    'pending_requests' => 0,
+    'account_requests' => [],
     'recent_audit' => []
 ];
+
+$error = '';
 
 try {
     // Totale admins
@@ -42,127 +43,319 @@ try {
     $stmt->execute();
     $stats['active_tokens'] = (int) $stmt->fetchColumn();
 
+    // Pending account requests
+    try {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM account_requests WHERE status = ?');
+        $stmt->execute(['pending']);
+        $stats['pending_requests'] = (int) $stmt->fetchColumn();
+        
+        // Haal de pending requests op (max 5)
+        $stmt = $pdo->prepare('SELECT * FROM account_requests WHERE status = ? ORDER BY created_at DESC LIMIT 5');
+        $stmt->execute(['pending']);
+        $stats['account_requests'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // account_requests tabel bestaat mogelijk niet
+        error_log('Account requests error: ' . $e->getMessage());
+    }
+
     // Recente audit logs (laatste 10)
-    $stmt = $pdo->prepare('SELECT al.*, a.username FROM audit_logs al LEFT JOIN admins a ON al.admin_id = a.id ORDER BY al.created_at DESC LIMIT 10');
-    $stmt->execute();
-    $stats['recent_audit'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $pdo->prepare('SELECT al.*, a.username FROM audit_logs al LEFT JOIN admins a ON al.admin_id = a.id ORDER BY al.created_at DESC LIMIT 10');
+        $stmt->execute();
+        $stats['recent_audit'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // audit_logs tabel bestaat mogelijk niet
+        error_log('Audit logs error: ' . $e->getMessage());
+    }
 } catch (Exception $e) {
     error_log('Dashboard error: ' . $e->getMessage());
     $error = 'Kon dashboardgegevens niet ophalen. Controleer de logs.';
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Admin Dashboard - Yealink Config Builder</title>
-    <link rel="stylesheet" href="/css/style.css">
+
     <style>
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; margin-bottom: 20px; }
-        .stat { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .stat h3 { margin: 0 0 8px 0; color: #667eea; }
-        .recent-log { font-family: monospace; white-space: pre-wrap; word-break:break-word; }
-        .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 16px; 
+            margin-bottom: 20px; 
+        }
+        
+        .stat { 
+            background: white;
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #667eea;
+        }
+        
+        .stat h3 { 
+            margin: 0 0 12px 0; 
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat .number {
+            font-size: 32px; 
+            font-weight: 700;
+            color: #667eea;
+            margin: 8px 0;
+        }
+        
+        .stat p {
+            margin: 8px 0 0 0;
+            font-size: 13px;
+        }
+        
+        .stat a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .stat a:hover {
+            text-decoration: underline;
+        }
+        
+        .stat.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .stat.warning h3 {
+            color: #856404;
+        }
+        
+        .stat.warning .number {
+            color: #ffc107;
+        }
+        
+        .requests-widget {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .requests-widget h2 {
+            color: #856404;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .requests-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+        
+        .requests-list li {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border-left: 3px solid #ffc107;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .request-info {
+            flex: 1;
+        }
+        
+        .request-info strong {
+            display: block;
+            color: #333;
+        }
+        
+        .request-info small {
+            display: block;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .requests-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .requests-actions a {
+            padding: 6px 12px;
+            background: #ffc107;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .requests-actions a:hover {
+            background: #e0a800;
+        }
+        
+        .recent-log { 
+            font-family: monospace; 
+            white-space: pre-wrap; 
+            word-break: break-word; 
+        }
+        
+        .topbar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .topbar h2 {
+            margin: 0;
+        }
+        
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
     </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <div class="navbar">
-                <h1>🔧 Yealink Config Builder — Admin</h1>
-                <nav>
-                    <a href="/index.php">Dashboard</a>
-                    <a href="/admin/dashboard.php">Admin</a>
-                    <a href="/devices/list.php">Devices</a>
-                    <a href="/config/builder.php">Config Builder</a>
-                    <a href="/logout.php">Logout</a>
-                </nav>
+
+    <div class="topbar">
+        <h1>📊 Admin Dashboard</h1>
+        <div class="topbar-right">
+            Ingelogd als: <strong><?php echo htmlspecialchars($username); ?></strong>
+        </div>
+    </div>
+
+    <?php if (!empty($error)): ?>
+        <div class="alert alert-error">❌ <?php echo htmlspecialchars($error); ?></div>
+    <?php endif; ?>
+
+    <!-- Account Requests Widget -->
+    <?php if ($stats['pending_requests'] > 0 && !empty($stats['account_requests'])): ?>
+        <div class="requests-widget">
+            <h2>
+                ⚠️ 
+                <?php echo $stats['pending_requests']; ?> 
+                Ausstehende Account-Anfrage<?php echo $stats['pending_requests'] !== 1 ? 'n' : ''; ?>
+            </h2>
+            
+            <ul class="requests-list">
+                <?php foreach ($stats['account_requests'] as $req): ?>
+                    <li>
+                        <div class="request-info">
+                            <strong><?php echo htmlspecialchars($req['full_name']); ?></strong>
+                            <small>
+                                📧 <?php echo htmlspecialchars($req['email']); ?> 
+                                • 🏢 <?php echo htmlspecialchars($req['organization']); ?>
+                            </small>
+                        </div>
+                        <div class="requests-actions">
+                            <a href="/admin/approve_account.php?filter=pending">Beheer</a>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            
+            <p style="margin: 0; font-size: 13px; color: #856404;">
+                💡 <a href="/admin/approve_account.php?filter=pending" style="color: #856404; font-weight: 600;">Alle verzoeken bekijken →</a>
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <section class="stats">
+        <div class="stat">
+            <h3>👥 Gebruikers</h3>
+            <p class="number"><?php echo $stats['admins']; ?></p>
+            <p><a href="/admin/users.php">Beheer gebruikers</a></p>
+        </div>
+
+        <div class="stat">
+            <h3>📱 Devices</h3>
+            <p class="number"><?php echo $stats['devices']; ?></p>
+            <p><a href="/devices/list.php">Bekijk devices</a></p>
+        </div>
+
+        <div class="stat">
+            <h3>⚙️ Config Versies</h3>
+            <p class="number"><?php echo $stats['config_versions']; ?></p>
+            <p><a href="/config/versions.php">Beheer versies</a></p>
+        </div>
+
+        <div class="stat">
+            <h3>🔑 Actieve Tokens</h3>
+            <p class="number"><?php echo $stats['active_tokens']; ?></p>
+            <p><a href="/admin/tokens.php">Bekijk tokens</a></p>
+        </div>
+
+        <?php if ($stats['pending_requests'] > 0): ?>
+            <div class="stat warning">
+                <h3>📧 Account Verzoeken</h3>
+                <p class="number"><?php echo $stats['pending_requests']; ?></p>
+                <p><a href="/admin/approve_account.php">Goedkeuren</a></p>
             </div>
-        </div>
-    </header>
-
-    <main class="container">
-        <div class="topbar">
-            <h2>Admin dashboard</h2>
-            <div>Ingelogd als: <strong><?php echo htmlspecialchars($username); ?></strong></div>
-        </div>
-
-        <?php if (!empty($error)): ?>
-            <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
+    </section>
 
-        <section class="stats">
-            <div class="stat">
-                <h3>Gebruikers</h3>
-                <p style="font-size:24px; margin:8px 0;"><?php echo $stats['admins']; ?></p>
-                <p><a href="/admin/users.php">Beheer gebruikers</a></p>
-            </div>
-
-            <div class="stat">
-                <h3>Devices</h3>
-                <p style="font-size:24px; margin:8px 0;"><?php echo $stats['devices']; ?></p>
-                <p><a href="/devices/list.php">Bekijk devices</a></p>
-            </div>
-
-            <div class="stat">
-                <h3>Config versies</h3>
-                <p style="font-size:24px; margin:8px 0;"><?php echo $stats['config_versions']; ?></p>
-                <p><a href="/config/versions.php">Beheer versies</a></p>
-            </div>
-
-            <div class="stat">
-                <h3>Actieve tokens</h3>
-                <p style="font-size:24px; margin:8px 0;"><?php echo $stats['active_tokens']; ?></p>
-                <p><a href="/admin/tokens.php">Bekijk tokens</a></p>
-            </div>
-        </section>
-
-        <section class="card">
-            <h3>Recente activiteit</h3>
-            <?php if (empty($stats['recent_audit'])): ?>
-                <p>Geen recente audit-logs gevonden.</p>
-            <?php else: ?>
-                <table>
-                    <thead>
+    <section class="card">
+        <h2>📝 Recente Activiteit</h2>
+        <?php if (empty($stats['recent_audit'])): ?>
+            <p>Geen recente audit-logs gevonden.</p>
+        <?php else: ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tijd</th>
+                        <th>Gebruiker</th>
+                        <th>Actie</th>
+                        <th>Entiteit</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($stats['recent_audit'] as $log): ?>
                         <tr>
-                            <th>Tijd</th>
-                            <th>Gebruiker</th>
-                            <th>Actie</th>
-                            <th>Entiteit</th>
-                            <th>Details</th>
+                            <td><?php echo htmlspecialchars($log['created_at']); ?></td>
+                            <td><?php echo htmlspecialchars($log['username'] ?? 'Systeem'); ?></td>
+                            <td><?php echo htmlspecialchars($log['action']); ?></td>
+                            <td><?php echo htmlspecialchars($log['entity_type'] ?? '-'); ?></td>
+                            <td class="recent-log"><?php
+                                $parts = [];
+                                if (!empty($log['old_value'])) $parts[] = 'OLD: ' . htmlspecialchars($log['old_value']);
+                                if (!empty($log['new_value'])) $parts[] = 'NEW: ' . htmlspecialchars($log['new_value']);
+                                echo implode("\n", $parts) ?: '-';
+                            ?></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($stats['recent_audit'] as $log): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($log['created_at']); ?></td>
-                                <td><?php echo htmlspecialchars($log['username'] ?? 'Systeem'); ?></td>
-                                <td><?php echo htmlspecialchars($log['action']); ?></td>
-                                <td><?php echo htmlspecialchars($log['entity_type'] ?? '-'); ?></td>
-                                <td class="recent-log"><?php
-                                    $parts = [];
-                                    if (!empty($log['old_value'])) $parts[] = 'OLD: ' . htmlspecialchars($log['old_value']);
-                                    if (!empty($log['new_value'])) $parts[] = 'NEW: ' . htmlspecialchars($log['new_value']);
-                                    echo implode("\n", $parts) ?: '-';
-                                ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </section>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </section>
 
-        <section style="margin-top:20px;">
-            <a class="btn" href="/admin/users.php">Gebruikers beheren</a>
-            <a class="btn" href="/admin/roles.php">Rollen & permissies</a>
-            <a class="btn" href="/admin/audit.php">Audit logs</a>
-            <a class="btn" href="/devices/create.php">Nieuw device</a>
-        </section>
-    </main>
+    <div class="button-group">
+        <a class="btn" href="/admin/users.php">👥 Gebruikers Beheren</a>
+        <a class="btn" href="/admin/approve_account.php">📧 Account Verzoeken</a>
+        <a class="btn" href="/admin/templates.php">📋 Templates</a>
+        <a class="btn" href="/devices/create.php">📱 Nieuw Device</a>
+        <a class="btn btn-secondary" href="/admin/audit.php">📑 Audit Logs</a>
+    </div>
 
-    <footer>
-        <p style="text-align:center; margin-top:40px;">&copy; <?php echo date('Y'); ?> Yealink Config Builder</p>
-    </footer>
+</main>
+
 </body>
 </html>
