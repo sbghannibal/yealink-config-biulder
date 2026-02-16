@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Config Templates';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -171,27 +172,21 @@ if ($editing) {
         error_log('Failed to load template: ' . $e->getMessage());
     }
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Config Templates - Yealink Config Builder</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .templates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .template-form { max-width: 800px; }
-        textarea.template-content { width: 100%; height: 400px; font-family: monospace; }
-        .template-card { padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; }
-        .template-card.inactive { opacity: 0.6; background: #f9f9f9; }
-        .badge { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 3px; background: #6c757d; color: white; }
-        .badge.default { background: #28a745; }
-        .badge.inactive { background: #dc3545; }
-    </style>
-</head>
-<body>
-<?php if (file_exists(__DIR__ . '/_admin_nav.php')) include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
+
+<style>
+    .templates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .template-form { max-width: 800px; }
+    textarea.template-content { width: 100%; height: 400px; font-family: monospace; }
+    .template-card { padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; }
+    .template-card.inactive { opacity: 0.6; background: #f9f9f9; }
+    .badge { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 3px; background: #6c757d; color: white; }
+    .badge.default { background: #28a745; }
+    .badge.inactive { background: #dc3545; }
+</style>
+
     <h2>Config Templates</h2>
     
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
