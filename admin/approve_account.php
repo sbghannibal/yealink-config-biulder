@@ -229,7 +229,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 </div>
                 <div class="request-actions">
                     <?php if ($req['status'] === 'pending'): ?>
-                        <button class="btn-small btn-approve" onclick='showApproveModal(<?php echo (int)$req['id']; ?>, <?php echo json_encode($req['full_name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>✅ Goedkeuren</button>
+                        <button class="btn-small btn-approve" onclick='showApproveModal(<?php echo (int)$req['id']; ?>, <?php echo json_encode($req['full_name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS); ?>)'>✅ Goedkeuren</button>
                         <button class="btn-small btn-reject" onclick="showRejectModal(<?php echo (int)$req['id']; ?>)">❌ Afwijzen</button>
                     <?php endif; ?>
                     <button class="btn-small btn-delete" onclick="showDeleteModal(<?php echo (int)$req['id']; ?>)">🗑️ Verwijder</button>
