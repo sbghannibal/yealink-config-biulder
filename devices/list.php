@@ -16,16 +16,17 @@ if (!has_permission($pdo, $admin_id, 'devices.manage')) {
 }
 
 try {
-    // Enhanced query to include config assignment info
+    // Optimized query - avoid duplicate rows from multiple JOINs
     $stmt = $pdo->query('
         SELECT d.id, d.device_name, d.mac_address, d.description, d.is_active, 
                d.created_at, d.updated_at, dt.type_name AS model_name,
-               cv.id as config_version_id, cv.version_number,
+               (SELECT cv.version_number FROM config_versions cv 
+                JOIN device_config_assignments dca ON dca.config_version_id = cv.id 
+                WHERE dca.device_id = d.id 
+                ORDER BY cv.id DESC LIMIT 1) as latest_version,
                (SELECT COUNT(*) FROM config_download_history cdh WHERE cdh.device_id = d.id) as download_count
         FROM devices d 
         LEFT JOIN device_types dt ON d.device_type_id = dt.id
-        LEFT JOIN device_config_assignments dca ON d.id = dca.device_id
-        LEFT JOIN config_versions cv ON dca.config_version_id = cv.id
         ORDER BY d.device_name ASC
     ');
     $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -43,69 +44,171 @@ try {
     <title>Devices - Yealink Config Builder</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .badge { display:inline-block; padding:2px 6px; font-size:10px; border-radius:3px; background:#6c757d; color:white; margin-left:4px; }
-        .badge.success { background:#28a745; }
-        .badge.warning { background:#ffc107; color:#000; }
-        .action-buttons { display:flex; gap:4px; flex-wrap:wrap; }
-        .action-buttons .btn { font-size:12px; padding:4px 8px; }
+        .badge { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            font-size: 11px; 
+            border-radius: 3px; 
+            background: #6c757d; 
+            color: white; 
+            margin-left: 4px; 
+        }
+        .badge.success { background: #28a745; }
+        .badge.warning { background: #ffc107; color: #000; }
+        .badge.info { background: #17a2b8; }
+        
+        .action-buttons { 
+            display: flex; 
+            gap: 6px; 
+            flex-wrap: wrap; 
+            align-items: center;
+        }
+        .action-buttons .btn { 
+            font-size: 12px; 
+            padding: 6px 10px; 
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        
+        table tbody tr:nth-child(even) { background: #f8f9fa; }
+        table tbody tr:hover { background: #e9ecef; }
+        
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .topbar h2 { margin: 0; }
+        
+        .card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th {
+            background: #f1f3f5;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
 <?php if (file_exists(__DIR__ . '/../admin/_admin_nav.php')) include __DIR__ . '/../admin/_admin_nav.php'; ?>
+
 <main class="container">
     <div class="topbar">
-        <h2>Devices</h2>
-        <div><a class="btn" href="/devices/create.php">➕ Nieuw Device</a></div>
+        <h2>📱 Devices</h2>
+        <a class="btn" href="/devices/create.php" style="background: #28a745; color: white;">➕ Nieuw Device</a>
     </div>
 
-    <?php if (!empty($error)): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+    <?php if (!empty($error)): ?>
+        <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+    <?php endif; ?>
 
     <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Naam</th>
-                    <th>Model</th>
-                    <th>MAC</th>
-                    <th>Config Versie</th>
-                    <th>Downloads</th>
-                    <th>Actief</th>
-                    <th>Acties</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (count($devices) === 0): ?>
-                    <tr><td colspan="8" style="text-align:center">Geen devices gevonden. <a href="/devices/create.php">Maak er een aan</a>.</td></tr>
-                <?php else: ?>
+        <?php if (count($devices) === 0): ?>
+            <div style="padding: 40px; text-align: center;">
+                <p style="color: #6c757d; font-size: 16px;">
+                    Geen devices gevonden. 
+                    <a href="/devices/create.php" style="color: #007bff; text-decoration: none;">Maak er een aan →</a>
+                </p>
+            </div>
+        <?php else: ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Naam</th>
+                        <th>Model</th>
+                        <th>MAC Adres</th>
+                        <th>Laatste Config</th>
+                        <th>Downloads</th>
+                        <th>Status</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <?php foreach ($devices as $d): ?>
                         <tr>
-                            <td><?php echo (int)$d['id']; ?></td>
+                            <td><strong>#<?php echo (int)$d['id']; ?></strong></td>
                             <td><?php echo htmlspecialchars($d['device_name']); ?></td>
-                            <td><?php echo htmlspecialchars($d['model_name'] ?? '-'); ?></td>
-                            <td><?php echo htmlspecialchars($d['mac_address'] ?? '-'); ?></td>
                             <td>
-                                <?php if ($d['config_version_id']): ?>
-                                    <span class="badge success">v<?php echo (int)$d['version_number']; ?></span>
+                                <?php if ($d['model_name']): ?>
+                                    <span class="badge info"><?php echo htmlspecialchars($d['model_name']); ?></span>
                                 <?php else: ?>
-                                    <span class="badge warning">Geen config</span>
+                                    <span style="color: #6c757d;">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo (int)($d['download_count'] ?? 0); ?>x</td>
-                            <td><?php echo $d['is_active'] ? 'Ja' : 'Nee'; ?></td>
+                            <td><code style="background: #f1f3f5; padding: 2px 6px; border-radius: 3px; font-size: 12px;"><?php echo htmlspecialchars($d['mac_address'] ?? '-'); ?></code></td>
+                            <td>
+                                <?php if ($d['latest_version']): ?>
+                                    <span class="badge success">v<?php echo (int)$d['latest_version']; ?></span>
+                                <?php else: ?>
+                                    <span class="badge warning">⚠️ Geen config</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span style="color: #6c757d;">
+                                    <?php echo (int)($d['download_count'] ?? 0); ?>x
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($d['is_active']): ?>
+                                    <span class="badge success">✓ Actief</span>
+                                <?php else: ?>
+                                    <span class="badge" style="background: #dc3545;">✗ Inactief</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a class="btn" href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>" style="background:#28a745;">⚙️ Config</a>
-                                    <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>">Bewerken</a>
-                                    <a class="btn" href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>" onclick="return confirm('Weet je het zeker dat je dit device wilt verwijderen?');" style="background:#dc3545;">Verwijderen</a>
+                                    <a class="btn" href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>" style="background: #28a745; color: white;">⚙️ Config</a>
+                                    <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>" style="background: #007bff; color: white;">✏️ Bewerken</a>
+                                    <a class="btn" href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>" onclick="return confirm('Weet je zeker dat je dit device wilt verwijderen?');" style="background: #dc3545; color: white;">🗑️ Verwijderen</a>
                                 </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        <?php endif; ?>
     </div>
 </main>
+
 </body>
 </html>
