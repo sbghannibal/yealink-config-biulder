@@ -1,0 +1,484 @@
+<?php
+session_start();
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/generator.php';
+require_once __DIR__ . '/../includes/rbac.php';
+
+// Ensure logged in
+if (!isset($_SESSION['admin_id'])) {
+    header('Location: /login.php');
+    exit;
+}
+$admin_id = (int) $_SESSION['admin_id'];
+
+// Permission check
+if (!has_permission($pdo, $admin_id, 'devices.manage')) {
+    http_response_code(403);
+    echo 'Toegang geweigerd.';
+    exit;
+}
+
+// CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+}
+$csrf = $_SESSION['csrf_token'];
+
+$error = '';
+$success = '';
+
+// Get current step
+$step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
+$step = max(1, min(5, $step)); // Clamp between 1-5
+
+// Get device ID if provided
+$device_id = isset($_GET['device_id']) ? (int)$_GET['device_id'] : null;
+
+// Initialize wizard data in session
+if (!isset($_SESSION['wizard_data'])) {
+    $_SESSION['wizard_data'] = [
+        'device_id' => $device_id,
+        'device_type_id' => null,
+        'template_id' => null,
+        'variables' => [],
+        'config_content' => ''
+    ];
+} elseif ($device_id && $_SESSION['wizard_data']['device_id'] != $device_id) {
+    // Reset if device changed
+    $_SESSION['wizard_data'] = [
+        'device_id' => $device_id,
+        'device_type_id' => null,
+        'template_id' => null,
+        'variables' => [],
+        'config_content' => ''
+    ];
+}
+
+$wizard_data = &$_SESSION['wizard_data'];
+
+// Load device if ID provided
+$device = null;
+if ($device_id) {
+    try {
+        $stmt = $pdo->prepare('
+            SELECT d.*, dt.type_name, dt.id as device_type_id
+            FROM devices d
+            LEFT JOIN device_types dt ON d.device_type_id = dt.id
+            WHERE d.id = ?
+        ');
+        $stmt->execute([$device_id]);
+        $device = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($device) {
+            $wizard_data['device_type_id'] = $device['device_type_id'];
+        }
+    } catch (Exception $e) {
+        error_log('Failed to load device: ' . $e->getMessage());
+        $error = 'Kon device niet laden.';
+    }
+}
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
+        $error = 'Ongeldige aanvraag (CSRF).';
+    } else {
+        $action = $_POST['action'] ?? '';
+        
+        // Step 1: Device Type Selection
+        if ($action === 'select_type' && $step === 1) {
+            $wizard_data['device_type_id'] = !empty($_POST['device_type_id']) ? (int)$_POST['device_type_id'] : null;
+            if ($wizard_data['device_type_id']) {
+                header('Location: ?step=2' . ($device_id ? "&device_id=$device_id" : ''));
+                exit;
+            } else {
+                $error = 'Selecteer een device type.';
+            }
+        }
+        
+        // Step 2: Template Selection
+        if ($action === 'select_template' && $step === 2) {
+            $wizard_data['template_id'] = !empty($_POST['template_id']) ? (int)$_POST['template_id'] : null;
+            if ($wizard_data['template_id']) {
+                header('Location: ?step=3' . ($device_id ? "&device_id=$device_id" : ''));
+                exit;
+            } else {
+                $error = 'Selecteer een template.';
+            }
+        }
+        
+        // Step 3: Variable Input
+        if ($action === 'set_variables' && $step === 3) {
+            // Collect all variable inputs
+            $wizard_data['variables'] = [];
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'var_') === 0) {
+                    $var_name = substr($key, 4); // Remove 'var_' prefix
+                    $wizard_data['variables'][$var_name] = $value;
+                }
+            }
+            header('Location: ?step=4' . ($device_id ? "&device_id=$device_id" : ''));
+            exit;
+        }
+        
+        // Step 4: Generate and Save Config
+        if ($action === 'save_config' && $step === 4) {
+            try {
+                $pabx_id = !empty($_POST['pabx_id']) ? (int)$_POST['pabx_id'] : null;
+                
+                if (!$pabx_id) {
+                    $error = 'Selecteer een PABX.';
+                } else {
+                    // Generate config from template
+                    $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
+                    
+                    if (!$result['success']) {
+                        $error = $result['error'];
+                    } else {
+                        // Save as config version
+                        $stmt = $pdo->prepare('
+                            SELECT COALESCE(MAX(version_number), 0) + 1 AS next_ver 
+                            FROM config_versions 
+                            WHERE pabx_id = ? AND device_type_id = ?
+                        ');
+                        $stmt->execute([$pabx_id, $wizard_data['device_type_id']]);
+                        $next_ver = (int) $stmt->fetchColumn();
+                        
+                        $stmt = $pdo->prepare('
+                            INSERT INTO config_versions 
+                            (pabx_id, device_type_id, version_number, config_content, changelog, is_active, created_by, created_at)
+                            VALUES (?, ?, ?, ?, ?, 1, ?, NOW())
+                        ');
+                        $changelog = 'Generated from wizard: ' . $result['template']['template_name'];
+                        $stmt->execute([
+                            $pabx_id,
+                            $wizard_data['device_type_id'],
+                            $next_ver,
+                            $result['content'],
+                            $changelog,
+                            $admin_id
+                        ]);
+                        $config_version_id = $pdo->lastInsertId();
+                        
+                        // Assign to device if device_id provided
+                        if ($device_id) {
+                            $stmt = $pdo->prepare('
+                                INSERT INTO device_config_assignments 
+                                (device_id, config_version_id, assigned_by, assigned_at)
+                                VALUES (?, ?, ?, NOW())
+                                ON DUPLICATE KEY UPDATE config_version_id = VALUES(config_version_id), assigned_at = NOW()
+                            ');
+                            $stmt->execute([$device_id, $config_version_id, $admin_id]);
+                        }
+                        
+                        $wizard_data['config_version_id'] = $config_version_id;
+                        $wizard_data['config_content'] = $result['content'];
+                        
+                        header('Location: ?step=5' . ($device_id ? "&device_id=$device_id" : ''));
+                        exit;
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Wizard save error: ' . $e->getMessage());
+                $error = 'Kon configuratie niet opslaan.';
+            }
+        }
+    }
+}
+
+// Load data for current step
+$device_types = [];
+$templates = [];
+$template_variables = [];
+$pabx_list = [];
+$global_variables = [];
+
+try {
+    // Load device types for step 1
+    if ($step === 1) {
+        $stmt = $pdo->query('SELECT id, type_name, description FROM device_types ORDER BY type_name');
+        $device_types = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    // Load templates for step 2
+    if ($step === 2 && $wizard_data['device_type_id']) {
+        $stmt = $pdo->prepare('
+            SELECT * FROM config_templates 
+            WHERE device_type_id = ? AND is_active = 1 
+            ORDER BY is_default DESC, category, template_name
+        ');
+        $stmt->execute([$wizard_data['device_type_id']]);
+        $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    // Load template variables for step 3
+    if ($step === 3 && $wizard_data['template_id']) {
+        $stmt = $pdo->prepare('
+            SELECT * FROM template_variables 
+            WHERE template_id = ? 
+            ORDER BY display_order, var_name
+        ');
+        $stmt->execute([$wizard_data['template_id']]);
+        $template_variables = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Also load global variables for reference
+        $stmt = $pdo->query('SELECT var_name, var_value FROM variables');
+        $global_variables = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+    
+    // Load PABX list for step 4
+    if ($step === 4) {
+        $stmt = $pdo->query('SELECT id, pabx_name FROM pabx WHERE is_active = 1 ORDER BY pabx_name');
+        $pabx_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Generate preview
+        if ($wizard_data['template_id']) {
+            $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
+            if ($result['success']) {
+                $wizard_data['config_content'] = $result['content'];
+            }
+        }
+    }
+} catch (Exception $e) {
+    error_log('Wizard data load error: ' . $e->getMessage());
+}
+?>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>Config Wizard - Yealink Config Builder</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding: 0;
+            list-style: none;
+        }
+        .wizard-step {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: #f5f5f5;
+            border-right: 1px solid white;
+            position: relative;
+        }
+        .wizard-step:last-child { border-right: none; }
+        .wizard-step.active { background: #007bff; color: white; font-weight: bold; }
+        .wizard-step.completed { background: #28a745; color: white; }
+        .wizard-content { max-width: 800px; margin: 0 auto; }
+        .template-option {
+            border: 2px solid #ddd;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .template-option:hover { border-color: #007bff; }
+        .template-option input[type="radio"] { margin-right: 8px; }
+        .template-option.default { border-color: #28a745; background: #f0fff4; }
+        .config-preview {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .var-input { margin-bottom: 16px; }
+        .qr-code { text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+<?php if (file_exists(__DIR__ . '/../admin/_admin_nav.php')) include __DIR__ . '/../admin/_admin_nav.php'; ?>
+<main class="container">
+    <h2>Device Configuratie Wizard <?php if ($device): ?><small>voor <?php echo htmlspecialchars($device['device_name']); ?></small><?php endif; ?></h2>
+    
+    <ul class="wizard-steps">
+        <li class="wizard-step <?php echo $step === 1 ? 'active' : ($step > 1 ? 'completed' : ''); ?>">1. Device Type</li>
+        <li class="wizard-step <?php echo $step === 2 ? 'active' : ($step > 2 ? 'completed' : ''); ?>">2. Template</li>
+        <li class="wizard-step <?php echo $step === 3 ? 'active' : ($step > 3 ? 'completed' : ''); ?>">3. Variabelen</li>
+        <li class="wizard-step <?php echo $step === 4 ? 'active' : ($step > 4 ? 'completed' : ''); ?>">4. Preview</li>
+        <li class="wizard-step <?php echo $step === 5 ? 'active' : ''; ?>">5. Voltooid</li>
+    </ul>
+    
+    <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+    <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
+    
+    <div class="wizard-content card">
+        <?php if ($step === 1): ?>
+            <!-- Step 1: Device Type Selection -->
+            <h3>Stap 1: Selecteer Device Type</h3>
+            <?php if ($device): ?>
+                <p>Device: <strong><?php echo htmlspecialchars($device['device_name']); ?></strong> (<?php echo htmlspecialchars($device['type_name'] ?? 'Unknown'); ?>)</p>
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                    <input type="hidden" name="action" value="select_type">
+                    <input type="hidden" name="device_type_id" value="<?php echo (int)$device['device_type_id']; ?>">
+                    <p>Het device type is automatisch geselecteerd.</p>
+                    <button class="btn" type="submit">Volgende →</button>
+                </form>
+            <?php else: ?>
+                <p>Kies het Yealink model voor deze configuratie:</p>
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                    <input type="hidden" name="action" value="select_type">
+                    <?php foreach ($device_types as $dt): ?>
+                        <div class="template-option">
+                            <label>
+                                <input type="radio" name="device_type_id" value="<?php echo (int)$dt['id']; ?>" required>
+                                <strong><?php echo htmlspecialchars($dt['type_name']); ?></strong>
+                                <?php if ($dt['description']): ?><br><small><?php echo htmlspecialchars($dt['description']); ?></small><?php endif; ?>
+                            </label>
+                        </div>
+                    <?php endforeach; ?>
+                    <button class="btn" type="submit">Volgende →</button>
+                </form>
+            <?php endif; ?>
+            
+        <?php elseif ($step === 2): ?>
+            <!-- Step 2: Template Selection -->
+            <h3>Stap 2: Selecteer Config Template</h3>
+            <?php if (empty($templates)): ?>
+                <p style="color: #dc3545;">Geen templates gevonden voor dit device type.</p>
+                <a class="btn" href="?step=1<?php echo $device_id ? "&device_id=$device_id" : ''; ?>">&larr; Terug</a>
+            <?php else: ?>
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                    <input type="hidden" name="action" value="select_template">
+                    <?php foreach ($templates as $tpl): ?>
+                        <div class="template-option <?php echo $tpl['is_default'] ? 'default' : ''; ?>">
+                            <label>
+                                <input type="radio" name="template_id" value="<?php echo (int)$tpl['id']; ?>" <?php echo $tpl['is_default'] ? 'checked' : ''; ?> required>
+                                <strong><?php echo htmlspecialchars($tpl['template_name']); ?></strong>
+                                <?php if ($tpl['is_default']): ?><span class="badge" style="background:#28a745;color:white;padding:2px 6px;border-radius:3px;font-size:10px;">DEFAULT</span><?php endif; ?>
+                                <?php if ($tpl['category']): ?><span style="color:#666;font-size:12px;"> - <?php echo htmlspecialchars($tpl['category']); ?></span><?php endif; ?>
+                                <?php if ($tpl['description']): ?><br><small><?php echo htmlspecialchars($tpl['description']); ?></small><?php endif; ?>
+                            </label>
+                        </div>
+                    <?php endforeach; ?>
+                    <div style="display:flex;gap:8px;margin-top:16px;">
+                        <a class="btn" href="?step=1<?php echo $device_id ? "&device_id=$device_id" : ''; ?>" style="background:#6c757d;">&larr; Terug</a>
+                        <button class="btn" type="submit">Volgende →</button>
+                    </div>
+                </form>
+            <?php endif; ?>
+            
+        <?php elseif ($step === 3): ?>
+            <!-- Step 3: Variable Input -->
+            <h3>Stap 3: Configureer Variabelen</h3>
+            <p>Vul de variabelen in voor deze configuratie:</p>
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                <input type="hidden" name="action" value="set_variables">
+                
+                <?php if (empty($template_variables)): ?>
+                    <p style="color:#666;">Dit template heeft geen specifieke variabelen. Globale variabelen worden automatisch toegepast.</p>
+                <?php else: ?>
+                    <?php foreach ($template_variables as $var): ?>
+                        <div class="var-input">
+                            <label>
+                                <strong><?php echo htmlspecialchars($var['var_label'] ?: $var['var_name']); ?></strong>
+                                <?php if ($var['is_required']): ?><span style="color:red;">*</span><?php endif; ?>
+                            </label>
+                            <?php
+                            $current_value = $wizard_data['variables'][$var['var_name']] ?? 
+                                           $var['default_value'] ?? 
+                                           ($global_variables[$var['var_name']] ?? '');
+                            ?>
+                            <?php if ($var['var_type'] === 'select' && $var['options']): ?>
+                                <select name="var_<?php echo htmlspecialchars($var['var_name']); ?>" <?php echo $var['is_required'] ? 'required' : ''; ?>>
+                                    <?php
+                                    $options = json_decode($var['options'], true) ?: [];
+                                    foreach ($options as $opt):
+                                    ?>
+                                        <option value="<?php echo htmlspecialchars($opt); ?>" <?php echo $opt === $current_value ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($opt); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php elseif ($var['var_type'] === 'boolean'): ?>
+                                <label>
+                                    <input type="checkbox" name="var_<?php echo htmlspecialchars($var['var_name']); ?>" value="1" <?php echo $current_value ? 'checked' : ''; ?>>
+                                    Ja
+                                </label>
+                            <?php else: ?>
+                                <input 
+                                    type="<?php echo $var['var_type'] === 'number' ? 'number' : 'text'; ?>" 
+                                    name="var_<?php echo htmlspecialchars($var['var_name']); ?>"
+                                    value="<?php echo htmlspecialchars($current_value); ?>"
+                                    <?php echo $var['is_required'] ? 'required' : ''; ?>
+                                    placeholder="<?php echo htmlspecialchars($var['default_value'] ?? ''); ?>"
+                                >
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                
+                <div style="display:flex;gap:8px;margin-top:16px;">
+                    <a class="btn" href="?step=2<?php echo $device_id ? "&device_id=$device_id" : ''; ?>" style="background:#6c757d;">&larr; Terug</a>
+                    <button class="btn" type="submit">Volgende →</button>
+                </div>
+            </form>
+            
+        <?php elseif ($step === 4): ?>
+            <!-- Step 4: Preview & Save -->
+            <h3>Stap 4: Preview & Opslaan</h3>
+            <p>Controleer de gegenereerde configuratie:</p>
+            
+            <div class="config-preview"><?php echo htmlspecialchars($wizard_data['config_content']); ?></div>
+            
+            <form method="post" style="margin-top:16px;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                <input type="hidden" name="action" value="save_config">
+                
+                <div class="form-group">
+                    <label>Selecteer PABX *</label>
+                    <select name="pabx_id" required>
+                        <option value="">-- Kies PABX --</option>
+                        <?php foreach ($pabx_list as $p): ?>
+                            <option value="<?php echo (int)$p['id']; ?>"><?php echo htmlspecialchars($p['pabx_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div style="display:flex;gap:8px;margin-top:16px;">
+                    <a class="btn" href="?step=3<?php echo $device_id ? "&device_id=$device_id" : ''; ?>" style="background:#6c757d;">&larr; Terug</a>
+                    <button class="btn" type="submit">Opslaan & Voltooien</button>
+                </div>
+            </form>
+            
+        <?php elseif ($step === 5): ?>
+            <!-- Step 5: Complete -->
+            <h3>✓ Configuratie Voltooid!</h3>
+            <p>De configuratie is succesvol aangemaakt en opgeslagen.</p>
+            
+            <?php if (isset($wizard_data['config_version_id'])): ?>
+                <div style="margin:16px 0;">
+                    <p><strong>Config Versie ID:</strong> <?php echo (int)$wizard_data['config_version_id']; ?></p>
+                    <?php if ($device_id): ?>
+                        <p>De configuratie is toegewezen aan device: <strong><?php echo htmlspecialchars($device['device_name']); ?></strong></p>
+                    <?php endif; ?>
+                </div>
+                
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
+                    <a class="btn" href="/devices/list.php">← Terug naar Devices</a>
+                    <a class="btn" href="/config/builder.php" style="background:#28a745;">Config Builder</a>
+                    <a class="btn" href="?step=1" style="background:#6c757d;" onclick="<?php unset($_SESSION['wizard_data']); ?>">Nieuwe Wizard</a>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+</main>
+</body>
+</html>
+<?php
+// Clear wizard data after completion
+if ($step === 5 && isset($_SESSION['wizard_data']) && isset($wizard_data['config_version_id'])) {
+    // Keep it for display, but mark for clearing on next page load
+}
+?>

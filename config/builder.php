@@ -140,6 +140,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+        
+        // Assign config to devices (bulk)
+        if ($action === 'assign_to_devices') {
+            $config_version_id = !empty($posted['config_version_id']) ? (int)$posted['config_version_id'] : null;
+            $device_ids = !empty($posted['device_ids']) ? $posted['device_ids'] : [];
+            
+            if (!$config_version_id || empty($device_ids)) {
+                $error = 'Selecteer een configuratie en minimaal één device.';
+            } else {
+                try {
+                    $assigned_count = 0;
+                    $stmt = $pdo->prepare('
+                        INSERT INTO device_config_assignments (device_id, config_version_id, assigned_by, assigned_at)
+                        VALUES (?, ?, ?, NOW())
+                        ON DUPLICATE KEY UPDATE config_version_id = VALUES(config_version_id), assigned_at = NOW()
+                    ');
+                    
+                    foreach ($device_ids as $device_id) {
+                        $stmt->execute([(int)$device_id, $config_version_id, $admin_id]);
+                        $assigned_count++;
+                    }
+                    
+                    $success = "Configuratie toegewezen aan $assigned_count device(s).";
+                } catch (Exception $e) {
+                    error_log('Config assignment error: ' . $e->getMessage());
+                    $error = 'Kon configuratie niet toewijzen.';
+                }
+            }
+        }
     }
 }
 
@@ -150,6 +179,14 @@ try {
     $config_versions = $cvstmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $config_versions = [];
+}
+
+// Fetch devices for assignment
+try {
+    $dstmt = $pdo->query('SELECT d.id, d.device_name, dt.type_name FROM devices d LEFT JOIN device_types dt ON d.device_type_id = dt.id WHERE d.is_active = 1 ORDER BY d.device_name');
+    $devices_list = $dstmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $devices_list = [];
 }
 ?>
 <!DOCTYPE html>
@@ -253,6 +290,35 @@ try {
                         </table>
                     <?php endif; ?>
                 </div>
+            </section>
+            
+            <section class="card" style="margin-top:12px;">
+                <h3>Toewijzen aan Devices</h3>
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                    <input type="hidden" name="action" value="assign_to_devices">
+                    <div class="form-group">
+                        <label>Config versie ID</label>
+                        <input name="config_version_id" type="number" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Selecteer devices</label>
+                        <div style="max-height:150px; overflow-y:auto; border:1px solid #ddd; padding:8px;">
+                            <?php if (empty($devices_list)): ?>
+                                <p class="small">Geen actieve devices gevonden.</p>
+                            <?php else: ?>
+                                <?php foreach ($devices_list as $dev): ?>
+                                    <label style="display:block; padding:4px;">
+                                        <input type="checkbox" name="device_ids[]" value="<?php echo (int)$dev['id']; ?>">
+                                        <?php echo htmlspecialchars($dev['device_name']); ?> 
+                                        <small>(<?php echo htmlspecialchars($dev['type_name'] ?? '-'); ?>)</small>
+                                    </label>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Toewijzen</button>
+                </form>
             </section>
 
             <section class="card" style="margin-top:12px;">
