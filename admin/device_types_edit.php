@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Edit Device Type';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -33,9 +34,22 @@ if ($id <= 0) {
 $error = '';
 $success = '';
 
-// Haal huidig record
+// Haal huidig record met device count
 try {
-    $stmt = $pdo->prepare('SELECT id, type_name, description, created_at, updated_at FROM device_types WHERE id = ? LIMIT 1');
+    $stmt = $pdo->prepare('
+        SELECT 
+            dt.id, 
+            dt.type_name, 
+            dt.description, 
+            dt.created_at, 
+            dt.updated_at,
+            COUNT(d.id) as device_count
+        FROM device_types dt
+        LEFT JOIN devices d ON dt.id = d.device_type_id
+        WHERE dt.id = ?
+        GROUP BY dt.id, dt.type_name, dt.description, dt.created_at, dt.updated_at
+        LIMIT 1
+    ');
     $stmt->execute([$id]);
     $type = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$type) {
@@ -99,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $count = (int) $chk->fetchColumn();
 
                 if ($count > 0) {
-                    $error = "Kan model niet verwijderen: $count device(s) gebruiken dit model. Pas eerst devices aan.";
+                    $error = "Cannot delete - $count device(s) are using this type. Please reassign those devices first.";
                 } else {
                     $del = $pdo->prepare('DELETE FROM device_types WHERE id = ?');
                     $del->execute([$id]);
@@ -130,22 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Bewerk model - Admin</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .container { max-width:900px; margin:20px auto; padding:0 12px; }
-        .card { background:#fff; padding:16px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-    </style>
-</head>
-<body>
-<?php if (file_exists(__DIR__ . '/_admin_nav.php')) include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
-    <h2>Model bewerken</h2>
+
+    <h2>Edit Device Type</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -156,32 +158,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="hidden" name="id" value="<?php echo (int)$type['id']; ?>">
 
             <div class="form-group">
-                <label>Model (type_name)</label>
+                <label>Type Name</label>
                 <input name="type_name" type="text" required value="<?php echo htmlspecialchars($type['type_name']); ?>">
             </div>
 
             <div class="form-group">
-                <label>Beschrijving</label>
+                <label>Description</label>
                 <input name="description" type="text" value="<?php echo htmlspecialchars($type['description'] ?? ''); ?>">
             </div>
 
-            <div style="display:flex; gap:8px; margin-top:12px;">
-                <button class="btn" type="submit" name="do" value="update">Opslaan</button>
-                <a class="btn" href="/admin/device_types.php" style="background:#6c757d;">Annuleren</a>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button class="btn" type="submit" name="do" value="update">Save Changes</button>
+                <a class="btn btn-secondary" href="/admin/device_types.php">Cancel</a>
 
-                <button class="btn" type="submit" name="do" value="delete" style="background:#dc3545;" onclick="return confirm('Weet je zeker dat je dit model wilt verwijderen? Dit kan niet ongedaan gemaakt worden.');">Verwijderen</button>
+                <?php 
+                $device_count = (int)($type['device_count'] ?? 0);
+                if ($device_count > 0): 
+                ?>
+                    <button class="btn btn-danger" type="button" disabled title="Cannot delete - devices are using this type" style="opacity:0.5;cursor:not-allowed;">
+                        Delete (<?php echo $device_count; ?> device<?php echo $device_count !== 1 ? 's' : ''; ?> in use)
+                    </button>
+                <?php else: ?>
+                    <button class="btn btn-danger" type="submit" name="do" value="delete" onclick="return confirm('Are you sure you want to delete this device type? This action cannot be undone.');">
+                        Delete Device Type
+                    </button>
+                <?php endif; ?>
             </div>
         </form>
     </div>
 
-    <section style="margin-top:16px;">
-        <div class="card">
-            <h4>Info</h4>
-            <p>Model ID: <strong><?php echo (int)$type['id']; ?></strong><br>
-            Aangemaakt: <?php echo htmlspecialchars($type['created_at']); ?> — Laatste wijziging: <?php echo htmlspecialchars($type['updated_at']); ?></p>
-            <p>Opmerking: bij het verwijderen wordt gecontroleerd of er nog apparaten zijn die dit model gebruiken. Als je een foutmelding krijgt, pas eerst die apparaten aan of wijzig hun model naar een ander type.</p>
-        </div>
-    </section>
+    <div class="card" style="margin-top:20px;">
+        <h4>Device Type Information</h4>
+        <table style="width:auto;">
+            <tr>
+                <td style="padding:8px;font-weight:600;">ID:</td>
+                <td style="padding:8px;"><?php echo (int)$type['id']; ?></td>
+            </tr>
+            <tr>
+                <td style="padding:8px;font-weight:600;">Devices Using:</td>
+                <td style="padding:8px;">
+                    <?php if ($device_count > 0): ?>
+                        <span style="display:inline-block;background:#667eea;color:white;padding:4px 10px;border-radius:16px;font-weight:600;">
+                            <?php echo $device_count; ?> device<?php echo $device_count !== 1 ? 's' : ''; ?>
+                        </span>
+                    <?php else: ?>
+                        <span style="color:#999;">0 devices</span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:8px;font-weight:600;">Created:</td>
+                <td style="padding:8px;"><?php echo htmlspecialchars($type['created_at']); ?></td>
+            </tr>
+            <tr>
+                <td style="padding:8px;font-weight:600;">Last Updated:</td>
+                <td style="padding:8px;"><?php echo htmlspecialchars($type['updated_at']); ?></td>
+            </tr>
+        </table>
+        <p style="margin-top:16px;color:#666;font-size:14px;">
+            <strong>Note:</strong> Device types that are in use cannot be deleted. You must first reassign or delete all devices using this type.
+        </p>
+    </div>
 </main>
 </body>
 </html>
