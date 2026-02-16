@@ -27,6 +27,13 @@ $csrf = $_SESSION['csrf_token'];
 $error = '';
 $success = '';
 
+// Handle wizard reset
+if (isset($_GET['reset']) && $_GET['reset'] === '1') {
+    unset($_SESSION['wizard_data']);
+    header('Location: /devices/configure_wizard.php?step=1');
+    exit;
+}
+
 // Get current step
 $step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
 $step = max(1, min(5, $step)); // Clamp between 1-5
@@ -468,7 +475,7 @@ try {
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
                     <a class="btn" href="/devices/list.php">← Terug naar Devices</a>
                     <a class="btn" href="/config/builder.php" style="background:#28a745;">Config Builder</a>
-                    <a class="btn" href="?step=1" style="background:#6c757d;" onclick="<?php unset($_SESSION['wizard_data']); ?>">Nieuwe Wizard</a>
+                    <a class="btn" href="?reset=1" style="background:#6c757d;">Nieuwe Wizard</a>
                 </div>
             <?php endif; ?>
         <?php endif; ?>

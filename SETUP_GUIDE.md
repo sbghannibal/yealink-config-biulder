@@ -6,8 +6,8 @@ Dit document beschrijft de installatie en configuratie van het Yealink Config Ma
 
 ## Vereisten
 
-- PHP 7.4 of hoger
-- MySQL 5.7 of hoger / MariaDB 10.3 or hoger
+- PHP 7.4 or hoger
+- MySQL 5.7 of hoger / MariaDB 10.3 of hoger
 - Webserver (Apache/Nginx)
 - Bestaande Yealink Config Builder installatie
 
