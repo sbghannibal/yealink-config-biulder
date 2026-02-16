@@ -26,6 +26,7 @@ $csrf = $_SESSION['csrf_token'];
 
 $error = '';
 $success = '';
+$debug_info = ''; // DEBUG
 
 // Handle wizard reset
 if (isset($_GET['reset']) && $_GET['reset'] === '1') {
@@ -238,11 +239,47 @@ try {
         $stmt = $pdo->query('SELECT id, pabx_name FROM pabx WHERE is_active = 1 ORDER BY pabx_name');
         $pabx_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
+        // ========== DEBUG STEP 4 START ==========
+        error_log('=== DEBUG STEP 4 ===');
+        error_log('Template ID: ' . $wizard_data['template_id']);
+        error_log('Variables submitted: ' . json_encode($wizard_data['variables']));
+        
+        // Check template exists
+        $debug_stmt = $pdo->prepare('SELECT id, template_name, config_template FROM config_templates WHERE id = ?');
+        $debug_stmt->execute([$wizard_data['template_id']]);
+        $debug_tpl = $debug_stmt->fetch(PDO::FETCH_ASSOC);
+        error_log('Template found: ' . ($debug_tpl ? 'YES' : 'NO'));
+        if ($debug_tpl) {
+            error_log('Template name: ' . $debug_tpl['template_name']);
+            error_log('Config length: ' . strlen($debug_tpl['config_template'] ?? ''));
+            error_log('Config content (first 500 chars): ' . substr($debug_tpl['config_template'], 0, 500));
+            
+            // Display debug info on page
+            $debug_info = '<div style="background:#fff3cd;border:1px solid #ffc107;padding:12px;border-radius:4px;margin:16px 0;">
+                <strong>🔍 DEBUG INFO:</strong><br>
+                <code>Template: ' . htmlspecialchars($debug_tpl['template_name']) . '</code><br>
+                <code>Content length: ' . strlen($debug_tpl['config_template'] ?? '') . ' chars</code><br>
+                <code>First 300 chars: ' . htmlspecialchars(substr($debug_tpl['config_template'], 0, 300)) . '</code>
+            </div>';
+        }
+        
+        // Try the generation manually
+        $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
+        error_log('Generation result success: ' . ($result['success'] ? 'YES' : 'NO'));
+        error_log('Generation error: ' . ($result['error'] ?? 'NONE'));
+        error_log('Generated content length: ' . strlen($result['content'] ?? ''));
+        if (!$result['success']) {
+            error_log('ERROR DETAILS: ' . json_encode($result));
+        }
+        // ========== DEBUG STEP 4 END ==========
+        
         // Generate preview
         if ($wizard_data['template_id']) {
             $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
             if ($result['success']) {
                 $wizard_data['config_content'] = $result['content'];
+            } else {
+                $error = $result['error'] ?? 'Kon configuratie niet genereren';
             }
         }
     }
@@ -315,6 +352,7 @@ try {
     
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
+    <?php if ($debug_info): echo $debug_info; endif; // DEBUG ?>
     
     <div class="wizard-content card">
         <?php if ($step === 1): ?>
