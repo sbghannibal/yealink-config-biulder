@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Nieuw device';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -103,16 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+require_once __DIR__ . '/../admin/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Nieuw device - Yealink Config Builder</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<?php if (file_exists(__DIR__ . '/../admin/_admin_nav.php')) include __DIR__ . '/../admin/_admin_nav.php'; ?>
+
 <main class="container" style="max-width:900px; margin-top:20px;">
     <h2>Nieuw device</h2>
 

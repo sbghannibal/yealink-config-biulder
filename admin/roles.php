@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Rollen & permissies';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -62,17 +63,10 @@ try {
     $error = 'Kon rollen niet ophalen.';
     $roles = [];
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Rollen & permissies</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<?php include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
+
     <h2>Rollen & permissies</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>

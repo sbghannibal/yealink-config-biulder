@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Config Wizard';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/generator.php';
@@ -286,13 +287,10 @@ try {
 } catch (Exception $e) {
     error_log('Wizard data load error: ' . $e->getMessage());
 }
+
+require_once __DIR__ . '/../admin/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Config Wizard - Yealink Config Builder</title>
-    <link rel="stylesheet" href="/css/style.css">
+
     <style>
         .wizard-steps {
             display: flex;
@@ -336,10 +334,7 @@ try {
         .var-input { margin-bottom: 16px; }
         .qr-code { text-align: center; padding: 20px; }
     </style>
-</head>
-<body>
-<?php if (file_exists(__DIR__ . '/../admin/_admin_nav.php')) include __DIR__ . '/../admin/_admin_nav.php'; ?>
-<main class="container">
+
     <h2>Device Configuratie Wizard <?php if ($device): ?><small>voor <?php echo htmlspecialchars($device['device_name']); ?></small><?php endif; ?></h2>
     
     <ul class="wizard-steps">
