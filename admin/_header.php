@@ -323,6 +323,10 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
             📱 Devices
         </a>
         
+        <a href="/admin/device_types.php" class="<?php echo $current_page === 'device_types.php' || $current_page === 'device_types_edit.php' ? 'active' : ''; ?>">
+            📦 Device Types
+        </a>
+        
         <a href="/devices/configure_wizard.php" class="<?php echo $current_page === 'configure_wizard.php' ? 'active' : ''; ?>">
             ⚙️ Config Wizard
         </a>
