@@ -35,6 +35,7 @@ if (empty($_SESSION['csrf_token'])) {
 $csrf_token = $_SESSION['csrf_token'];
 
 $error = '';
+$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Basic CSRF check
@@ -88,16 +89,171 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Login - Yealink Config Builder</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .login-container { max-width: 420px; margin: 80px auto; padding: 30px; background:#fff; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.08); }
-        .login-container h1 { text-align:center; color:#667eea; margin-bottom:18px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            max-width: 420px;
+            width: 100%;
+            margin: 20px;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+        
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .login-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .login-footer p {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .account-request-btn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .account-request-btn:hover {
+            background: #218838;
+            text-decoration: none;
+            color: white;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            
+            .login-header h1 {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>🔐 Login</h1>
+        <div class="login-header">
+            <h1>☎️ Yealink Config</h1>
+            <p>Beheerder Login</p>
+        </div>
 
         <?php if ($error): ?>
-            <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-error">
+                ❌ <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+            <div class="alert alert-success">
+                ✅ <?php echo htmlspecialchars($success); ?>
+            </div>
         <?php endif; ?>
 
         <form method="post" autocomplete="off" novalidate>
@@ -105,20 +261,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group">
                 <label for="username">Gebruikersnaam</label>
-                <input id="username" name="username" type="text" required autofocus>
+                <input id="username" name="username" type="text" required autofocus placeholder="Voer je gebruikersnaam in">
             </div>
 
             <div class="form-group">
                 <label for="password">Wachtwoord</label>
-                <input id="password" name="password" type="password" required>
+                <input id="password" name="password" type="password" required placeholder="Voer je wachtwoord in">
             </div>
 
-            <button type="submit" class="btn" style="width:100%;">Inloggen</button>
+            <button type="submit" class="btn">🔓 Inloggen</button>
         </form>
 
-        <p style="margin-top:12px; font-size:90%; color:#666;">
-            Als je nog geen admin-account hebt, draai eerst <code>php seed.php</code> of maak een account in de database.
-        </p>
+        <div class="login-footer">
+            <p>
+                📝 Heb je nog geen account?
+            </p>
+            <p>
+                Neem contact op met de beheerder via:
+            </p>
+            <a href="request_account.php" class="account-request-btn">
+                📧 Verzoek een Account
+            </a>
+        </div>
     </div>
 </body>
 </html>
