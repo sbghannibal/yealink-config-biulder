@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Instellingen';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -70,17 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Load current values
 $dashboard_title = get_setting($pdo, 'dashboard_title', 'Welkom bij Yealink Config Builder');
 $dashboard_text  = get_setting($pdo, 'dashboard_text', "Gebruik het menu om devices en configuraties te beheren.\n\nJe kunt deze tekst aanpassen via Admin → Instellingen.");
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Instellingen - Admin</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<?php include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
+
     <h2>Instellingen</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>

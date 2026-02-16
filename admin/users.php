@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Gebruikers';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -25,17 +26,10 @@ try {
     $error = 'Kon gebruikers niet ophalen.';
     error_log('users.php error: ' . $e->getMessage());
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Beheer gebruikers</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<?php include __DIR__ . '/_admin_nav.php'; // optionele include met admin navigatie ?>
-<main class="container">
+
     <h2>Gebruikers</h2>
     <p><a class="btn" href="/admin/users_create.php">➕ Nieuwe gebruiker</a></p>
 

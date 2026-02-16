@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Gebruiker bewerken';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -119,17 +120,10 @@ try {
     $user = ['id' => $user_id, 'username' => '', 'email' => '', 'is_active' => 0];
     $assigned = [];
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Gebruiker bewerken</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<?php include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
+
     <h2>Gebruiker bewerken</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
