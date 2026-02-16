@@ -25,18 +25,18 @@ if (empty($_SESSION['csrf_token'])) {
 $csrf = $_SESSION['csrf_token'];
 
 function get_setting($pdo, $key, $default = '') {
-    $stmt = $pdo->prepare('SELECT value FROM settings WHERE key_name = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT setting_value FROM settings WHERE setting_key = ? LIMIT 1');
     $stmt->execute([$key]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $row ? $row['value'] : $default;
+    return $row ? $row['setting_value'] : $default;
 }
 
 function upsert_setting($pdo, $key, $value) {
     // Try update, if affected rows == 0 try insert
-    $stmt = $pdo->prepare('UPDATE settings SET value = ? WHERE key_name = ?');
+    $stmt = $pdo->prepare('UPDATE settings SET setting_value = ? WHERE setting_key = ?');
     $stmt->execute([$value, $key]);
     if ($stmt->rowCount() === 0) {
-        $ins = $pdo->prepare('INSERT INTO settings (key_name, value) VALUES (?, ?)');
+        $ins = $pdo->prepare('INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)');
         $ins->execute([$key, $value]);
     }
 }

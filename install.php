@@ -5,10 +5,10 @@ require_once __DIR__ . '/includes/rbac.php';
 
 // Fetch settings helper
 function get_setting($pdo, $key, $default = '') {
-    $stmt = $pdo->prepare('SELECT value FROM settings WHERE key_name = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT setting_value FROM settings WHERE setting_key = ? LIMIT 1');
     $stmt->execute([$key]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $row ? $row['value'] : $default;
+    return $row ? $row['setting_value'] : $default;
 }
 
 // If logged in get admin info
