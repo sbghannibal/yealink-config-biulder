@@ -64,8 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $password = bin2hex(random_bytes(12));
                             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                             
-                            $stmt = $pdo->prepare('INSERT INTO admins (username, password, email, is_active, created_by, created_at) VALUES (?, ?, ?, 1, ?, NOW())');
-                            $stmt->execute([$suggested_username, $hashed_password, $request['email'], $admin_id]);
+                            $stmt = $pdo->prepare('INSERT INTO admins (username, password, email, is_active) VALUES (?, ?, ?, 1)');
+                            $stmt->execute([$suggested_username, $hashed_password, $request['email']]);
                             
                             $stmt = $pdo->prepare('UPDATE account_requests SET status = ?, approved_by = ?, approved_at = NOW() WHERE id = ?');
                             $stmt->execute(['approved', $admin_id, $request_id]);
