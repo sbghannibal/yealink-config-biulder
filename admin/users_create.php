@@ -52,9 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Wachtwoorden komen niet overeen.';
         } else {
             try {
+                $hash = password_hash($password, PASSWORD_BCRYPT);
+                
                 $pdo->beginTransaction();
                 
-                $hash = password_hash($password, PASSWORD_BCRYPT);
                 $stmt = $pdo->prepare('INSERT INTO admins (username, password, email) VALUES (?, ?, ?)');
                 $stmt->execute([$username, $hash, $email]);
                 $newId = $pdo->lastInsertId();

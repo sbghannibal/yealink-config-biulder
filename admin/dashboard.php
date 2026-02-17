@@ -311,7 +311,7 @@ require_once __DIR__ . '/_header.php';
             <h2>
                 ⚠️ 
                 <?php echo $stats['pending_requests']; ?> 
-                Ausstehende Account-Anfrage<?php echo $stats['pending_requests'] !== 1 ? 'n' : ''; ?>
+                Openstaande Account-Aanvra<?php echo $stats['pending_requests'] !== 1 ? 'gen' : 'ag'; ?>
             </h2>
             
             <ul class="requests-list">
