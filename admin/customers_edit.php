@@ -10,7 +10,7 @@ if (!isset($_SESSION['admin_id'])) {
 }
 $admin_id = (int) $_SESSION['admin_id'];
 
-if (!has_permission($pdo, $admin_id, 'admin.customers.manage') && !has_permission($pdo, $admin_id, 'devices.manage')) {
+if (!has_permission($pdo, $admin_id, 'customers.edit')) {
     http_response_code(403);
     echo 'Toegang geweigerd.';
     exit;

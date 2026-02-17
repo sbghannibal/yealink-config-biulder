@@ -13,6 +13,27 @@ if (!isset($_SESSION['admin_id'])) {
 $admin_id = (int) $_SESSION['admin_id'];
 $username = $_SESSION['username'] ?? 'Admin';
 
+// Get user's role(s)
+$stmt = $pdo->prepare('
+    SELECT r.role_name 
+    FROM admin_roles ar
+    JOIN roles r ON r.id = ar.role_id
+    WHERE ar.admin_id = ?
+');
+$stmt->execute([$admin_id]);
+$user_roles = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$user_role_display = !empty($user_roles) ? implode(', ', $user_roles) : 'Geen rol';
+
+// Determine role badge color
+$role_badge_color = '#6c757d'; // default gray
+if (in_array('Owner', $user_roles)) {
+    $role_badge_color = '#dc3545'; // red for owner
+} elseif (in_array('Expert', $user_roles)) {
+    $role_badge_color = '#28a745'; // green for expert
+} elseif (in_array('Tech', $user_roles)) {
+    $role_badge_color = '#007bff'; // blue for tech
+}
+
 // Load dashboard settings
 function get_setting($pdo, $key, $default = '') {
     try {
@@ -269,7 +290,14 @@ require_once __DIR__ . '/_header.php';
             <?php endif; ?>
         </div>
         <div class="topbar-right">
-            Ingelogd als: <strong><?php echo htmlspecialchars($username); ?></strong>
+            <div style="text-align: right;">
+                <div>Ingelogd als: <strong><?php echo htmlspecialchars($username); ?></strong></div>
+                <div style="margin-top: 4px;">
+                    <span style="background: <?php echo $role_badge_color; ?>; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                        <?php echo htmlspecialchars($user_role_display); ?>
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 
