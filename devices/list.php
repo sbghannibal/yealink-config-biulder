@@ -20,10 +20,47 @@ $devices = [];
 $device_types = [];
 $error = '';
 
+// Pagination parameters
+$per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+$per_page = in_array($per_page, [10, 25, 50, 100]) ? $per_page : 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = max(1, $page);
+$offset = ($page - 1) * $per_page;
+
+// Search and filters
+$search_customer = $_GET['search_customer'] ?? '';
+$filter_type = isset($_GET['filter_type']) && $_GET['filter_type'] !== '' ? (int)$_GET['filter_type'] : null;
+
+$total_count = 0;
+
 try {
-    $stmt = $pdo->query('
-        SELECT d.id, d.device_name, d.mac_address, d.description, d.is_active, 
+    // Count total devices matching filters
+    $count_sql = "SELECT COUNT(*) as total
+        FROM devices d
+        LEFT JOIN customers c ON d.customer_id = c.id
+        WHERE 1=1";
+    
+    $count_params = [];
+    
+    if ($search_customer) {
+        $count_sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ?)";
+        $search_param = '%' . $search_customer . '%';
+        $count_params[] = $search_param;
+        $count_params[] = $search_param;
+    }
+    if ($filter_type) {
+        $count_sql .= " AND d.device_type_id = ?";
+        $count_params[] = $filter_type;
+    }
+    
+    $count_stmt = $pdo->prepare($count_sql);
+    $count_stmt->execute($count_params);
+    $total_count = $count_stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Fetch devices with pagination
+    $sql = "SELECT d.id, d.device_name, d.mac_address, d.description, d.is_active, 
                d.created_at, d.updated_at, dt.type_name AS model_name,
+               c.customer_code, c.company_name,
                (SELECT cv.version_number FROM config_versions cv 
                 JOIN device_config_assignments dca ON dca.config_version_id = cv.id 
                 WHERE dca.device_id = d.id 
@@ -32,8 +69,28 @@ try {
                 WHERE cdh.mac_address = d.mac_address) as download_count
         FROM devices d 
         LEFT JOIN device_types dt ON d.device_type_id = dt.id
-        ORDER BY d.device_name ASC
-    ');
+        LEFT JOIN customers c ON d.customer_id = c.id
+        WHERE 1=1";
+    
+    $params = [];
+    
+    if ($search_customer) {
+        $sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ?)";
+        $search_param = '%' . $search_customer . '%';
+        $params[] = $search_param;
+        $params[] = $search_param;
+    }
+    if ($filter_type) {
+        $sql .= " AND d.device_type_id = ?";
+        $params[] = $filter_type;
+    }
+    
+    $sql .= " ORDER BY d.created_at DESC LIMIT ? OFFSET ?";
+    $params[] = $per_page;
+    $params[] = $offset;
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Fetch distinct device types for filter dropdown
@@ -49,6 +106,10 @@ try {
     error_log('Failed to fetch devices: ' . $e->getMessage());
     $error = 'Kon devices niet ophalen: ' . $e->getMessage();
 }
+
+// Calculate pagination
+$total_pages = $total_count > 0 ? ceil($total_count / $per_page) : 1;
+$page = min($page, $total_pages);
 
 require_once __DIR__ . '/../admin/_header.php';
 ?>
@@ -190,6 +251,66 @@ require_once __DIR__ . '/../admin/_header.php';
             font-size: 16px;
         }
         
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .pagination-info {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .pagination-controls a,
+        .pagination-controls span {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #007bff;
+            background: white;
+            font-size: 14px;
+        }
+        
+        .pagination-controls span {
+            background: #007bff;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .pagination-controls a:hover {
+            background: #f1f3f5;
+        }
+        
+        .pagination-controls a.disabled {
+            color: #6c757d;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        
+        .per-page-selector {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .per-page-selector select {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        
         @media (max-width: 768px) {
             .filter-controls {
                 flex-direction: column;
@@ -200,6 +321,15 @@ require_once __DIR__ . '/../admin/_header.php';
             .filter-controls select {
                 width: 100%;
                 max-width: none;
+            }
+            
+            .pagination {
+                flex-direction: column;
+            }
+            
+            .pagination-controls {
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
@@ -213,29 +343,40 @@ require_once __DIR__ . '/../admin/_header.php';
         <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
 
-    <?php if (!empty($devices)): ?>
-        <div class="filter-controls">
-            <input type="text" id="searchInput" placeholder="🔍 Zoek op naam, MAC of model..." aria-label="Zoek devices">
-            <select id="modelFilter" aria-label="Filter op model">
+    <div class="filter-controls">
+        <form method="get" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1;">
+            <input type="text" name="search_customer" placeholder="🔍 Zoek op klant naam of code..." 
+                   value="<?php echo htmlspecialchars($search_customer); ?>" 
+                   aria-label="Zoek klanten">
+            <select name="filter_type" aria-label="Filter op model">
                 <option value="">Alle modellen</option>
                 <?php foreach ($device_types as $type): ?>
-                    <option value="<?php echo htmlspecialchars($type['type_name']); ?>">
+                    <option value="<?php echo (int)$type['id']; ?>" <?php echo $filter_type == $type['id'] ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($type['type_name']); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
-            <button id="clearFilters" class="clear-filters-btn" style="display: none;">
-                ❌ Wis filters
-            </button>
-        </div>
-    <?php endif; ?>
+            <input type="hidden" name="per_page" value="<?php echo $per_page; ?>">
+            <button type="submit" class="btn" style="background: #007bff; color: white;">Zoeken</button>
+            <?php if ($search_customer || $filter_type): ?>
+                <a href="/devices/list.php?per_page=<?php echo $per_page; ?>" class="clear-filters-btn">
+                    ❌ Wis filters
+                </a>
+            <?php endif; ?>
+        </form>
+    </div>
 
     <div class="card">
-        <?php if (empty($devices)): ?>
+        <?php if ($total_count === 0): ?>
             <div style="padding: 40px; text-align: center;">
                 <p style="color: #6c757d; font-size: 16px;">
-                    Geen devices gevonden. 
-                    <a href="/devices/create.php" style="color: #007bff; text-decoration: none;">Maak er een aan →</a>
+                    <?php if ($search_customer || $filter_type): ?>
+                        Geen devices gevonden met de geselecteerde filters.
+                        <a href="/devices/list.php" style="color: #007bff; text-decoration: none;">Wis filters →</a>
+                    <?php else: ?>
+                        Geen devices gevonden. 
+                        <a href="/devices/create.php" style="color: #007bff; text-decoration: none;">Maak er een aan →</a>
+                    <?php endif; ?>
                 </p>
             </div>
         <?php else: ?>
@@ -244,6 +385,7 @@ require_once __DIR__ . '/../admin/_header.php';
                     <tr>
                         <th>ID</th>
                         <th>Naam</th>
+                        <th>Klant</th>
                         <th>Model</th>
                         <th>MAC Adres</th>
                         <th>Laatste Config</th>
@@ -254,11 +396,19 @@ require_once __DIR__ . '/../admin/_header.php';
                 </thead>
                 <tbody id="devicesTableBody">
                     <?php foreach ($devices as $d): ?>
-                        <tr data-device-name="<?php echo htmlspecialchars(strtolower($d['device_name'])); ?>" 
-                            data-mac-address="<?php echo htmlspecialchars(strtolower($d['mac_address'] ?? '')); ?>" 
-                            data-model-name="<?php echo htmlspecialchars(strtolower($d['model_name'] ?? '')); ?>">
+                        <tr>
                             <td><strong>#<?php echo (int)$d['id']; ?></strong></td>
                             <td><?php echo htmlspecialchars($d['device_name']); ?></td>
+                            <td>
+                                <?php if ($d['company_name']): ?>
+                                    <span style="font-weight: 500;"><?php echo htmlspecialchars($d['company_name']); ?></span>
+                                    <?php if ($d['customer_code']): ?>
+                                        <br><small style="color: #6c757d;"><?php echo htmlspecialchars($d['customer_code']); ?></small>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span style="color: #6c757d;">-</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php if ($d['model_name']): ?>
                                     <span class="badge info"><?php echo htmlspecialchars($d['model_name']); ?></span>
@@ -300,83 +450,43 @@ require_once __DIR__ . '/../admin/_header.php';
         <?php endif; ?>
     </div>
 
-    <?php if (!empty($devices)): ?>
-    <script>
-        (function() {
-            const searchInput = document.getElementById('searchInput');
-            const modelFilter = document.getElementById('modelFilter');
-            const clearFiltersBtn = document.getElementById('clearFilters');
-            const tableBody = document.getElementById('devicesTableBody');
-            const tableRows = tableBody.getElementsByTagName('tr');
+    <?php if ($total_count > 0): ?>
+    <div class="pagination">
+        <div class="pagination-info">
+            Toont <?php echo (($page - 1) * $per_page) + 1; ?> tot <?php echo min($page * $per_page, $total_count); ?> van <?php echo $total_count; ?> devices
+        </div>
+        
+        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+            <div class="per-page-selector">
+                <span>Per pagina:</span>
+                <select onchange="window.location.href='?page=1&per_page=' + this.value + '<?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>'">
+                    <?php foreach ([10, 25, 50, 100] as $pp): ?>
+                        <option value="<?php echo $pp; ?>" <?php echo $pp == $per_page ? 'selected' : ''; ?>><?php echo $pp; ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             
-            function filterTable() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                const selectedModel = modelFilter.value.toLowerCase().trim();
-                let visibleCount = 0;
+            <div class="pagination-controls">
+                <?php if ($page > 1): ?>
+                    <a href="?page=1&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">« Eerste</a>
+                    <a href="?page=<?php echo $page - 1; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">‹ Vorige</a>
+                <?php else: ?>
+                    <a class="disabled">« Eerste</a>
+                    <a class="disabled">‹ Vorige</a>
+                <?php endif; ?>
                 
-                for (let i = 0; i < tableRows.length; i++) {
-                    const row = tableRows[i];
-                    const deviceName = row.getAttribute('data-device-name') || '';
-                    const macAddress = row.getAttribute('data-mac-address') || '';
-                    const modelName = row.getAttribute('data-model-name') || '';
-                    
-                    // Check search term matches (name, MAC, or model)
-                    const matchesSearch = !searchTerm || 
-                        deviceName.includes(searchTerm) || 
-                        macAddress.includes(searchTerm) || 
-                        modelName.includes(searchTerm);
-                    
-                    // Check model filter
-                    const matchesModel = !selectedModel || modelName === selectedModel;
-                    
-                    // Show row only if both conditions match (AND logic)
-                    if (matchesSearch && matchesModel) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
-                }
+                <span>Pagina <?php echo $page; ?> van <?php echo $total_pages; ?></span>
                 
-                // Show/hide "no results" message
-                showNoResults(visibleCount === 0);
-                
-                // Show/hide clear filters button
-                const hasActiveFilters = searchTerm !== '' || selectedModel !== '';
-                clearFiltersBtn.style.display = hasActiveFilters ? 'inline-flex' : 'none';
-            }
-            
-            function showNoResults(show) {
-                let noResultsRow = document.getElementById('noResultsRow');
-                
-                if (show && !noResultsRow) {
-                    // Create "no results" row
-                    noResultsRow = document.createElement('tr');
-                    noResultsRow.id = 'noResultsRow';
-                    // Dynamically calculate colspan based on number of header columns
-                    const headerCells = document.querySelectorAll('table thead th');
-                    const colspan = headerCells.length;
-                    noResultsRow.innerHTML = '<td colspan="' + colspan + '" class="no-results">Geen resultaten gevonden. Probeer andere zoektermen of filters.</td>';
-                    tableBody.appendChild(noResultsRow);
-                } else if (!show && noResultsRow) {
-                    // Remove "no results" row
-                    noResultsRow.remove();
-                }
-            }
-            
-            function clearFilters() {
-                searchInput.value = '';
-                modelFilter.value = '';
-                filterTable();
-                searchInput.focus();
-            }
-            
-            // Event listeners
-            searchInput.addEventListener('keyup', filterTable);
-            modelFilter.addEventListener('change', filterTable);
-            clearFiltersBtn.addEventListener('click', clearFilters);
-        })();
-    </script>
+                <?php if ($page < $total_pages): ?>
+                    <a href="?page=<?php echo $page + 1; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">Volgende ›</a>
+                    <a href="?page=<?php echo $total_pages; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">Laatste »</a>
+                <?php else: ?>
+                    <a class="disabled">Volgende ›</a>
+                    <a class="disabled">Laatste »</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
     <?php endif; ?>
 
 </main>

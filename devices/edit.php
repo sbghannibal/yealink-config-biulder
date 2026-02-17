@@ -54,12 +54,22 @@ try {
     error_log('devices/edit fetch types error: ' . $e->getMessage());
 }
 
+// Fetch customers
+try {
+    $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 ORDER BY company_name ASC');
+    $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $customers = [];
+    error_log('devices/edit fetch customers error: ' . $e->getMessage());
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = 'Ongeldige aanvraag (CSRF).';
     } else {
         $name = trim((string)($_POST['device_name'] ?? ''));
         $device_type_id = (int)($_POST['device_type_id'] ?? 0);
+        $customer_id = !empty($_POST['customer_id']) ? (int)$_POST['customer_id'] : null;
         $mac_raw = trim((string)($_POST['mac_address'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
         $is_active = isset($_POST['is_active']) && $_POST['is_active'] == '1' ? 1 : 0;
@@ -88,8 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     if ($error === '') {
-                        $stmt = $pdo->prepare('UPDATE devices SET device_name = ?, device_type_id = ?, mac_address = ?, description = ?, is_active = ?, updated_at = NOW() WHERE id = ?');
-                        $stmt->execute([$name, $device_type_id, $mac, $description, $is_active, $device_id]);
+                        $stmt = $pdo->prepare('UPDATE devices SET device_name = ?, device_type_id = ?, customer_id = ?, mac_address = ?, description = ?, is_active = ?, updated_at = NOW() WHERE id = ?');
+                        $stmt->execute([$name, $device_type_id, $customer_id, $mac, $description, $is_active, $device_id]);
 
                         // audit
                         try {
@@ -100,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'device',
                                 $device_id,
                                 json_encode($device),
-                                json_encode(['device_name' => $name, 'device_type_id' => $device_type_id, 'mac_address' => $mac, 'description' => $description, 'is_active' => $is_active]),
+                                json_encode(['device_name' => $name, 'device_type_id' => $device_type_id, 'customer_id' => $customer_id, 'mac_address' => $mac, 'description' => $description, 'is_active' => $is_active]),
                                 $_SERVER['REMOTE_ADDR'] ?? null,
                                 $_SERVER['HTTP_USER_AGENT'] ?? null
                             ]);
@@ -150,6 +160,19 @@ require_once __DIR__ . '/../admin/_header.php';
                     <?php foreach ($types as $t): ?>
                         <?php $sel = ((isset($_POST['device_type_id']) && $_POST['device_type_id'] == $t['id']) || (!isset($_POST['device_type_id']) && $device['device_type_id'] == $t['id'])) ? 'selected' : ''; ?>
                         <option value="<?php echo (int)$t['id']; ?>" <?php echo $sel; ?>><?php echo htmlspecialchars($t['type_name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Klant (optioneel)</label>
+                <select name="customer_id">
+                    <option value="">-- Selecteer klant --</option>
+                    <?php foreach ($customers as $c): ?>
+                        <?php $sel = ((isset($_POST['customer_id']) && $_POST['customer_id'] == $c['id']) || (!isset($_POST['customer_id']) && ($device['customer_id'] ?? null) == $c['id'])) ? 'selected' : ''; ?>
+                        <option value="<?php echo (int)$c['id']; ?>" <?php echo $sel; ?>>
+                            <?php echo htmlspecialchars($c['customer_code'] . ' - ' . $c['company_name']); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
