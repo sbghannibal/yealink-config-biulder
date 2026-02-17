@@ -12,6 +12,16 @@ if (!isset($_SESSION['admin_id'])) {
 $admin_id = (int) $_SESSION['admin_id'];
 $current_page = basename($_SERVER['PHP_SELF']);
 
+// Check user permissions for navigation
+$can_view_devices = has_permission($pdo, $admin_id, 'devices.view');
+$can_view_device_types = has_permission($pdo, $admin_id, 'admin.device_types.manage');
+$can_use_wizard = has_permission($pdo, $admin_id, 'config.manage');
+$can_manage_templates = has_permission($pdo, $admin_id, 'admin.templates.manage');
+$can_manage_customers = has_permission($pdo, $admin_id, 'customers.view');
+$can_view_accounts = has_permission($pdo, $admin_id, 'admin.accounts.manage');
+$can_manage_users = has_permission($pdo, $admin_id, 'admin.users.view');
+$can_edit_settings = has_permission($pdo, $admin_id, 'admin.settings.edit');
+
 // Get current admin info
 $stmt = $pdo->prepare('SELECT username, email FROM admins WHERE id = ?');
 $stmt->execute([$admin_id]);
@@ -319,37 +329,53 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
             📊 Dashboard
         </a>
         
+        <?php if ($can_view_devices): ?>
         <a href="/devices/list.php" class="<?php echo $current_page === 'list.php' ? 'active' : ''; ?>">
             📱 Devices
         </a>
+        <?php endif; ?>
         
-        <a href="/admin/device_types.php" class="<?php echo $current_page === 'device_types.php' || $current_page === 'device_types_edit.php' ? 'active' : ''; ?>">
+        <?php if ($can_view_device_types): ?>
+        <a href="/admin/device_types.php" class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php']) ? 'active' : ''; ?>">
             📦 Device Types
         </a>
+        <?php endif; ?>
         
+        <?php if ($can_use_wizard): ?>
         <a href="/devices/configure_wizard.php" class="<?php echo $current_page === 'configure_wizard.php' ? 'active' : ''; ?>">
             ⚙️ Config Wizard
         </a>
+        <?php endif; ?>
         
+        <?php if ($can_manage_templates): ?>
         <a href="/admin/templates.php" class="<?php echo $current_page === 'templates.php' ? 'active' : ''; ?>">
             📋 Templates
         </a>
+        <?php endif; ?>
         
+        <?php if ($can_manage_customers): ?>
         <a href="/admin/customers.php" class="<?php echo in_array($current_page, ['customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php']) ? 'active' : ''; ?>">
             🏢 Klanten
         </a>
+        <?php endif; ?>
         
+        <?php if ($can_view_accounts): ?>
         <a href="/admin/approve_account.php" class="<?php echo $current_page === 'approve_account.php' ? 'active' : ''; ?>">
             📧 Account Verzoeken
         </a>
+        <?php endif; ?>
         
+        <?php if ($can_manage_users): ?>
         <a href="/admin/users.php" class="<?php echo $current_page === 'users.php' ? 'active' : ''; ?>">
             👥 Users
         </a>
+        <?php endif; ?>
         
+        <?php if ($can_edit_settings): ?>
         <a href="/admin/settings.php" class="<?php echo $current_page === 'settings.php' ? 'active' : ''; ?>">
             ⚙️ Settings
         </a>
+        <?php endif; ?>
     </nav>
 </header>
 
