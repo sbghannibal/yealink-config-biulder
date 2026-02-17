@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Download Tokens';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -175,24 +176,17 @@ try {
 } catch (Exception $e) {
     $config_versions = [];
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Download tokens - Admin</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .small { font-size:90%; color:#666; }
-        table { width:100%; border-collapse:collapse; }
-        table th, table td { padding:8px; border-bottom:1px solid #eee; text-align:left; vertical-align:top; }
-        .actions form { display:inline; }
-    </style>
-</head>
-<body>
-<?php include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
-    <h2>Download tokens</h2>
+<style>
+    .small { font-size:90%; color:#666; }
+    table { width:100%; border-collapse:collapse; }
+    table th, table td { padding:8px; border-bottom:1px solid #eee; text-align:left; vertical-align:top; }
+    .actions form { display:inline; }
+</style>
+
+<h2>Download Tokens</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo nl2br(htmlspecialchars($success)); ?></div><?php endif; ?>
