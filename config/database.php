@@ -1,15 +1,22 @@
 <?php
-/**
- * Database Configuration
- */
+// Load environment variables
+$env_file = __DIR__ . '/../.env';
+if (file_exists($env_file)) {
+    $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '=') !== false && $line[0] !== '#') {
+            list($key, $value) = explode('=', $line, 2);
+            putenv(trim($key) . '=' . trim($value));
+        }
+    }
+}
 
-// Database credentials
+// Database configuration
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_USER', getenv('DB_USER') ?: 'admin_yealink');
-define('DB_PASS', getenv('DB_PASS') ?: 'fpujknRqxQtmXDtq6x8m');
 define('DB_NAME', getenv('DB_NAME') ?: 'admin_yealink');
+define('DB_USER', getenv('DB_USER') ?: 'admin_yealink');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 
-// Create PDO connection
 try {
     $pdo = new PDO(
         'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
@@ -18,13 +25,11 @@ try {
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_EMULATE_PREPARES => false
         ]
     );
 } catch (PDOException $e) {
-    die('Database connection failed: ' . $e->getMessage());
+    error_log('Database connection failed: ' . $e->getMessage());
+    die('Database connection failed. Please check your configuration.');
 }
-
-// Include other config files
-include_once __DIR__ . '/constants.php';
 ?>
