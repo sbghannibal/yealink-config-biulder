@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Nieuw Device';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -55,18 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Nieuw device</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<?php include __DIR__ . '/../admin/_admin_nav.php'; ?>
-<main class="container">
-    <h2>Nieuw device</h2>
+
+<h2>Nieuw device</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>

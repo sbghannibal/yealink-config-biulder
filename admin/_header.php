@@ -335,6 +335,10 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
             📋 Templates
         </a>
         
+        <a href="/admin/customers.php" class="<?php echo in_array($current_page, ['customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php']) ? 'active' : ''; ?>">
+            🏢 Klanten
+        </a>
+        
         <a href="/admin/approve_account.php" class="<?php echo $current_page === 'approve_account.php' ? 'active' : ''; ?>">
             📧 Account Verzoeken
         </a>

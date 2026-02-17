@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Gebruiker Verwijderen';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -66,18 +67,11 @@ try {
     header('Location: /admin/users.php');
     exit;
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Gebruiker verwijderen</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<?php include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
-    <h2>Gebruiker verwijderen</h2>
+
+<h2>Gebruiker verwijderen</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>

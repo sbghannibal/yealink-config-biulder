@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Audit Logs';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -47,18 +48,10 @@ try {
     $logs = [];
     $error = 'Kon audit logs niet ophalen.';
 }
+
+require_once __DIR__ . '/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Audit logs</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>.monos { font-family: monospace; white-space: pre-wrap; }</style>
-</head>
-<body>
-<?php include __DIR__ . '/_admin_nav.php'; ?>
-<main class="container">
+<style>.monos { font-family: monospace; white-space: pre-wrap; }</style>
     <h2>Audit logs</h2>
 
     <form method="get" class="card" style="margin-bottom:16px;">
