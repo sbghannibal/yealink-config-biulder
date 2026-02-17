@@ -442,6 +442,7 @@ require_once __DIR__ . '/../admin/_header.php';
                                     <?php endforeach; ?>
                                 </select>
                             <?php elseif ($var['var_type'] === 'boolean'): ?>
+                                <input type="hidden" name="var_<?php echo htmlspecialchars($var['var_name']); ?>" value="0">
                                 <label>
                                     <input type="checkbox" name="var_<?php echo htmlspecialchars($var['var_name']); ?>" value="1" <?php echo $current_value ? 'checked' : ''; ?>>
                                     Ja
