@@ -13,7 +13,7 @@ $admin_id = (int) $_SESSION['admin_id'];
 // Permission check
 if (!has_permission($pdo, $admin_id, 'admin.users.create')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 
@@ -26,6 +26,15 @@ $csrf = $_SESSION['csrf_token'];
 $error = '';
 $success = '';
 
+// Fetch available roles
+try {
+    $stmt = $pdo->query('SELECT id, role_name FROM roles ORDER BY role_name ASC');
+    $all_roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $all_roles = [];
+    error_log('users_create fetch roles error: ' . $e->getMessage());
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $posted = $_POST;
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $posted['csrf_token'] ?? '')) {
@@ -35,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($posted['email'] ?? '');
         $password = $posted['password'] ?? '';
         $password_confirm = $posted['password_confirm'] ?? '';
+        $role_id = isset($posted['role_id']) && $posted['role_id'] !== '' ? (int)$posted['role_id'] : null;
 
         if ($username === '' || $email === '' || $password === '') {
             $error = 'Vul alle vereiste velden in.';
@@ -43,12 +53,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $hash = password_hash($password, PASSWORD_BCRYPT);
+                
+                $pdo->beginTransaction();
+                
                 $stmt = $pdo->prepare('INSERT INTO admins (username, password, email) VALUES (?, ?, ?)');
                 $stmt->execute([$username, $hash, $email]);
                 $newId = $pdo->lastInsertId();
+                
+                // Assign role if selected
+                if ($role_id !== null) {
+                    $stmt = $pdo->prepare('INSERT INTO admin_roles (admin_id, role_id) VALUES (?, ?)');
+                    $stmt->execute([$newId, $role_id]);
+                }
+                
+                $pdo->commit();
                 $success = 'Gebruiker aangemaakt (ID: ' . (int)$newId . ').';
-                // Optionally assign roles via POST['roles'] (not implemented here)
             } catch (Exception $e) {
+                $pdo->rollBack();
                 error_log('users_create error: ' . $e->getMessage());
                 $error = 'Kon gebruiker niet aanmaken. Mogelijk bestaat de gebruikersnaam of e-mail al.';
             }
@@ -82,6 +103,24 @@ require_once __DIR__ . '/_header.php';
             <div class="form-group">
                 <label>Wachtwoord bevestigen</label>
                 <input name="password_confirm" type="password" required>
+            </div>
+            <div class="form-group">
+                <label>Rol</label>
+                <?php if (empty($all_roles)): ?>
+                    <p>Geen rollen geconfigureerd.</p>
+                <?php else: ?>
+                    <select name="role_id">
+                        <option value="">-- Selecteer een rol --</option>
+                        <?php foreach ($all_roles as $r): ?>
+                            <option value="<?php echo (int)$r['id']; ?>">
+                                <?php echo htmlspecialchars($r['role_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small style="display: block; margin-top: 4px; color: #666;">
+                        Elke gebruiker heeft één primaire rol. Selecteer de rol die het beste past bij de gebruiker.
+                    </small>
+                <?php endif; ?>
             </div>
             <button class="btn" type="submit">Maak gebruiker</button>
             <a class="btn" href="/admin/users.php" style="background:#6c757d;">Annuleren</a>

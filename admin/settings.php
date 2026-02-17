@@ -14,7 +14,7 @@ $admin_id = (int) $_SESSION['admin_id'];
 // Permission required to edit settings
 if (!has_permission($pdo, $admin_id, 'admin.settings.edit')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 

@@ -306,12 +306,12 @@ require_once __DIR__ . '/_header.php';
     <?php endif; ?>
 
     <!-- Account Requests Widget -->
-    <?php if ($stats['pending_requests'] > 0 && !empty($stats['account_requests'])): ?>
+    <?php if ($stats['pending_requests'] > 0 && !empty($stats['account_requests']) && has_permission($pdo, $admin_id, 'admin.accounts.manage')): ?>
         <div class="requests-widget">
             <h2>
                 ⚠️ 
                 <?php echo $stats['pending_requests']; ?> 
-                Ausstehende Account-Anfrage<?php echo $stats['pending_requests'] !== 1 ? 'n' : ''; ?>
+                Openstaande Account-Aanvra<?php echo $stats['pending_requests'] !== 1 ? 'gen' : 'ag'; ?>
             </h2>
             
             <ul class="requests-list">
@@ -341,28 +341,36 @@ require_once __DIR__ . '/_header.php';
         <div class="stat">
             <h3>👥 Gebruikers</h3>
             <p class="number"><?php echo $stats['admins']; ?></p>
+            <?php if (has_permission($pdo, $admin_id, 'admin.users.view')): ?>
             <p><a href="/admin/users.php">Beheer gebruikers</a></p>
+            <?php endif; ?>
         </div>
 
         <div class="stat">
             <h3>📱 Devices</h3>
             <p class="number"><?php echo $stats['devices']; ?></p>
+            <?php if (has_permission($pdo, $admin_id, 'devices.view')): ?>
             <p><a href="/devices/list.php">Bekijk devices</a></p>
+            <?php endif; ?>
         </div>
 
         <div class="stat">
             <h3>⚙️ Config Versies</h3>
             <p class="number"><?php echo $stats['config_versions']; ?></p>
+            <?php if (has_permission($pdo, $admin_id, 'config.manage')): ?>
             <p><a href="/config/versions.php">Beheer versies</a></p>
+            <?php endif; ?>
         </div>
 
         <div class="stat">
             <h3>🔑 Actieve Tokens</h3>
             <p class="number"><?php echo $stats['active_tokens']; ?></p>
+            <?php if (has_permission($pdo, $admin_id, 'admin.tokens.manage')): ?>
             <p><a href="/admin/tokens.php">Bekijk tokens</a></p>
+            <?php endif; ?>
         </div>
 
-        <?php if ($stats['pending_requests'] > 0): ?>
+        <?php if ($stats['pending_requests'] > 0 && has_permission($pdo, $admin_id, 'admin.accounts.manage')): ?>
             <div class="stat warning">
                 <h3>📧 Account Verzoeken</h3>
                 <p class="number"><?php echo $stats['pending_requests']; ?></p>
@@ -371,6 +379,7 @@ require_once __DIR__ . '/_header.php';
         <?php endif; ?>
     </section>
 
+    <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
     <section class="card">
         <h2>📝 Recente Activiteit</h2>
         <?php if (empty($stats['recent_audit'])): ?>
@@ -405,13 +414,28 @@ require_once __DIR__ . '/_header.php';
             </table>
         <?php endif; ?>
     </section>
+    <?php endif; ?>
 
     <div class="button-group">
+        <?php if (has_permission($pdo, $admin_id, 'admin.users.view')): ?>
         <a class="btn" href="/admin/users.php">👥 Gebruikers Beheren</a>
+        <?php endif; ?>
+        
+        <?php if (has_permission($pdo, $admin_id, 'admin.accounts.manage')): ?>
         <a class="btn" href="/admin/approve_account.php">📧 Account Verzoeken</a>
+        <?php endif; ?>
+        
+        <?php if (has_permission($pdo, $admin_id, 'admin.templates.manage')): ?>
         <a class="btn" href="/admin/templates.php">📋 Templates</a>
+        <?php endif; ?>
+        
+        <?php if (has_permission($pdo, $admin_id, 'devices.create')): ?>
         <a class="btn" href="/devices/create.php">📱 Nieuw Device</a>
+        <?php endif; ?>
+        
+        <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
         <a class="btn btn-secondary" href="/admin/audit.php">📑 Audit Logs</a>
+        <?php endif; ?>
     </div>
 
 </main>

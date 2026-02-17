@@ -13,7 +13,7 @@ $admin_id = (int) $_SESSION['admin_id'];
 // Check permission - using a new permission or fallback to admin permission
 if (!has_permission($pdo, $admin_id, 'customers.view')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 

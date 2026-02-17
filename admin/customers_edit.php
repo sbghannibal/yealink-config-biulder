@@ -12,7 +12,7 @@ $admin_id = (int) $_SESSION['admin_id'];
 
 if (!has_permission($pdo, $admin_id, 'customers.edit')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 

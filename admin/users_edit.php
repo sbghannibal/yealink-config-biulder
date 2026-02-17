@@ -12,7 +12,7 @@ $current_admin_id = (int) $_SESSION['admin_id'];
 
 if (!has_permission($pdo, $current_admin_id, 'admin.users.edit')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email'] ?? '');
         $is_active = isset($_POST['is_active']) && $_POST['is_active'] == '1' ? 1 : 0;
         $password = $_POST['password'] ?? '';
-        $roles_selected = $_POST['roles'] ?? [];
+        $role_id = isset($_POST['role_id']) && $_POST['role_id'] !== '' ? (int)$_POST['role_id'] : null;
 
         if ($username === '' || $email === '') {
             $error = 'Vul gebruikersnaam en e-mail in.';
@@ -67,15 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$username, $email, $is_active, $user_id]);
                 }
 
-                // Update roles: remove existing then insert selected
+                // Update role: remove existing then insert selected (only one role)
                 $stmt = $pdo->prepare('DELETE FROM admin_roles WHERE admin_id = ?');
                 $stmt->execute([$user_id]);
 
-                if (!empty($roles_selected) && is_array($roles_selected)) {
+                if ($role_id !== null) {
                     $ins = $pdo->prepare('INSERT INTO admin_roles (admin_id, role_id) VALUES (?, ?)');
-                    foreach ($roles_selected as $rid) {
-                        $ins->execute([$user_id, (int)$rid]);
-                    }
+                    $ins->execute([$user_id, $role_id]);
                 }
 
                 $pdo->commit();
@@ -158,19 +156,22 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Rollen</label>
+                <label>Rol</label>
                 <?php if (empty($all_roles)): ?>
                     <p>Geen rollen geconfigureerd.</p>
                 <?php else: ?>
-                    <?php foreach ($all_roles as $r): ?>
-                        <div>
-                            <label>
-                                <input type="checkbox" name="roles[]" value="<?php echo (int)$r['id']; ?>"
-                                    <?php echo in_array((int)$r['id'], $assigned, true) ? 'checked' : ''; ?>>
+                    <select name="role_id">
+                        <option value="">-- Selecteer een rol --</option>
+                        <?php foreach ($all_roles as $r): ?>
+                            <option value="<?php echo (int)$r['id']; ?>"
+                                <?php echo (count($assigned) === 1 && in_array((int)$r['id'], $assigned, true)) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($r['role_name']); ?>
-                            </label>
-                        </div>
-                    <?php endforeach; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small style="display: block; margin-top: 4px; color: #666;">
+                        Elke gebruiker heeft één primaire rol. Selecteer de rol die het beste past bij de gebruiker.
+                    </small>
                 <?php endif; ?>
             </div>
 

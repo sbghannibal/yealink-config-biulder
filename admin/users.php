@@ -14,7 +14,7 @@ $admin_id = (int) $_SESSION['admin_id'];
 // Optionele permissie-check (pas permission string aan indien gewenst)
 if (!has_permission($pdo, $admin_id, 'admin.users.view')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 

@@ -11,9 +11,9 @@ if (!isset($_SESSION['admin_id'])) {
 
 $admin_id = (int) $_SESSION['admin_id'];
 
-if (!has_permission($pdo, $admin_id, 'admin.manage')) {
+if (!has_permission($pdo, $admin_id, 'admin.accounts.manage')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 
