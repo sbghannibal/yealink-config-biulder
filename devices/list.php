@@ -28,8 +28,8 @@ try {
                 JOIN device_config_assignments dca ON dca.config_version_id = cv.id 
                 WHERE dca.device_id = d.id 
                 ORDER BY cv.id DESC LIMIT 1) as latest_version,
-               (SELECT COUNT(*) FROM config_download_history cdh 
-                WHERE cdh.mac_address = d.mac_address) as download_count
+               (SELECT COUNT(*) FROM provision_logs pl 
+                WHERE pl.device_id = d.id) as download_count
         FROM devices d 
         LEFT JOIN device_types dt ON d.device_type_id = dt.id
         ORDER BY d.device_name ASC
