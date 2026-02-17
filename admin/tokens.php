@@ -186,7 +186,7 @@ require_once __DIR__ . '/_header.php';
     .actions form { display:inline; }
 </style>
 
-<h2>Download tokens</h2>
+<h2>Download Tokens</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo nl2br(htmlspecialchars($success)); ?></div><?php endif; ?>

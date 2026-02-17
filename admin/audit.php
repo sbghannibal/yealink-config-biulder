@@ -52,9 +52,9 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 <style>.monos { font-family: monospace; white-space: pre-wrap; }</style>
-    <h2>Audit logs</h2>
+<h2>Audit Logs</h2>
 
-    <form method="get" class="card" style="margin-bottom:16px;">
+<form method="get" class="card" style="margin-bottom:16px;">
         <div class="form-group">
             <label>Admin ID</label>
             <input name="admin_id" value="<?php echo htmlspecialchars($_GET['admin_id'] ?? ''); ?>">
