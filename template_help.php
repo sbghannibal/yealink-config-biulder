@@ -277,21 +277,21 @@ $pabx_vars = [
     </style>
 </head>
 <body>
-    <button class="close-btn" onclick="window.close()">✕ Sluiten</button>
+    <button class="close-btn" onclick="window.close()">✕ Close</button>
     
     <div class="container">
         <header>
             <h1>❓ Template Variable Help</h1>
-            <p>Leer hoe je template variabelen kunt gebruiken in je Yealink configuraties</p>
+            <p>Learn how to use template variables in your Yealink configurations</p>
         </header>
         
         <div class="content">
             <div class="tabs">
                 <button class="tab active" data-tab="syntax">📝 Syntax</button>
-                <button class="tab" data-tab="global">🌐 Globale Variabelen</button>
-                <button class="tab" data-tab="device">📱 Device Variabelen</button>
-                <button class="tab" data-tab="pabx">☎️ PABX Variabelen</button>
-                <button class="tab" data-tab="examples">💡 Voorbeelden</button>
+                <button class="tab" data-tab="global">🌐 Global Variables</button>
+                <button class="tab" data-tab="device">📱 Device Variables</button>
+                <button class="tab" data-tab="pabx">☎️ PABX Variables</button>
+                <button class="tab" data-tab="examples">💡 Examples</button>
             </div>
             
             <!-- Syntax Tab -->
@@ -300,7 +300,7 @@ $pabx_vars = [
                     <h2>Template Variabele Syntax</h2>
                     
                     <div class="info-box">
-                        <p><strong>Belangrijk:</strong> Template variabelen worden automatisch vervangen tijdens het genereren van configuraties.</p>
+                        <p><strong>Important:</strong> Template variables are automatically replaced during configuration generation.</p>
                     </div>
                     
                     <h3>Basis Syntax</h3>
@@ -479,7 +479,7 @@ phone_setting.auto_answer=0
                     </div>
                     
                     <div class="info-box">
-                        <p><strong>Tip:</strong> Kopieer deze voorbeelden en pas ze aan voor jouw specifieke gebruik.</p>
+                        <p><strong>Tip:</strong> Copy these examples and adapt them for your specific use.</p>
                     </div>
                 </div>
             </div>

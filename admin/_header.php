@@ -67,8 +67,7 @@ if (in_array('Owner', $user_roles)) {
             background: #f5f5f5;
         }
         
-        .badge-common {
-            background: #28a745;
+        .badge-base {
             color: white;
             padding: 2px 8px;
             border-radius: 3px;
@@ -355,12 +354,12 @@ if (in_array('Owner', $user_roles)) {
                     <strong><?php echo htmlspecialchars($admin['username']); ?></strong>
                     <!-- Status badge -->
                     <?php if ($admin['is_active']): ?>
-                        <span class="badge badge-common badge-active">✅ Active</span>
+                        <span class="badge badge-base badge-active">✅ Active</span>
                     <?php else: ?>
-                        <span class="badge badge-common badge-inactive">⏸️ Inactive</span>
+                        <span class="badge badge-base badge-inactive">⏸️ Inactive</span>
                     <?php endif; ?>
                     <!-- Role badge -->
-                    <span class="badge badge-common" style="background: <?php echo $role_badge_color; ?>;">
+                    <span class="badge badge-base" style="background: <?php echo $role_badge_color; ?>;">
                         <?php echo htmlspecialchars($user_role_display); ?>
                     </span>
                     <small><?php echo htmlspecialchars($admin['email']); ?></small>

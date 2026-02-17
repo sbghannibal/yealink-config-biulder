@@ -191,7 +191,7 @@ require_once __DIR__ . '/_header.php';
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <div></div>
-        <button class="btn" onclick="window.open('/template_help.php', 'help', 'width=900,height=700')" style="background: #17a2b8; color: white;">
+        <button class="btn" id="helpButton" style="background: #17a2b8; color: white;">
             ❓ Variable Help
         </button>
     </div>
@@ -311,5 +311,10 @@ require_once __DIR__ . '/_header.php';
         </div>
     </div>
 </main>
+<script>
+document.getElementById('helpButton').addEventListener('click', function() {
+    window.open('/template_help.php', 'help', 'width=900,height=700');
+});
+</script>
 </body>
 </html>
