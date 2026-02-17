@@ -8,6 +8,50 @@
 
 require_once __DIR__ . '/../../config/database.php';
 
+// HTTP Basic Authentication for staging provisioning
+$auth_username = getenv('STAGING_AUTH_USER') ?: 'provisioning';
+$auth_password = getenv('STAGING_AUTH_PASS') ?: '';
+
+// Check if authentication is configured
+if (!empty($auth_password)) {
+    // Require authentication
+    if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) ||
+        $_SERVER['PHP_AUTH_USER'] !== $auth_username ||
+        $_SERVER['PHP_AUTH_PW'] !== $auth_password) {
+        
+        header('WWW-Authenticate: Basic realm="Yealink Staging Provisioning"');
+        http_response_code(401);
+        echo "Authentication required";
+        error_log("Staging auth failed - User: " . ($_SERVER['PHP_AUTH_USER'] ?? 'none'));
+        exit;
+    }
+}
+
+// Security: Verify User-Agent is from Yealink device
+$user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$is_yealink = false;
+
+// Check if User-Agent contains Yealink identifier
+if (stripos($user_agent, 'yealink') !== false) {
+    $is_yealink = true;
+}
+
+// Allow bypass for testing with specific parameter (only for Owner in development)
+$allow_test = isset($_GET['allow_test']) && $_GET['allow_test'] === getenv('STAGING_TEST_TOKEN');
+
+if (!$is_yealink && !$allow_test) {
+    http_response_code(403);
+    header('Content-Type: text/plain');
+    echo "# Error: Access denied - Invalid device type\n";
+    error_log("Staging rejected - Non-Yealink User-Agent: $user_agent from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+    exit;
+}
+
+// Log the device type for monitoring
+if ($is_yealink) {
+    error_log("Staging request from Yealink device - UA: $user_agent");
+}
+
 // Get MAC from request
 $mac = null;
 
@@ -65,6 +109,8 @@ try {
     $server_url = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'yealink-cfg.eu');
     
     // Generate boot configuration
+    // Using heredoc with single quotes to prevent variable interpolation
+    // Placeholders are replaced with str_replace() for clarity and security
     $boot_config = <<<'CONFIG'
 #!version:1.0.0.1
 
@@ -72,17 +118,17 @@ try {
 device_mac={{DEVICE_MAC}}
 
 [CERTIFICATE]
-# Download trusted CA certificates
+# Download trusted CA certificate (shared for all devices)
 static.trusted_certificates.url={{SERVER_URL}}/provision/staging/certificates/ca.crt
 
-# Download device-specific certificate (once available)
-static.server_certificates.url={{SERVER_URL}}/provision/staging/certificates/device_{{MAC}}.crt
+# Download shared server certificate (NOT device-specific to prevent MAC spoofing)
+static.server_certificates.url={{SERVER_URL}}/provision/staging/certificates/server.crt
 
 # Enable custom certificate support
 static.security.dev_cert=1
 
 [AUTO_PROVISION]
-# Full provisioning configuration
+# Full provisioning configuration (device validation happens here)
 static.auto_provision.url={{SERVER_URL}}/provision/?mac={{DEVICE_MAC}}
 static.auto_provision.enable=1
 
@@ -97,8 +143,8 @@ CONFIG;
     
     // Replace placeholders
     $boot_config = str_replace(
-        ['{{DEVICE_MAC}}', '{{SERVER_URL}}', '{{MAC}}'],
-        [$mac_formatted, $server_url, $mac],
+        ['{{DEVICE_MAC}}', '{{SERVER_URL}}'],
+        [$mac_formatted, $server_url],
         $boot_config
     );
     
