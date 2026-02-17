@@ -123,27 +123,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($_POST as $key => $value) {
                 if (strpos($key, 'var_') === 0) {
                     $var_name = substr($key, 4); // Remove 'var_' prefix
-                    $wizard_data['variables'][$var_name] = $value;
+                    // Handle multiselect arrays
+                    if (is_array($value)) {
+                        $wizard_data['variables'][$var_name] = implode(',', $value);
+                    } else {
+                        $wizard_data['variables'][$var_name] = $value;
+                    }
                 }
             }
             header('Location: ?step=4' . ($device_id ? "&device_id=$device_id" : ''));
             exit;
         }
         
-        // Step 4: Generate and Save Config
-        if ($action === 'save_config' && $step === 4) {
-            try {
-                $pabx_id = !empty($_POST['pabx_id']) ? (int)$_POST['pabx_id'] : null;
-                
-                if (!$pabx_id) {
-                    $error = 'Selecteer een PABX.';
-                } else {
+        // Step 4: Customer Selection
+        if ($action === 'select_customer' && $step === 4) {
+            $customer_id = !empty($_POST['customer_id']) ? (int)$_POST['customer_id'] : null;
+            
+            if (!$customer_id) {
+                $error = 'Selecteer een klant.';
+            } else {
+                try {
                     // Generate config from template
                     $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
                     
                     if (!$result['success']) {
                         $error = $result['error'];
                     } else {
+                        // For now, we'll save without customer_id in config_versions table
+                        // as config_versions doesn't have customer_id yet (it still uses pabx_id)
+                        // We'll need to check if pabx table exists, if not create a dummy entry or skip
+                        
+                        // Check if we can save config - we need a dummy pabx_id for backward compatibility
+                        // Let's create a default customer-based pabx entry if needed
+                        $stmt = $pdo->prepare('SELECT id FROM pabx WHERE pabx_name = ? LIMIT 1');
+                        $stmt->execute(['Customer-Based']);
+                        $default_pabx = $stmt->fetch();
+                        
+                        if (!$default_pabx) {
+                            // Create a default pabx entry for customer-based configs
+                            $stmt = $pdo->prepare('INSERT INTO pabx (pabx_name, pabx_ip, pabx_type, is_active, created_by) VALUES (?, ?, ?, 1, ?)');
+                            $stmt->execute(['Customer-Based', '0.0.0.0', 'Generic', $admin_id]);
+                            $pabx_id = $pdo->lastInsertId();
+                        } else {
+                            $pabx_id = $default_pabx['id'];
+                        }
+                        
                         // Save as config version
                         $stmt = $pdo->prepare('
                             SELECT COALESCE(MAX(version_number), 0) + 1 AS next_ver 
@@ -169,8 +193,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ]);
                         $config_version_id = $pdo->lastInsertId();
                         
-                        // Assign to device if device_id provided
+                        // Assign to device if device_id provided and update customer_id
                         if ($device_id) {
+                            // Update device customer_id
+                            $stmt = $pdo->prepare('UPDATE devices SET customer_id = ? WHERE id = ?');
+                            $stmt->execute([$customer_id, $device_id]);
+                            
+                            // Assign config to device
                             $stmt = $pdo->prepare('
                                 INSERT INTO device_config_assignments 
                                 (device_id, config_version_id, assigned_by, assigned_at)
@@ -182,14 +211,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         $wizard_data['config_version_id'] = $config_version_id;
                         $wizard_data['config_content'] = $result['content'];
+                        $wizard_data['customer_id'] = $customer_id;
                         
                         header('Location: ?step=5' . ($device_id ? "&device_id=$device_id" : ''));
                         exit;
                     }
+                } catch (Exception $e) {
+                    error_log('Wizard save error: ' . $e->getMessage());
+                    $error = 'Kon configuratie niet opslaan: ' . $e->getMessage();
                 }
-            } catch (Exception $e) {
-                error_log('Wizard save error: ' . $e->getMessage());
-                $error = 'Kon configuratie niet opslaan.';
             }
         }
     }
@@ -199,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $device_types = [];
 $templates = [];
 $template_variables = [];
-$pabx_list = [];
+$customer_list = [];
 $global_variables = [];
 
 try {
@@ -235,44 +265,10 @@ try {
         $global_variables = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
     
-    // Load PABX list for step 4
+    // Load customer list for step 4
     if ($step === 4) {
-        $stmt = $pdo->query('SELECT id, pabx_name FROM pabx WHERE is_active = 1 ORDER BY pabx_name');
-        $pabx_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // ========== DEBUG STEP 4 START ==========
-        error_log('=== DEBUG STEP 4 ===');
-        error_log('Template ID: ' . $wizard_data['template_id']);
-        error_log('Variables submitted: ' . json_encode($wizard_data['variables']));
-        
-        // Check template exists
-        $debug_stmt = $pdo->prepare('SELECT id, template_name, template_content FROM config_templates WHERE id = ?');
-        $debug_stmt->execute([$wizard_data['template_id']]);
-        $debug_tpl = $debug_stmt->fetch(PDO::FETCH_ASSOC);
-        error_log('Template found: ' . ($debug_tpl ? 'YES' : 'NO'));
-        if ($debug_tpl) {
-            error_log('Template name: ' . $debug_tpl['template_name']);
-            error_log('Config length: ' . strlen($debug_tpl['template_content'] ?? ''));
-            error_log('Config content (first 500 chars): ' . substr($debug_tpl['template_content'], 0, 500));
-            
-            // Display debug info on page
-            $debug_info = '<div style="background:#fff3cd;border:1px solid #ffc107;padding:12px;border-radius:4px;margin:16px 0;">
-                <strong>🔍 DEBUG INFO:</strong><br>
-                <code>Template: ' . htmlspecialchars($debug_tpl['template_name']) . '</code><br>
-                <code>Content length: ' . strlen($debug_tpl['template_content'] ?? '') . ' chars</code><br>
-                <code>First 300 chars: ' . htmlspecialchars(substr($debug_tpl['template_content'], 0, 300)) . '</code>
-            </div>';
-        }
-        
-        // Try the generation manually
-        $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
-        error_log('Generation result success: ' . ($result['success'] ? 'YES' : 'NO'));
-        error_log('Generation error: ' . ($result['error'] ?? 'NONE'));
-        error_log('Generated content length: ' . strlen($result['content'] ?? ''));
-        if (!$result['success']) {
-            error_log('ERROR DETAILS: ' . json_encode($result));
-        }
-        // ========== DEBUG STEP 4 END ==========
+        $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 ORDER BY company_name');
+        $customer_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Generate preview
         if ($wizard_data['template_id']) {
@@ -429,33 +425,82 @@ require_once __DIR__ . '/../admin/_header.php';
                             $current_value = $wizard_data['variables'][$var['var_name']] ?? 
                                            $var['default_value'] ?? 
                                            ($global_variables[$var['var_name']] ?? '');
-                            ?>
-                            <?php if ($var['var_type'] === 'select' && $var['options']): ?>
-                                <select name="var_<?php echo htmlspecialchars($var['var_name']); ?>" <?php echo $var['is_required'] ? 'required' : ''; ?>>
-                                    <?php
+                            
+                            switch ($var['var_type']) {
+                                case 'boolean':
+                                    $options = json_decode($var['options'], true) ?: [
+                                        ['value' => '0', 'label' => 'Nee'],
+                                        ['value' => '1', 'label' => 'Ja']
+                                    ];
+                                    echo '<select name="var_' . htmlspecialchars($var['var_name']) . '" ' . ($var['is_required'] ? 'required' : '') . '>';
+                                    foreach ($options as $opt) {
+                                        $selected = ($opt['value'] == $current_value) ? 'selected' : '';
+                                        echo '<option value="' . htmlspecialchars($opt['value']) . '" ' . $selected . '>' . 
+                                             htmlspecialchars($opt['label']) . '</option>';
+                                    }
+                                    echo '</select>';
+                                    break;
+                                    
+                                case 'select':
                                     $options = json_decode($var['options'], true) ?: [];
-                                    foreach ($options as $opt):
-                                    ?>
-                                        <option value="<?php echo htmlspecialchars($opt); ?>" <?php echo $opt === $current_value ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($opt); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            <?php elseif ($var['var_type'] === 'boolean'): ?>
-                                <input type="hidden" name="var_<?php echo htmlspecialchars($var['var_name']); ?>" value="0">
-                                <label>
-                                    <input type="checkbox" name="var_<?php echo htmlspecialchars($var['var_name']); ?>" value="1" <?php echo $current_value ? 'checked' : ''; ?>>
-                                    Ja
-                                </label>
-                            <?php else: ?>
-                                <input 
-                                    type="<?php echo $var['var_type'] === 'number' ? 'number' : 'text'; ?>" 
-                                    name="var_<?php echo htmlspecialchars($var['var_name']); ?>"
-                                    value="<?php echo htmlspecialchars($current_value); ?>"
-                                    <?php echo $var['is_required'] ? 'required' : ''; ?>
-                                    placeholder="<?php echo htmlspecialchars($var['default_value'] ?? ''); ?>"
-                                >
-                            <?php endif; ?>
+                                    echo '<select name="var_' . htmlspecialchars($var['var_name']) . '" ' . ($var['is_required'] ? 'required' : '') . '>';
+                                    echo '<option value="">-- Selecteer --</option>';
+                                    foreach ($options as $opt) {
+                                        $value = is_array($opt) ? $opt['value'] : $opt;
+                                        $label = is_array($opt) ? $opt['label'] : $opt;
+                                        $selected = ($value == $current_value) ? 'selected' : '';
+                                        echo '<option value="' . htmlspecialchars($value) . '" ' . $selected . '>' . 
+                                             htmlspecialchars($label) . '</option>';
+                                    }
+                                    echo '</select>';
+                                    break;
+                                    
+                                case 'multiselect':
+                                    $options = json_decode($var['options'], true) ?: [];
+                                    $current_values = explode(',', $current_value);
+                                    echo '<select name="var_' . htmlspecialchars($var['var_name']) . '[]" multiple size="5" ' . ($var['is_required'] ? 'required' : '') . '>';
+                                    foreach ($options as $opt) {
+                                        $value = is_array($opt) ? $opt['value'] : $opt;
+                                        $label = is_array($opt) ? $opt['label'] : $opt;
+                                        $selected = in_array($value, $current_values) ? 'selected' : '';
+                                        echo '<option value="' . htmlspecialchars($value) . '" ' . $selected . '>' . 
+                                             htmlspecialchars($label) . '</option>';
+                                    }
+                                    echo '</select>';
+                                    echo '<small style="color:#6c757d;">Houd Ctrl/Cmd ingedrukt om meerdere opties te selecteren</small>';
+                                    break;
+                                    
+                                case 'number':
+                                    $attrs = 'type="number"';
+                                    if ($var['min_value']) $attrs .= ' min="' . (int)$var['min_value'] . '"';
+                                    if ($var['max_value']) $attrs .= ' max="' . (int)$var['max_value'] . '"';
+                                    echo '<input ' . $attrs . ' name="var_' . htmlspecialchars($var['var_name']) . '" ' . 
+                                         'value="' . htmlspecialchars($current_value) . '" ' .
+                                         ($var['is_required'] ? 'required' : '') . ' ' .
+                                         'placeholder="' . htmlspecialchars($var['placeholder'] ?? '') . '">';
+                                    break;
+                                    
+                                case 'textarea':
+                                    echo '<textarea name="var_' . htmlspecialchars($var['var_name']) . '" rows="4" ' . 
+                                         ($var['is_required'] ? 'required' : '') . ' ' .
+                                         'placeholder="' . htmlspecialchars($var['placeholder'] ?? '') . '">' . 
+                                         htmlspecialchars($current_value) . '</textarea>';
+                                    break;
+                                    
+                                case 'ip_address':
+                                case 'text':
+                                default:
+                                    echo '<input type="text" name="var_' . htmlspecialchars($var['var_name']) . '" ' . 
+                                         'value="' . htmlspecialchars($current_value) . '" ' .
+                                         ($var['is_required'] ? 'required' : '') . ' ' .
+                                         'placeholder="' . htmlspecialchars($var['placeholder'] ?? $var['default_value'] ?? '') . '">';
+                                    break;
+                            }
+                            
+                            if ($var['help_text']) {
+                                echo '<small style="color:#6c757d;">' . htmlspecialchars($var['help_text']) . '</small>';
+                            }
+                            ?>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -467,24 +512,29 @@ require_once __DIR__ . '/../admin/_header.php';
             </form>
             
         <?php elseif ($step === 4): ?>
-            <!-- Step 4: Preview & Save -->
-            <h3>Stap 4: Preview & Opslaan</h3>
-            <p>Controleer de gegenereerde configuratie:</p>
+            <!-- Step 4: Customer Selection & Preview -->
+            <h3>Stap 4: Selecteer Klant & Preview</h3>
+            <p>Controleer de gegenereerde configuratie en selecteer een klant:</p>
             
             <div class="config-preview"><?php echo htmlspecialchars($wizard_data['config_content']); ?></div>
             
             <form method="post" style="margin-top:16px;">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
-                <input type="hidden" name="action" value="save_config">
+                <input type="hidden" name="action" value="select_customer">
                 
                 <div class="form-group">
-                    <label>Selecteer PABX *</label>
-                    <select name="pabx_id" required>
-                        <option value="">-- Kies PABX --</option>
-                        <?php foreach ($pabx_list as $p): ?>
-                            <option value="<?php echo (int)$p['id']; ?>"><?php echo htmlspecialchars($p['pabx_name']); ?></option>
+                    <label>Selecteer Klant <?php if ($device_id): ?>*<?php endif; ?></label>
+                    <select name="customer_id" <?php if ($device_id): ?>required<?php endif; ?>>
+                        <option value="">-- Selecteer klant --</option>
+                        <?php foreach ($customer_list as $c): ?>
+                            <option value="<?php echo (int)$c['id']; ?>">
+                                <?php echo htmlspecialchars($c['customer_code'] . ' - ' . $c['company_name']); ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
+                    <?php if (!$device_id): ?>
+                        <small style="color:#6c757d;">Optioneel wanneer geen device is geselecteerd</small>
+                    <?php endif; ?>
                 </div>
                 
                 <div style="display:flex;gap:8px;margin-top:16px;">
