@@ -37,12 +37,13 @@ try {
     $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Fetch distinct device types for filter dropdown
-    $types_stmt = $pdo->query('
+    $types_stmt = $pdo->prepare('
         SELECT DISTINCT dt.id, dt.type_name 
         FROM device_types dt
         INNER JOIN devices d ON d.device_type_id = dt.id
         ORDER BY dt.type_name ASC
     ');
+    $types_stmt->execute();
     $device_types = $types_stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('Failed to fetch devices: ' . $e->getMessage());
@@ -352,7 +353,10 @@ require_once __DIR__ . '/../admin/_header.php';
                     // Create "no results" row
                     noResultsRow = document.createElement('tr');
                     noResultsRow.id = 'noResultsRow';
-                    noResultsRow.innerHTML = '<td colspan="8" class="no-results">Geen resultaten gevonden. Probeer andere zoektermen of filters.</td>';
+                    // Dynamically calculate colspan based on number of header columns
+                    const headerCells = document.querySelectorAll('table thead th');
+                    const colspan = headerCells.length;
+                    noResultsRow.innerHTML = '<td colspan="' + colspan + '" class="no-results">Geen resultaten gevonden. Probeer andere zoektermen of filters.</td>';
                     tableBody.appendChild(noResultsRow);
                 } else if (!show && noResultsRow) {
                     // Remove "no results" row
