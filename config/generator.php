@@ -98,7 +98,7 @@ function apply_variables_to_content($content, $variables) {
     }
     
     // Check for any remaining unreplaced placeholders
-    preg_match_all('/\{\{([A-Z_]+)\}\}/', $content, $matches);
+    preg_match_all('/\{\{([A-Za-z0-9_]+)\}\}/', $content, $matches);
     if (!empty($matches[1])) {
         error_log('WARNING: Unreplaced placeholders found: ' . implode(', ', $matches[1]));
     }
@@ -125,7 +125,7 @@ function apply_yealink_formatting($content) {
     
     // Normalize whitespace around equals signs in key=value pairs
     // This handles patterns like "key = value" or "key  =  value" -> "key=value"
-    $content = preg_replace('/^([a-zA-Z0-9._\[\]]+)\s*=\s*(.*)$/m', '$1=$2', $content);
+    $content = preg_replace('/^([a-zA-Z0-9._\\[\\]]+)\s*=\s*(.*)$/m', '$1=$2', $content);
     
     // Remove trailing whitespace from each line
     $content = preg_replace('/[ \t]+$/m', '', $content);
