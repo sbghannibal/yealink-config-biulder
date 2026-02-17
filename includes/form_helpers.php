@@ -7,6 +7,25 @@
  */
 
 /**
+ * Parse comma-separated values into an array
+ * Handles both array input and comma-separated string
+ * 
+ * @param mixed $value Value to parse (array or comma-separated string)
+ * @return array Array of trimmed values
+ */
+function parse_comma_separated_values($value) {
+    if (is_array($value)) {
+        return $value;
+    }
+    
+    if (empty($value)) {
+        return [];
+    }
+    
+    return array_filter(array_map('trim', explode(',', $value)));
+}
+
+/**
  * Render an input field based on variable type
  * 
  * @param array $variable Variable definition from template_variables table
@@ -282,7 +301,7 @@ function render_select_input($variable, $current_value, $input_name) {
  */
 function render_multiselect_input($variable, $current_value, $input_name) {
     $options = json_decode($variable['options'], true) ?: [];
-    $current_values = is_array($current_value) ? $current_value : array_filter(array_map('trim', explode(',', $current_value ?: '')));
+    $current_values = parse_comma_separated_values($current_value);
     
     $html = '<select name="' . htmlspecialchars($input_name) . '[]" ';
     $html .= 'id="' . htmlspecialchars($input_name) . '" ';
@@ -342,7 +361,7 @@ function render_radio_input($variable, $current_value, $input_name) {
  */
 function render_checkbox_group_input($variable, $current_value, $input_name) {
     $options = json_decode($variable['options'], true) ?: [];
-    $current_values = is_array($current_value) ? $current_value : array_filter(array_map('trim', explode(',', $current_value ?: '')));
+    $current_values = parse_comma_separated_values($current_value);
     
     $html = '<div style="display:flex;flex-direction:column;gap:8px;">';
     

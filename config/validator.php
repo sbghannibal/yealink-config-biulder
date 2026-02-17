@@ -175,9 +175,11 @@ function validate_date($value) {
  * Validate array values (for multiselect and checkbox_group)
  */
 function validate_array_value($value, $variable) {
-    // Value should be comma-separated string or array
+    // Parse comma-separated values
     if (is_array($value)) {
         $values = $value;
+    } elseif (empty($value)) {
+        $values = [];
     } else {
         $values = array_filter(array_map('trim', explode(',', $value)));
     }
