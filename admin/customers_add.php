@@ -136,7 +136,7 @@ require_once __DIR__ . '/_header.php';
 
             <div style="display:flex; gap:8px;">
                 <button class="btn" type="submit">Aanmaken</button>
-                <a class="btn" href="/admin/customers.php" style="background:#6c757d; align-self:center;">Annuleren</a>
+                <a class="btn" href="/admin/customers.php" style="background:#6c757d;">Annuleren</a>
             </div>
         </form>
     </div>

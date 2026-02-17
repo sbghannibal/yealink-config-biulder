@@ -86,8 +86,8 @@ try {
     }
     
     $sql .= " ORDER BY d.created_at DESC LIMIT ? OFFSET ?";
-    $params[] = $per_page;
-    $params[] = $offset;
+    $params[] = (int)$per_page;
+    $params[] = (int)$offset;
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);

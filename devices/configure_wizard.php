@@ -5,6 +5,9 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/generator.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
+// Default PABX name for customer-based configurations
+define('DEFAULT_CUSTOMER_PABX_NAME', 'Customer-Based');
+
 // Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -156,13 +159,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Check if we can save config - we need a dummy pabx_id for backward compatibility
                         // Let's create a default customer-based pabx entry if needed
                         $stmt = $pdo->prepare('SELECT id FROM pabx WHERE pabx_name = ? LIMIT 1');
-                        $stmt->execute(['Customer-Based']);
+                        $stmt->execute([DEFAULT_CUSTOMER_PABX_NAME]);
                         $default_pabx = $stmt->fetch();
                         
                         if (!$default_pabx) {
                             // Create a default pabx entry for customer-based configs
                             $stmt = $pdo->prepare('INSERT INTO pabx (pabx_name, pabx_ip, pabx_type, is_active, created_by) VALUES (?, ?, ?, 1, ?)');
-                            $stmt->execute(['Customer-Based', '0.0.0.0', 'Generic', $admin_id]);
+                            $stmt->execute([DEFAULT_CUSTOMER_PABX_NAME, '0.0.0.0', 'Generic', $admin_id]);
                             $pabx_id = $pdo->lastInsertId();
                         } else {
                             $pabx_id = $default_pabx['id'];
@@ -472,8 +475,8 @@ require_once __DIR__ . '/../admin/_header.php';
                                     
                                 case 'number':
                                     $attrs = 'type="number"';
-                                    if ($var['min_value']) $attrs .= ' min="' . (int)$var['min_value'] . '"';
-                                    if ($var['max_value']) $attrs .= ' max="' . (int)$var['max_value'] . '"';
+                                    if ($var['min_value'] !== null) $attrs .= ' min="' . (int)$var['min_value'] . '"';
+                                    if ($var['max_value'] !== null) $attrs .= ' max="' . (int)$var['max_value'] . '"';
                                     echo '<input ' . $attrs . ' name="var_' . htmlspecialchars($var['var_name']) . '" ' . 
                                          'value="' . htmlspecialchars($current_value) . '" ' .
                                          ($var['is_required'] ? 'required' : '') . ' ' .
