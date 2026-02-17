@@ -7,90 +7,89 @@ START TRANSACTION;
 UPDATE roles SET 
     role_name = 'Owner',
     description = 'Full system access - can manage users, roles, and all features'
-WHERE id = 1; -- Current Admin becomes Owner
+WHERE role_name = 'Admin'; -- Current Admin becomes Owner
 
 UPDATE roles SET 
     role_name = 'Expert',
     description = 'Advanced access - everything except user/role management'
-WHERE id = 2; -- Current Manager becomes Expert
+WHERE role_name = 'Manager'; -- Current Manager becomes Expert
 
 UPDATE roles SET 
     role_name = 'Tech',
     description = 'Basic access - manage customers and devices'
-WHERE id = 3; -- Current Operator becomes Tech
+WHERE role_name = 'Operator'; -- Current Operator becomes Tech
 
--- Step 2: Delete unused Viewer role
-DELETE FROM role_permissions WHERE role_id = 4;
-DELETE FROM admin_roles WHERE role_id = 4;
-DELETE FROM roles WHERE id = 4;
+-- Step 2: Delete unused Viewer role (get its ID first)
+DELETE FROM role_permissions WHERE role_id IN (SELECT id FROM roles WHERE role_name = 'Viewer');
+DELETE FROM admin_roles WHERE role_id IN (SELECT id FROM roles WHERE role_name = 'Viewer');
+DELETE FROM roles WHERE role_name = 'Viewer';
 
--- Step 3: Clear existing permissions (we'll reassign properly)
-DELETE FROM role_permissions WHERE role_id IN (1, 2, 3);
+-- Step 3: Clear existing permissions for the renamed roles (we'll reassign properly)
+DELETE FROM role_permissions WHERE role_id IN (
+    SELECT id FROM roles WHERE role_name IN ('Owner', 'Expert', 'Tech')
+);
 
--- Step 4: Assign permissions to OWNER (role_id = 1)
+-- Step 4: Assign permissions to OWNER
 -- Owner has EVERYTHING
-INSERT INTO role_permissions (role_id, permission) VALUES
-(1, 'admin.accounts.manage'),
-(1, 'admin.audit.view'),
-(1, 'admin.device_types.manage'),
-(1, 'admin.manage'),
-(1, 'admin.roles.manage'),
-(1, 'admin.settings.edit'),
-(1, 'admin.templates.manage'),
-(1, 'admin.tokens.manage'),
-(1, 'admin.users.create'),
-(1, 'admin.users.delete'),
-(1, 'admin.users.edit'),
-(1, 'admin.users.view'),
-(1, 'admin.variables.manage'),
-(1, 'config.manage'),
-(1, 'devices.create'),
-(1, 'devices.edit'),
-(1, 'devices.delete'),
-(1, 'devices.view'),
-(1, 'devices.manage'),
-(1, 'customers.create'),
-(1, 'customers.edit'),
-(1, 'customers.delete'),
-(1, 'customers.view'),
-(1, 'variables.manage');
+INSERT INTO role_permissions (role_id, permission) 
+SELECT id, 'admin.accounts.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.audit.view' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.device_types.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.roles.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.settings.edit' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.templates.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.tokens.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.users.create' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.users.delete' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.users.edit' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.users.view' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'admin.variables.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'config.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'devices.create' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'devices.edit' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'devices.delete' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'devices.view' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'devices.manage' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'customers.create' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'customers.edit' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'customers.delete' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'customers.view' FROM roles WHERE role_name = 'Owner'
+UNION ALL SELECT id, 'variables.manage' FROM roles WHERE role_name = 'Owner';
 
--- Step 5: Assign permissions to EXPERT (role_id = 2)
+-- Step 5: Assign permissions to EXPERT
 -- Expert: Everything EXCEPT user/role management
-INSERT INTO role_permissions (role_id, permission) VALUES
-(2, 'admin.accounts.manage'),
-(2, 'admin.audit.view'),
-(2, 'admin.device_types.manage'),
-(2, 'admin.settings.edit'),
-(2, 'admin.templates.manage'),
-(2, 'admin.tokens.manage'),
-(2, 'admin.variables.manage'),
-(2, 'config.manage'),
-(2, 'devices.create'),
-(2, 'devices.edit'),
-(2, 'devices.delete'),
-(2, 'devices.view'),
-(2, 'devices.manage'),
-(2, 'customers.create'),
-(2, 'customers.edit'),
-(2, 'customers.delete'),
-(2, 'customers.view'),
-(2, 'variables.manage');
+INSERT INTO role_permissions (role_id, permission)
+SELECT id, 'admin.accounts.manage' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'admin.audit.view' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'admin.device_types.manage' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'admin.settings.edit' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'admin.templates.manage' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'admin.tokens.manage' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'admin.variables.manage' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'config.manage' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'devices.create' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'devices.edit' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'devices.delete' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'devices.view' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'devices.manage' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'customers.create' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'customers.edit' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'customers.delete' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'customers.view' FROM roles WHERE role_name = 'Expert'
+UNION ALL SELECT id, 'variables.manage' FROM roles WHERE role_name = 'Expert';
 
--- Step 6: Assign permissions to TECH (role_id = 3)
+-- Step 6: Assign permissions to TECH
 -- Tech: Only customers and devices
-INSERT INTO role_permissions (role_id, permission) VALUES
-(3, 'devices.create'),
-(3, 'devices.edit'),
-(3, 'devices.delete'),
-(3, 'devices.view'),
-(3, 'devices.manage'),
-(3, 'customers.create'),
-(3, 'customers.edit'),
-(3, 'customers.view'),
-(3, 'config.manage');  -- Can use config wizard
-
--- Step 7: Update current admin user to Owner role (already done, but ensure it)
--- admin_roles should already have admin (id=1) linked to role 1 (now Owner)
+INSERT INTO role_permissions (role_id, permission)
+SELECT id, 'devices.create' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'devices.edit' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'devices.delete' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'devices.view' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'devices.manage' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'customers.create' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'customers.edit' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'customers.view' FROM roles WHERE role_name = 'Tech'
+UNION ALL SELECT id, 'config.manage' FROM roles WHERE role_name = 'Tech';  -- Can use config wizard
 
 COMMIT;
