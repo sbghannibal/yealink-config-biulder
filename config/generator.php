@@ -73,4 +73,69 @@ function generate_config_from_template($pdo, $template_id, $variable_values = []
         return ['success' => false, 'content' => '', 'error' => 'Fout bij genereren configuratie: ' . $e->getMessage()];
     }
 }
+
+/**
+ * Apply variables to template content
+ * Replaces {{VARIABLE_NAME}} placeholders with actual values
+ * 
+ * @param string $content Template content with placeholders
+ * @param array $variables Associative array of variable names and values
+ * @return string Content with placeholders replaced by actual values
+ */
+function apply_variables_to_content($content, $variables) {
+    error_log('=== APPLY VARIABLES START ===');
+    error_log('Content length: ' . strlen($content));
+    error_log('Variables count: ' . count($variables));
+    
+    // Replace all {{VARIABLE}} placeholders with their values
+    foreach ($variables as $key => $value) {
+        $placeholder = '{{' . $key . '}}';
+        $count = 0;
+        $content = str_replace($placeholder, $value, $content, $count);
+        if ($count > 0) {
+            error_log("Replaced $placeholder with '$value' ($count occurrence(s))");
+        }
+    }
+    
+    // Check for any remaining unreplaced placeholders
+    preg_match_all('/\{\{([A-Za-z0-9_]+)\}\}/', $content, $matches);
+    if (!empty($matches[1])) {
+        error_log('WARNING: Unreplaced placeholders found: ' . implode(', ', $matches[1]));
+    }
+    
+    error_log('Final content length: ' . strlen($content));
+    error_log('=== APPLY VARIABLES END ===');
+    
+    return $content;
+}
+
+/**
+ * Apply Yealink-specific formatting to config content
+ * Ensures proper .cfg file format with Unix line endings
+ * 
+ * @param string $content Configuration content to format
+ * @return string Formatted content suitable for Yealink devices
+ */
+function apply_yealink_formatting($content) {
+    error_log('=== APPLY YEALINK FORMATTING START ===');
+    error_log('Input content length: ' . strlen($content));
+    
+    // Convert to Unix line endings (LF only)
+    $content = str_replace(["\r\n", "\r"], "\n", $content);
+    
+    // Normalize whitespace around equals signs in key=value pairs
+    // This handles patterns like "key = value" or "key  =  value" -> "key=value"
+    $content = preg_replace('/^([a-zA-Z0-9._\\[\\]]+)\s*=\s*(.*)$/m', '$1=$2', $content);
+    
+    // Remove trailing whitespace from each line
+    $content = preg_replace('/[ \t]+$/m', '', $content);
+    
+    // Ensure file ends with a single newline
+    $content = rtrim($content) . "\n";
+    
+    error_log('Output content length: ' . strlen($content));
+    error_log('=== APPLY YEALINK FORMATTING END ===');
+    
+    return $content;
+}
 ?>
