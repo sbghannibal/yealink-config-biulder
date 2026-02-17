@@ -14,7 +14,7 @@ $admin_id = (int) $_SESSION['admin_id'];
 // Permission required to manage tokens
 if (!has_permission($pdo, $admin_id, 'admin.tokens.manage')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    header('Location: /access_denied.php');
     exit;
 }
 

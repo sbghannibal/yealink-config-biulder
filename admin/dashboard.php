@@ -371,6 +371,7 @@ require_once __DIR__ . '/_header.php';
         <?php endif; ?>
     </section>
 
+    <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
     <section class="card">
         <h2>📝 Recente Activiteit</h2>
         <?php if (empty($stats['recent_audit'])): ?>
@@ -405,6 +406,7 @@ require_once __DIR__ . '/_header.php';
             </table>
         <?php endif; ?>
     </section>
+    <?php endif; ?>
 
     <div class="button-group">
         <a class="btn" href="/admin/users.php">👥 Gebruikers Beheren</a>

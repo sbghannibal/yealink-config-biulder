@@ -39,7 +39,8 @@ function get_admin_permissions($pdo, $admin_id) {
 function check_permission($admin_id, $required_permission) {
     if (!has_permission($GLOBALS['pdo'], $admin_id, $required_permission)) {
         http_response_code(403);
-        die('Insufficient permissions');
+        header('Location: /access_denied.php');
+        exit;
     }
 }
 
