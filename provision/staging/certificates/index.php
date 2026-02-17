@@ -2,9 +2,11 @@
 /**
  * Certificate Download Endpoint
  * 
- * Serves:
+ * Serves shared certificates for all devices:
  * - ca.crt (Yealink Root CA)
- * - device_*.crt (Device-specific certificates)
+ * - server.crt (Shared server certificate)
+ * 
+ * Security: Uses shared certificates to prevent MAC spoofing attacks
  */
 
 require_once __DIR__ . '/../../../config/database.php';

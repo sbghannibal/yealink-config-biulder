@@ -145,7 +145,10 @@ require_once __DIR__ . '/_header.php';
 </h2>
 
 <div class="warning-box">
-    <strong>⚠️ VERTROUWELIJKE INFORMATIE</strong><br>
+    <strong>⚠️ CONFIDENTIAL INFORMATION / VERTROUWELIJKE INFORMATIE</strong><br>
+    These credentials provide access to staging provisioning endpoints. 
+    Share this information only with trusted personnel. This page is accessible only to Owner role.
+    <br><br>
     Deze credentials geven toegang tot de staging provisioning endpoints. 
     Deel deze informatie alleen met vertrouwde personen. Deze pagina is alleen toegankelijk voor Owner-rol.
 </div>

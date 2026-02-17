@@ -100,7 +100,7 @@ unzip firmware.zip
 find . -name "*.crt" -o -name "*.pem"
 ```
 
-### Step 2: Upload CA Certificate
+### Step 3: Upload CA Certificate
 
 1. Go to Admin → Staging Certs
 2. Scroll to "1️⃣ Upload Root CA Certificate"
@@ -110,17 +110,16 @@ find . -name "*.crt" -o -name "*.pem"
 
 **Verify:** You should see "✅ CA Certificate: Present"
 
-### Step 3: Create Device Certificates
+### Step 4: Upload Server Certificate
 
-For each Yealink phone:
-1. Get the phone's MAC address (Menu → Information → MAC)
-2. Go to Admin → Staging Certs
-3. Enter MAC address (format: 00:15:65:AA:BB:20)
-4. Click "Generate Certificate"
+1. Go to Admin → Staging Certs
+2. Scroll to "2️⃣ Upload Server Certificate"
+3. Upload the shared server certificate
+4. This certificate is used by ALL devices
 
-**Note:** Currently creates placeholder. Certificate generation will be added in next phase.
+**Note:** We use shared certificates (not per-device) to prevent MAC spoofing attacks.
 
-### Step 4: Test Boot Configuration Download
+### Step 5: Test Boot Configuration Download
 
 **Method A: Browser with Authentication (Simulation)**
 ```
@@ -141,7 +140,7 @@ device_mac=00:15:65:AA:BB:20
 
 [CERTIFICATE]
 static.trusted_certificates.url=http://yealink-cfg.eu/provision/staging/certificates/ca.crt
-static.server_certificates.url=http://yealink-cfg.eu/provision/staging/certificates/device_001565aabb20.crt
+static.server_certificates.url=http://yealink-cfg.eu/provision/staging/certificates/server.crt
 static.security.dev_cert=1
 
 [AUTO_PROVISION]
@@ -154,7 +153,7 @@ feature.reboot_on_new_config=1
 static.provisioning.protocol=https
 ```
 
-### Step 5: Configure Phone for Auto-Provisioning
+### Step 6: Configure Phone for Auto-Provisioning
 
 **Via DHCP Option 66 (with authentication):**
 ```
@@ -203,8 +202,6 @@ Or **Manual Configuration:**
 - Configure via DHCP with embedded credentials
 
 ---
-
-## Phase 3: Advanced Security (Optional - Later)
 
 ## Phase 3: Advanced Security (Optional - Later)
 
