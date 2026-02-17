@@ -32,13 +32,13 @@ function get_setting($pdo, $key, $default = '') {
 }
 
 function upsert_setting($pdo, $key, $value) {
-    // Try update, if affected rows == 0 try insert
-    $stmt = $pdo->prepare('UPDATE settings SET setting_value = ? WHERE setting_key = ?');
-    $stmt->execute([$value, $key]);
-    if ($stmt->rowCount() === 0) {
-        $ins = $pdo->prepare('INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)');
-        $ins->execute([$key, $value]);
-    }
+    // Use INSERT ... ON DUPLICATE KEY UPDATE for atomic upsert
+    $stmt = $pdo->prepare('
+        INSERT INTO settings (setting_key, setting_value) 
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+    ');
+    $stmt->execute([$key, $value]);
 }
 
 $error = '';
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             $pdo->rollBack();
             error_log('settings save error: ' . $e->getMessage());
-            $error = 'Kon instellingen niet opslaan.';
+            $error = 'Kon instellingen niet opslaan: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')';
         }
     }
 }
