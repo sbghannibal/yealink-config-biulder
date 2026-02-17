@@ -43,3 +43,9 @@ INNER JOIN pabx p ON d.pabx_id = p.id
 INNER JOIN customers c ON c.customer_code = CONCAT('MIGRATED_', p.id)
 SET d.customer_id = c.id
 WHERE d.pabx_id IS NOT NULL;
+
+-- Add customer management permissions to roles
+INSERT IGNORE INTO role_permissions (role_id, permission)
+SELECT r.id, 'admin.customers.manage'
+FROM roles r
+WHERE r.name IN ('super_admin', 'admin');
