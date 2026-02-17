@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `provision_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `device_id` INT NOT NULL,
+  `device_id` INT NULL,
   `mac_address` VARCHAR(17),
   `ip_address` VARCHAR(45),
   `user_agent` VARCHAR(255),

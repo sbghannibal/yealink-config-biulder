@@ -67,6 +67,23 @@ if (in_array('Owner', $user_roles)) {
             background: #f5f5f5;
         }
         
+        .badge-common {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+        
+        .badge-active {
+            background: #28a745;
+        }
+        
+        .badge-inactive {
+            background: #dc3545;
+        }
+        
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -338,12 +355,12 @@ if (in_array('Owner', $user_roles)) {
                     <strong><?php echo htmlspecialchars($admin['username']); ?></strong>
                     <!-- Status badge -->
                     <?php if ($admin['is_active']): ?>
-                        <span class="badge badge-active" style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 4px;">✅ Active</span>
+                        <span class="badge badge-common badge-active">✅ Active</span>
                     <?php else: ?>
-                        <span class="badge badge-inactive" style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 4px;">⏸️ Inactive</span>
+                        <span class="badge badge-common badge-inactive">⏸️ Inactive</span>
                     <?php endif; ?>
                     <!-- Role badge -->
-                    <span class="badge badge-role" style="background: <?php echo $role_badge_color; ?>; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 4px;">
+                    <span class="badge badge-common" style="background: <?php echo $role_badge_color; ?>;">
                         <?php echo htmlspecialchars($user_role_display); ?>
                     </span>
                     <small><?php echo htmlspecialchars($admin['email']); ?></small>

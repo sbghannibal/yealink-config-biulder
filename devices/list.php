@@ -448,7 +448,6 @@ require_once __DIR__ . '/../admin/_header.php';
                                         <a href="/download_device_config.php?device_id=<?php echo (int)$d['id']; ?>&mac=<?php echo urlencode($d['mac_address']); ?>" 
                                            class="btn" 
                                            title="Download config voor <?php echo htmlspecialchars($d['device_name']); ?>"
-                                           target="_blank"
                                            style="background: #17a2b8; color: white;">
                                             📥 Download
                                         </a>

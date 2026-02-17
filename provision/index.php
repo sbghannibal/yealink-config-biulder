@@ -64,15 +64,6 @@ try {
         exit('Device not found or not active');
     }
     
-    // Check if provision is enabled (optional security feature)
-    // Note: This column may not exist, so we'll check if it's set
-    $provision_enabled = isset($device['provision_enabled']) ? $device['provision_enabled'] : true;
-    if (!$provision_enabled) {
-        error_log("Provisioning disabled for device MAC: $mac");
-        http_response_code(403);
-        exit('Provisioning disabled for this device');
-    }
-    
     if (!$device['config_version_id']) {
         error_log("No config assigned for device: $mac");
         
@@ -91,16 +82,24 @@ try {
         exit('No configuration assigned');
     }
     
-    // Get config content
-    $stmt = $pdo->prepare('SELECT config_content FROM config_versions WHERE id = ?');
+    // Get config content and PABX info
+    $stmt = $pdo->prepare('
+        SELECT cv.config_content, cv.pabx_id,
+               p.pabx_name, p.pabx_ip, p.pabx_port, p.pabx_type
+        FROM config_versions cv
+        LEFT JOIN pabx p ON cv.pabx_id = p.id
+        WHERE cv.id = ?
+    ');
     $stmt->execute([$device['config_version_id']]);
-    $config = $stmt->fetchColumn();
+    $config_data = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if (!$config) {
+    if (!$config_data || !$config_data['config_content']) {
         error_log("Config not found for device: $mac");
         http_response_code(404);
         exit('Configuration not found');
     }
+    
+    $config = $config_data['config_content'];
     
     // Apply device-specific variables to the config
     $device_variables = [
@@ -109,6 +108,14 @@ try {
         'DEVICE_IP' => $device['ip_address'] ?? '',
         'DEVICE_MODEL' => $device['model'] ?? '',
     ];
+    
+    // Add PABX variables if available
+    if ($config_data['pabx_id']) {
+        $device_variables['PABX_NAME'] = $config_data['pabx_name'] ?? '';
+        $device_variables['PABX_IP'] = $config_data['pabx_ip'] ?? '';
+        $device_variables['PABX_PORT'] = $config_data['pabx_port'] ?? '';
+        $device_variables['PABX_TYPE'] = $config_data['pabx_type'] ?? '';
+    }
     
     // Apply variables to config content
     $config = apply_variables_to_content($config, $device_variables);

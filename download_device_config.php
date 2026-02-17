@@ -66,15 +66,23 @@ try {
         exit('No configuration assigned to this device');
     }
     
-    // Get config content
-    $stmt = $pdo->prepare('SELECT config_content FROM config_versions WHERE id = ?');
+    // Get config content and PABX info
+    $stmt = $pdo->prepare('
+        SELECT cv.config_content, cv.pabx_id,
+               p.pabx_name, p.pabx_ip, p.pabx_port, p.pabx_type
+        FROM config_versions cv
+        LEFT JOIN pabx p ON cv.pabx_id = p.id
+        WHERE cv.id = ?
+    ');
     $stmt->execute([$device['config_version_id']]);
-    $config_content = $stmt->fetchColumn();
+    $config_data = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if (!$config_content) {
+    if (!$config_data || !$config_data['config_content']) {
         http_response_code(404);
         exit('Configuration not found');
     }
+    
+    $config_content = $config_data['config_content'];
     
     // Apply device-specific variables to the config
     // Remove colons from MAC for some variables
@@ -87,9 +95,13 @@ try {
         'DEVICE_MODEL' => $device['model_name'] ?? '',
     ];
     
-    // Get PABX variables if assigned
-    // Note: This assumes there's a pabx_id in the device or config
-    // For now, we'll just apply device variables
+    // Add PABX variables if available
+    if ($config_data['pabx_id']) {
+        $device_variables['PABX_NAME'] = $config_data['pabx_name'] ?? '';
+        $device_variables['PABX_IP'] = $config_data['pabx_ip'] ?? '';
+        $device_variables['PABX_PORT'] = $config_data['pabx_port'] ?? '';
+        $device_variables['PABX_TYPE'] = $config_data['pabx_type'] ?? '';
+    }
     
     // Apply variables to config content
     $config_content = apply_variables_to_content($config_content, $device_variables);
