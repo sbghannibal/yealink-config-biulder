@@ -394,6 +394,12 @@ if (in_array('Owner', $user_roles)) {
         </a>
         <?php endif; ?>
         
+        <?php if ($can_use_wizard): ?>
+        <a href="/admin/staging_certificates.php" class="<?php echo $current_page === 'staging_certificates.php' ? 'active' : ''; ?>">
+            🔐 Staging Certs
+        </a>
+        <?php endif; ?>
+        
         <?php if ($can_manage_templates): ?>
         <a href="/admin/templates.php" class="<?php echo $current_page === 'templates.php' ? 'active' : ''; ?>">
             📋 Templates
