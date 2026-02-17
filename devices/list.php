@@ -65,6 +65,9 @@ try {
                 JOIN device_config_assignments dca ON dca.config_version_id = cv.id 
                 WHERE dca.device_id = d.id 
                 ORDER BY cv.id DESC LIMIT 1) as latest_version,
+               (SELECT dca.config_version_id FROM device_config_assignments dca 
+                WHERE dca.device_id = d.id 
+                ORDER BY dca.assigned_at DESC LIMIT 1) as config_version_id,
                (SELECT COUNT(*) FROM provision_logs pl 
                 WHERE pl.device_id = d.id) as download_count
         FROM devices d 
@@ -440,6 +443,20 @@ require_once __DIR__ . '/../admin/_header.php';
                                 <div class="action-buttons">
                                     <a class="btn" href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>" style="background: #28a745; color: white;">⚙️ Config</a>
                                     <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>" style="background: #007bff; color: white;">✏️ Bewerken</a>
+                                    <!-- NEW Download button -->
+                                    <?php if ($d['config_version_id']): ?>
+                                        <a href="/download_device_config.php?device_id=<?php echo (int)$d['id']; ?>&mac=<?php echo urlencode($d['mac_address']); ?>" 
+                                           class="btn" 
+                                           title="Download config voor <?php echo htmlspecialchars($d['device_name']); ?>"
+                                           target="_blank"
+                                           style="background: #17a2b8; color: white;">
+                                            📥 Download
+                                        </a>
+                                    <?php else: ?>
+                                        <button class="btn" disabled title="Geen config toegewezen aan dit device" style="background: #6c757d; color: white; cursor: not-allowed; opacity: 0.6;">
+                                            📥 Download
+                                        </button>
+                                    <?php endif; ?>
                                     <a class="btn" href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>" onclick="return confirm('Weet je zeker dat je dit device wilt verwijderen?');" style="background: #dc3545; color: white;">🗑️ Verwijderen</a>
                                 </div>
                             </td>
