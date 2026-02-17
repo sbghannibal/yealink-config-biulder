@@ -13,6 +13,22 @@ if (!isset($_SESSION['admin_id'])) {
 $admin_id = (int) $_SESSION['admin_id'];
 $username = $_SESSION['username'] ?? 'Admin';
 
+// Load dashboard settings
+function get_setting($pdo, $key, $default = '') {
+    try {
+        $stmt = $pdo->prepare('SELECT setting_value FROM settings WHERE setting_key = ? LIMIT 1');
+        $stmt->execute([$key]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row['setting_value'] : $default;
+    } catch (Exception $e) {
+        error_log('Error loading setting ' . $key . ': ' . $e->getMessage());
+        return $default;
+    }
+}
+
+$dashboard_title = get_setting($pdo, 'dashboard_title', 'Welkom bij Yealink Config Builder');
+$dashboard_text = get_setting($pdo, 'dashboard_text', "Gebruik het menu om devices en configuraties te beheren.\n\nJe kunt deze tekst aanpassen via Admin → Instellingen.");
+
 $stats = [
     'admins' => 0,
     'devices' => 0,
@@ -233,10 +249,25 @@ require_once __DIR__ . '/_header.php';
             flex-wrap: wrap;
             margin-top: 20px;
         }
+        
+        .dashboard-text-box {
+            margin-top: 12px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
 
     <div class="topbar">
-        <h1>📊 Admin Dashboard</h1>
+        <div style="flex: 1;">
+            <h1>📊 <?php echo htmlspecialchars($dashboard_title); ?></h1>
+            <?php if (!empty($dashboard_text)): ?>
+                <div class="dashboard-text-box">
+                    <?php echo nl2br(htmlspecialchars($dashboard_text)); ?>
+                </div>
+            <?php endif; ?>
+        </div>
         <div class="topbar-right">
             Ingelogd als: <strong><?php echo htmlspecialchars($username); ?></strong>
         </div>
