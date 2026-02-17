@@ -22,6 +22,18 @@ $can_view_accounts = has_permission($pdo, $admin_id, 'admin.accounts.manage');
 $can_manage_users = has_permission($pdo, $admin_id, 'admin.users.view');
 $can_edit_settings = has_permission($pdo, $admin_id, 'admin.settings.edit');
 
+// Check if user is Owner (for staging credentials access)
+$stmt_roles = $pdo->prepare('
+    SELECT r.role_name 
+    FROM admin_roles ar
+    JOIN roles r ON r.id = ar.role_id
+    WHERE ar.admin_id = ?
+');
+$stmt_roles->execute([$admin_id]);
+$admin_roles = $stmt_roles->fetchAll(PDO::FETCH_COLUMN);
+$is_owner = in_array('Owner', $admin_roles);
+
+
 // Get current admin info including status and roles
 $stmt = $pdo->prepare('SELECT username, email, is_active FROM admins WHERE id = ?');
 $stmt->execute([$admin_id]);
@@ -391,6 +403,18 @@ if (in_array('Owner', $user_roles)) {
         <?php if ($can_use_wizard): ?>
         <a href="/devices/configure_wizard.php" class="<?php echo $current_page === 'configure_wizard.php' ? 'active' : ''; ?>">
             ⚙️ Config Wizard
+        </a>
+        <?php endif; ?>
+        
+        <?php if ($can_use_wizard): ?>
+        <a href="/admin/staging_certificates.php" class="<?php echo $current_page === 'staging_certificates.php' ? 'active' : ''; ?>">
+            🔐 Staging Certs
+        </a>
+        <?php endif; ?>
+        
+        <?php if ($is_owner): ?>
+        <a href="/admin/staging_credentials.php" class="<?php echo $current_page === 'staging_credentials.php' ? 'active' : ''; ?>" style="background: rgba(220, 53, 69, 0.1);">
+            🔑 Credentials
         </a>
         <?php endif; ?>
         
