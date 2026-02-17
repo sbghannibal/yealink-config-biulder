@@ -249,13 +249,22 @@ require_once __DIR__ . '/_header.php';
             flex-wrap: wrap;
             margin-top: 20px;
         }
+        
+        .dashboard-text-box {
+            margin-top: 12px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: pre-line;
+        }
     </style>
 
     <div class="topbar">
         <div style="flex: 1;">
             <h1>📊 <?php echo htmlspecialchars($dashboard_title); ?></h1>
             <?php if (!empty($dashboard_text)): ?>
-                <div style="margin-top: 12px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: pre-line;">
+                <div class="dashboard-text-box">
                     <?php echo nl2br(htmlspecialchars($dashboard_text)); ?>
                 </div>
             <?php endif; ?>
