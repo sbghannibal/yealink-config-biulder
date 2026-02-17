@@ -3,7 +3,9 @@ $page_title = 'Config Wizard';
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/generator.php';
+require_once __DIR__ . '/../config/validator.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/form_helpers.php';
 
 // Default PABX name for customer-based configurations
 define('DEFAULT_CUSTOMER_PABX_NAME', 'Customer-Based');
@@ -419,92 +421,15 @@ require_once __DIR__ . '/../admin/_header.php';
                     <p style="color:#666;">Dit template heeft geen specifieke variabelen. Globale variabelen worden automatisch toegepast.</p>
                 <?php else: ?>
                     <?php foreach ($template_variables as $var): ?>
-                        <div class="var-input">
-                            <label>
-                                <strong><?php echo htmlspecialchars($var['var_label'] ?: $var['var_name']); ?></strong>
-                                <?php if ($var['is_required']): ?><span style="color:red;">*</span><?php endif; ?>
-                            </label>
-                            <?php
-                            $current_value = $wizard_data['variables'][$var['var_name']] ?? 
-                                           $var['default_value'] ?? 
-                                           ($global_variables[$var['var_name']] ?? '');
-                            
-                            switch ($var['var_type']) {
-                                case 'boolean':
-                                    $options = json_decode($var['options'], true) ?: [
-                                        ['value' => '0', 'label' => 'Nee'],
-                                        ['value' => '1', 'label' => 'Ja']
-                                    ];
-                                    echo '<select name="var_' . htmlspecialchars($var['var_name']) . '" ' . ($var['is_required'] ? 'required' : '') . '>';
-                                    foreach ($options as $opt) {
-                                        $selected = ($opt['value'] == $current_value) ? 'selected' : '';
-                                        echo '<option value="' . htmlspecialchars($opt['value']) . '" ' . $selected . '>' . 
-                                             htmlspecialchars($opt['label']) . '</option>';
-                                    }
-                                    echo '</select>';
-                                    break;
-                                    
-                                case 'select':
-                                    $options = json_decode($var['options'], true) ?: [];
-                                    echo '<select name="var_' . htmlspecialchars($var['var_name']) . '" ' . ($var['is_required'] ? 'required' : '') . '>';
-                                    echo '<option value="">-- Selecteer --</option>';
-                                    foreach ($options as $opt) {
-                                        $value = is_array($opt) ? $opt['value'] : $opt;
-                                        $label = is_array($opt) ? $opt['label'] : $opt;
-                                        $selected = ($value == $current_value) ? 'selected' : '';
-                                        echo '<option value="' . htmlspecialchars($value) . '" ' . $selected . '>' . 
-                                             htmlspecialchars($label) . '</option>';
-                                    }
-                                    echo '</select>';
-                                    break;
-                                    
-                                case 'multiselect':
-                                    $options = json_decode($var['options'], true) ?: [];
-                                    $current_values = explode(',', $current_value);
-                                    echo '<select name="var_' . htmlspecialchars($var['var_name']) . '[]" multiple size="5" ' . ($var['is_required'] ? 'required' : '') . '>';
-                                    foreach ($options as $opt) {
-                                        $value = is_array($opt) ? $opt['value'] : $opt;
-                                        $label = is_array($opt) ? $opt['label'] : $opt;
-                                        $selected = in_array($value, $current_values) ? 'selected' : '';
-                                        echo '<option value="' . htmlspecialchars($value) . '" ' . $selected . '>' . 
-                                             htmlspecialchars($label) . '</option>';
-                                    }
-                                    echo '</select>';
-                                    echo '<small style="color:#6c757d;">Houd Ctrl/Cmd ingedrukt om meerdere opties te selecteren</small>';
-                                    break;
-                                    
-                                case 'number':
-                                    $attrs = 'type="number"';
-                                    if ($var['min_value'] !== null) $attrs .= ' min="' . (int)$var['min_value'] . '"';
-                                    if ($var['max_value'] !== null) $attrs .= ' max="' . (int)$var['max_value'] . '"';
-                                    echo '<input ' . $attrs . ' name="var_' . htmlspecialchars($var['var_name']) . '" ' . 
-                                         'value="' . htmlspecialchars($current_value) . '" ' .
-                                         ($var['is_required'] ? 'required' : '') . ' ' .
-                                         'placeholder="' . htmlspecialchars($var['placeholder'] ?? '') . '">';
-                                    break;
-                                    
-                                case 'textarea':
-                                    echo '<textarea name="var_' . htmlspecialchars($var['var_name']) . '" rows="4" ' . 
-                                         ($var['is_required'] ? 'required' : '') . ' ' .
-                                         'placeholder="' . htmlspecialchars($var['placeholder'] ?? '') . '">' . 
-                                         htmlspecialchars($current_value) . '</textarea>';
-                                    break;
-                                    
-                                case 'ip_address':
-                                case 'text':
-                                default:
-                                    echo '<input type="text" name="var_' . htmlspecialchars($var['var_name']) . '" ' . 
-                                         'value="' . htmlspecialchars($current_value) . '" ' .
-                                         ($var['is_required'] ? 'required' : '') . ' ' .
-                                         'placeholder="' . htmlspecialchars($var['placeholder'] ?? $var['default_value'] ?? '') . '">';
-                                    break;
-                            }
-                            
-                            if ($var['help_text']) {
-                                echo '<small style="color:#6c757d;">' . htmlspecialchars($var['help_text']) . '</small>';
-                            }
-                            ?>
-                        </div>
+                        <?php
+                        // Get current value from wizard data, default value, or global variables
+                        $current_value = $wizard_data['variables'][$var['var_name']] ?? 
+                                       $var['default_value'] ?? 
+                                       ($global_variables[$var['var_name']] ?? '');
+                        
+                        // Render the input using the helper function
+                        echo render_variable_input($var, $current_value, ['show_label' => true]);
+                        ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
                 

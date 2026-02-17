@@ -285,7 +285,8 @@ require_once __DIR__ . '/_header.php';
                                             <div style="font-size: 12px; margin-top: 4px;"><?php echo htmlspecialchars($t['description']); ?></div>
                                         <?php endif; ?>
                                     </div>
-                                    <div style="display: flex; gap: 4px;">
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                        <a class="btn" href="/admin/template_variables.php?template_id=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 4px 8px; background: #17a2b8;">Variabelen</a>
                                         <a class="btn" href="?edit=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 4px 8px;">Bewerk</a>
                                         <form method="post" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je dit template wilt verwijderen?');">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
