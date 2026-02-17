@@ -22,10 +22,31 @@ $can_view_accounts = has_permission($pdo, $admin_id, 'admin.accounts.manage');
 $can_manage_users = has_permission($pdo, $admin_id, 'admin.users.view');
 $can_edit_settings = has_permission($pdo, $admin_id, 'admin.settings.edit');
 
-// Get current admin info
-$stmt = $pdo->prepare('SELECT username, email FROM admins WHERE id = ?');
+// Get current admin info including status and roles
+$stmt = $pdo->prepare('SELECT username, email, is_active FROM admins WHERE id = ?');
 $stmt->execute([$admin_id]);
 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Get user's role(s) for badge
+$stmt = $pdo->prepare('
+    SELECT r.role_name 
+    FROM admin_roles ar
+    JOIN roles r ON r.id = ar.role_id
+    WHERE ar.admin_id = ?
+');
+$stmt->execute([$admin_id]);
+$user_roles = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$user_role_display = !empty($user_roles) ? implode(', ', $user_roles) : 'Geen rol';
+
+// Determine role badge color
+$role_badge_color = '#6c757d'; // default gray
+if (in_array('Owner', $user_roles)) {
+    $role_badge_color = '#dc3545'; // red for owner
+} elseif (in_array('Expert', $user_roles)) {
+    $role_badge_color = '#28a745'; // green for expert
+} elseif (in_array('Tech', $user_roles)) {
+    $role_badge_color = '#007bff'; // blue for tech
+}
 ?>
 <!DOCTYPE html>
 <html lang="nl">
@@ -44,6 +65,22 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #f5f5f5;
+        }
+        
+        .badge-base {
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+        
+        .badge-active {
+            background: #28a745;
+        }
+        
+        .badge-inactive {
+            background: #dc3545;
         }
         
         header {
@@ -315,6 +352,16 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
             <div class="header-user">
                 <div>
                     <strong><?php echo htmlspecialchars($admin['username']); ?></strong>
+                    <!-- Status badge -->
+                    <?php if ($admin['is_active']): ?>
+                        <span class="badge badge-base badge-active">✅ Active</span>
+                    <?php else: ?>
+                        <span class="badge badge-base badge-inactive">⏸️ Inactive</span>
+                    <?php endif; ?>
+                    <!-- Role badge -->
+                    <span class="badge badge-base" style="background: <?php echo $role_badge_color; ?>;">
+                        <?php echo htmlspecialchars($user_role_display); ?>
+                    </span>
                     <small><?php echo htmlspecialchars($admin['email']); ?></small>
                 </div>
             </div>
