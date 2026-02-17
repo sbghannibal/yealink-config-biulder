@@ -1,5 +1,5 @@
 <?php
-// Load environment variables
+// Load environment variables from .env file
 $env_file = __DIR__ . '/../.env';
 if (file_exists($env_file)) {
     $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
