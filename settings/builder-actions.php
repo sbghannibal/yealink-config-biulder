@@ -27,7 +27,7 @@ if (!has_permission($pdo, $admin_id, 'config.manage')) {
 // CSRF validation for POST/DELETE requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     $csrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-    if (empty($csrf) || !hash_equals($_SESSION['csrf_token'] ?? '', $csrf)) {
+    if (!isset($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Ongeldige CSRF token']);
         exit;
@@ -222,14 +222,19 @@ try {
             $dstmt->execute([$config_id]);
             $devices = $dstmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Get download count
-            $dlstmt = $pdo->prepare('
-                SELECT COUNT(*) as count 
-                FROM config_download_history 
-                WHERE config_version_id = ?
-            ');
-            $dlstmt->execute([$config_id]);
-            $download_count = (int) $dlstmt->fetchColumn();
+            // Get download count (with error handling for missing table)
+            try {
+                $dlstmt = $pdo->prepare('
+                    SELECT COUNT(*) as count 
+                    FROM config_download_history 
+                    WHERE config_version_id = ?
+                ');
+                $dlstmt->execute([$config_id]);
+                $download_count = (int) $dlstmt->fetchColumn();
+            } catch (Exception $e) {
+                error_log('Download history table error: ' . $e->getMessage());
+                $download_count = 0;
+            }
             
             echo json_encode([
                 'success' => true,

@@ -591,6 +591,12 @@ try {
 </div>
 
 <script>
+// Configuration constants
+const CONFIG = {
+    SEARCH_DEBOUNCE_MS: 300,
+    PREVIEW_DEBOUNCE_MS: 1000
+};
+
 const csrfToken = <?php echo json_encode($csrf); ?>;
 const variables = <?php echo json_encode($variables); ?>;
 
@@ -614,7 +620,7 @@ document.getElementById('deviceSearch')?.addEventListener('input', function() {
                 }
             })
             .catch(e => console.error('Search error:', e));
-    }, 300);
+    }, CONFIG.SEARCH_DEBOUNCE_MS);
 });
 
 function displayDeviceResults(devices) {
@@ -626,8 +632,10 @@ function displayDeviceResults(devices) {
         return;
     }
     
-    results.innerHTML = devices.map(d => `
-        <div class="device-item" onclick='selectDevice(${JSON.stringify(d)})'>
+    results.innerHTML = devices.map(d => {
+        const deviceJson = JSON.stringify(d).replace(/"/g, '&quot;');
+        return `
+        <div class="device-item" data-device='${deviceJson}'>
             <strong>${escapeHtml(d.device_name)}</strong>
             <small>
                 ${d.company_name ? escapeHtml(d.company_name) : ''} 
@@ -636,8 +644,17 @@ function displayDeviceResults(devices) {
                 | ${escapeHtml(d.mac_address || '')}
             </small>
         </div>
-    `).join('');
+    `;
+    }).join('');
     results.style.display = 'block';
+    
+    // Add event listeners to device items
+    results.querySelectorAll('.device-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const deviceData = JSON.parse(this.getAttribute('data-device').replace(/&quot;/g, '"'));
+            selectDevice(deviceData);
+        });
+    });
 }
 
 function selectDevice(device) {
@@ -687,7 +704,7 @@ function updateCharCounter() {
 let previewTimeout;
 function debouncePreview() {
     clearTimeout(previewTimeout);
-    previewTimeout = setTimeout(showLivePreview, 1000);
+    previewTimeout = setTimeout(showLivePreview, CONFIG.PREVIEW_DEBOUNCE_MS);
 }
 
 function showLivePreview() {
@@ -865,6 +882,7 @@ document.querySelectorAll('.modal-overlay').forEach(modal => {
 
 // Utility function
 function escapeHtml(text) {
+    if (text == null) return '';
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -872,7 +890,7 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text ? String(text).replace(/[&<>"']/g, m => map[m]) : '';
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 // Initialize
