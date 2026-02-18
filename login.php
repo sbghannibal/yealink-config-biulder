@@ -1,7 +1,7 @@
 <?php
-// login.php - Secure login page (uses config/database.php which must provide $pdo)
+// login.php - Secure login page (uses settings/database.php which must provide $pdo)
 session_start();
-require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/settings/database.php';
 
 // If already logged in, redirect to dashboard
 if (isset($_SESSION['admin_id'])) {

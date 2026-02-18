@@ -4,7 +4,7 @@
  * Dynamically generates certificate URLs with proper server URL
  */
 
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../settings/database.php';
 
 // HTTP Basic Authentication (same as boot)
 $auth_username = getenv('STAGING_AUTH_USER') ?: 'provisioning';

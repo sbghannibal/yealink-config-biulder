@@ -1,7 +1,7 @@
 <?php
 $page_title = 'Gebruikers';
 session_start();
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
 // Zorg dat gebruiker is ingelogd

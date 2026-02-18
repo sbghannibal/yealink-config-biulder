@@ -156,7 +156,7 @@ fi
 # Set directory permissions
 chmod -R 755 .
 chmod 600 .env
-chmod 644 config/*.php
+chmod 644 settings/*.php
 chmod 755 provision/
 
 echo -e "${GREEN}✓${NC} Permissions set"

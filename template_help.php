@@ -4,7 +4,7 @@
  * Shows available template variables and syntax guide
  */
 session_start();
-require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/settings/database.php';
 require_once __DIR__ . '/includes/rbac.php';
 
 // Ensure logged in

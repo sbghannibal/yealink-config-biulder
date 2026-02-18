@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/settings/database.php';
 require_once __DIR__ . '/includes/rbac.php';
 
 // Fetch settings helper
@@ -37,7 +37,7 @@ $dashboard_text  = get_setting($pdo, 'dashboard_text', "Gebruik het menu om devi
                     <a href="index.php">Dashboard</a>
                     <a href="admin/dashboard.php">Admin</a>
                     <a href="devices/list.php">Devices</a>
-                    <a href="config/builder.php">Config Builder</a>
+                    <a href="settings/builder.php">Config Builder</a>
                     <?php if ($logged_in): ?>
                         <a href="logout.php">Logout (<?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>)</a>
                     <?php else: ?>
@@ -74,7 +74,7 @@ $dashboard_text  = get_setting($pdo, 'dashboard_text', "Gebruik het menu om devi
             <div class="card">
                 <h3>⚙️ Config Builder</h3>
                 <p>Bouw en beheer configuraties</p>
-                <a href="config/builder.php" class="btn">Config Builder</a>
+                <a href="settings/builder.php" class="btn">Config Builder</a>
             </div>
         </div>
     </main>

@@ -1,7 +1,7 @@
 <?php
 $page_title = 'Admin Dashboard';
 session_start();
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
 // Zorg dat gebruiker is ingelogd
@@ -358,7 +358,7 @@ require_once __DIR__ . '/_header.php';
             <h3>⚙️ Config Versies</h3>
             <p class="number"><?php echo $stats['config_versions']; ?></p>
             <?php if (has_permission($pdo, $admin_id, 'config.manage')): ?>
-            <p><a href="/config/versions.php">Beheer versies</a></p>
+            <p><a href="/settings/versions.php">Beheer versies</a></p>
             <?php endif; ?>
         </div>
 

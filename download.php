@@ -10,8 +10,8 @@
  * - Proper .cfg Content-Type
  */
 
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/config/generator.php';
+require_once __DIR__ . '/settings/database.php';
+require_once __DIR__ . '/settings/generator.php';
 
 // Disable output buffering for clean file delivery
 if (ob_get_level()) {

@@ -10,9 +10,9 @@ if (!is_dir(__DIR__ . '/../logs')) {
 error_reporting(E_ALL);
 ini_set('log_errors', 1);
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/generator.php';
-require_once __DIR__ . '/../config/validator.php';
+require_once __DIR__ . '/../settings/database.php';
+require_once __DIR__ . '/../settings/generator.php';
+require_once __DIR__ . '/../settings/validator.php';
 require_once __DIR__ . '/../includes/rbac.php';
 require_once __DIR__ . '/../includes/form_helpers.php';
 
@@ -520,7 +520,7 @@ require_once __DIR__ . '/../admin/_header.php';
 
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
                     <a class="btn" href="/devices/list.php">← Terug naar Devices</a>
-                    <a class="btn" href="/config/builder.php" style="background:#28a745;">Config Builder</a>
+                    <a class="btn" href="/settings/builder.php" style="background:#28a745;">Config Builder</a>
                     <a class="btn" href="?reset=1" style="background:#6c757d;">Nieuwe Wizard</a>
                 </div>
             <?php endif; ?>

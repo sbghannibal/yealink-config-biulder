@@ -4,7 +4,7 @@
  * Run with: php tests/test_validator.php
  */
 
-require_once __DIR__ . '/../config/validator.php';
+require_once __DIR__ . '/../settings/validator.php';
 
 echo "=== Testing Variable Validation Functions ===\n\n";
 

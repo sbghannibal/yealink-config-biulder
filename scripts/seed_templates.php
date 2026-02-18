@@ -6,7 +6,7 @@
  * Run after migrations: php scripts/seed_templates.php
  */
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../settings/database.php';
 
 echo PHP_EOL . "Seeding Yealink Config Templates..." . PHP_EOL;
 
