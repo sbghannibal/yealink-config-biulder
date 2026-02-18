@@ -1,0 +1,16 @@
+RewriteEngine On
+
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+<Files "*.boot">
+    SSLVerifyClient none
+</Files>
+
+<Files "*.cfg">
+    SSLVerifyClient none
+</Files>
+
+<FilesMatch "\.pem$|\.crt$">
+    SSLVerifyClient none
+</FilesMatch>
