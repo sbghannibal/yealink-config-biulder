@@ -26,6 +26,7 @@ $csrf = $_SESSION['csrf_token'];
 $error = '';
 $success = '';
 $preview = '';
+$loaded_config = null;
 
 // Load PABX list and device types
 try {
@@ -48,14 +49,13 @@ try {
 // Helper: apply variables in template content using {{VAR_NAME}} syntax
 function apply_variables($content, $variables) {
     if (empty($variables)) return $content;
-    // Replace tokens like {{VAR}} (case sensitive)
     return preg_replace_callback('/\{\{\s*([A-Z0-9_]+)\s*\}\}/', function($m) use ($variables) {
         $key = $m[1];
         return array_key_exists($key, $variables) ? $variables[$key] : $m[0];
     }, $content);
 }
 
-// Handle actions: save_config, generate_token, preview
+// Handle actions: load_config, save_config, generate_token, preview
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $posted = $_POST;
 
@@ -64,6 +64,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $action = $posted['action'] ?? 'save_config';
 
+        // LOAD existing config for editing
+        if ($action === 'load_config') {
+            $config_version_id = !empty($posted['load_config_id']) ? (int)$posted['load_config_id'] : null;
+            if ($config_version_id) {
+                try {
+                    $stmt = $pdo->prepare('SELECT * FROM config_versions WHERE id = ?');
+                    $stmt->execute([$config_version_id]);
+                    $loaded_config = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($loaded_config) {
+                        $success = "Config versie #{$loaded_config['id']} geladen. Je kunt deze nu aanpassen.";
+                    } else {
+                        $error = 'Config versie niet gevonden.';
+                    }
+                } catch (Exception $e) {
+                    error_log('Load config error: ' . $e->getMessage());
+                    $error = 'Kon config niet laden.';
+                }
+            }
+        }
+
         $pabx_id = !empty($posted['pabx_id']) ? (int)$posted['pabx_id'] : null;
         $device_type_id = !empty($posted['device_type_id']) ? (int)$posted['device_type_id'] : null;
         $raw_content = trim($posted['config_content'] ?? '');
@@ -71,11 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Basic validation
         if (!$pabx_id || !$device_type_id || $raw_content === '') {
-            $error = 'Kies PABX, apparaat-type en vul config-inhoud in.';
+            if ($action === 'save_config') {
+                $error = 'Kies PABX, apparaat-type en vul config-inhoud in.';
+            }
         } else {
             // If preview requested: apply variables and show
             if ($action === 'preview') {
-                // fetch variables maybe overridden in form: not implementing per-device overrides here
                 $preview = apply_variables($raw_content, $variables);
             }
 
@@ -140,28 +162,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        
+
         // Assign config to devices (bulk)
         if ($action === 'assign_to_devices') {
             $config_version_id = !empty($posted['config_version_id']) ? (int)$posted['config_version_id'] : null;
             $device_ids = !empty($posted['device_ids']) ? $posted['device_ids'] : [];
-            
+
             if (!$config_version_id || empty($device_ids)) {
                 $error = 'Selecteer een configuratie en minimaal één device.';
             } else {
                 try {
                     $assigned_count = 0;
-                    $stmt = $pdo->prepare('
-                        INSERT INTO device_config_assignments (device_id, config_version_id, assigned_by, assigned_at)
-                        VALUES (?, ?, ?, NOW())
-                        ON DUPLICATE KEY UPDATE config_version_id = VALUES(config_version_id), assigned_at = NOW()
-                    ');
-                    
                     foreach ($device_ids as $device_id) {
+                        $device_id = (int) $device_id;
+                        $stmt = $pdo->prepare('INSERT INTO device_config_assignments (device_id, config_version_id, assigned_by, assigned_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE config_version_id = VALUES(config_version_id), assigned_at = NOW()');
                         $stmt->execute([(int)$device_id, $config_version_id, $admin_id]);
                         $assigned_count++;
                     }
-                    
+
                     $success = "Configuratie toegewezen aan $assigned_count device(s).";
                 } catch (Exception $e) {
                     error_log('Config assignment error: ' . $e->getMessage());
@@ -174,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch recent config versions for listing
 try {
-    $cvstmt = $pdo->prepare('SELECT cv.id, cv.version_number, cv.created_at, p.pabx_name, dt.type_name, a.username FROM config_versions cv LEFT JOIN pabx p ON cv.pabx_id = p.id LEFT JOIN device_types dt ON cv.device_type_id = dt.id LEFT JOIN admins a ON cv.created_by = a.id ORDER BY cv.created_at DESC LIMIT 30');
+    $cvstmt = $pdo->prepare('SELECT cv.id, cv.version_number, cv.created_at, p.pabx_name, dt.type_name, a.username FROM config_versions cv LEFT JOIN pabx p ON cv.pabx_id = p.id LEFT JOIN device_types dt ON cv.device_type_id = dt.id LEFT JOIN admins a ON cv.created_by = a.id ORDER BY cv.created_at DESC LIMIT 50');
     $cvstmt->execute();
     $config_versions = $cvstmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
@@ -200,6 +218,7 @@ try {
         textarea.config { width:100%; height:340px; font-family:monospace; white-space:pre; }
         .small { font-size:90%; color:#666; }
         .cv-list { max-height:340px; overflow:auto; }
+        .loaded-info { background:#e8f5e9; padding:12px; border-left:4px solid #28a745; margin-bottom:16px; border-radius:4px; }
     </style>
 </head>
 <body>
@@ -212,6 +231,13 @@ try {
 
     <div class="split" style="margin-top:12px;">
         <div>
+            <?php if ($loaded_config): ?>
+                <div class="loaded-info">
+                    <strong>✓ Config geladen:</strong> Versie #<?php echo (int)$loaded_config['id']; ?> (v<?php echo (int)$loaded_config['version_number']; ?>)<br>
+                    <small>Aangepast: <?php echo htmlspecialchars($loaded_config['created_at']); ?></small>
+                </div>
+            <?php endif; ?>
+
             <form method="post">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                 <input type="hidden" name="action" value="save_config">
@@ -221,7 +247,7 @@ try {
                     <select name="pabx_id" required>
                         <option value="">-- Kies PABX --</option>
                         <?php foreach ($pabx_list as $p): ?>
-                            <option value="<?php echo (int)$p['id']; ?>" <?php echo (isset($_POST['pabx_id']) && $_POST['pabx_id'] == $p['id']) ? 'selected' : ''; ?>>
+                            <option value="<?php echo (int)$p['id']; ?>" <?php echo (isset($_POST['pabx_id']) && $_POST['pabx_id'] == $p['id']) || ($loaded_config && $loaded_config['pabx_id'] == $p['id']) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($p['pabx_name']); ?>
                             </option>
                         <?php endforeach; ?>
@@ -233,7 +259,7 @@ try {
                     <select name="device_type_id" required>
                         <option value="">-- Kies type --</option>
                         <?php foreach ($device_types as $t): ?>
-                            <option value="<?php echo (int)$t['id']; ?>" <?php echo (isset($_POST['device_type_id']) && $_POST['device_type_id'] == $t['id']) ? 'selected' : ''; ?>>
+                            <option value="<?php echo (int)$t['id']; ?>" <?php echo (isset($_POST['device_type_id']) && $_POST['device_type_id'] == $t['id']) || ($loaded_config && $loaded_config['device_type_id'] == $t['id']) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($t['type_name']); ?>
                             </option>
                         <?php endforeach; ?>
@@ -242,19 +268,17 @@ try {
 
                 <div class="form-group">
                     <label>Changelog (kort)</label>
-                    <input name="changelog" type="text" value="<?php echo htmlspecialchars($_POST['changelog'] ?? ''); ?>">
+                    <input name="changelog" type="text" value="<?php echo htmlspecialchars($_POST['changelog'] ?? ($loaded_config ? 'Aangepast van versie #' . $loaded_config['id'] : '')); ?>">
                 </div>
 
                 <div class="form-group">
                     <label>Config inhoud (gebruik placeholders zoals {{SERVER_IP}})</label>
-                    <textarea name="config_content" class="config"><?php echo htmlspecialchars($_POST['config_content'] ?? "server={{SERVER_IP}}\nport={{SERVER_PORT}}\nntp={{NTP_SERVER}}"); ?></textarea>
+                    <textarea name="config_content" class="config" required><?php echo htmlspecialchars($_POST['config_content'] ?? ($loaded_config ? $loaded_config['config_content'] : "server={{SERVER_IP}}\nport={{SERVER_PORT}}\nntp={{NTP_SERVER}}")); ?></textarea>
                 </div>
 
-                <div style="display:flex; gap:8px; align-items:center;">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                     <button class="btn" type="submit">Opslaan als nieuwe versie</button>
-
-                    <button class="btn" type="submit" onclick="this.form.action.value='preview'; this.form.action='';" formaction="?preview=1" formmethod="post" name="action" value="preview">Voorbeeld</button>
-
+                    <button class="btn" type="submit" onclick="document.querySelector('input[name=action]').value='preview'">Voorbeeld</button>
                     <a class="btn" href="/config/builder.php" style="background:#6c757d;">Reset</a>
                 </div>
             </form>
@@ -269,29 +293,28 @@ try {
 
         <aside>
             <section class="card">
-                <h3>Recente versies</h3>
-                <div class="cv-list">
-                    <?php if (empty($config_versions)): ?>
-                        <p class="small">Geen config versies gevonden.</p>
-                    <?php else: ?>
-                        <table>
-                            <thead><tr><th>ID</th><th>Versie</th><th>PABX</th><th>Type</th><th>Aangemaakt</th></tr></thead>
-                            <tbody>
-                                <?php foreach ($config_versions as $cv): ?>
-                                    <tr>
-                                        <td><?php echo (int)$cv['id']; ?></td>
-                                        <td><?php echo (int)$cv['version_number']; ?></td>
-                                        <td><?php echo htmlspecialchars($cv['pabx_name'] ?? '-'); ?></td>
-                                        <td><?php echo htmlspecialchars($cv['type_name'] ?? '-'); ?></td>
-                                        <td><?php echo htmlspecialchars($cv['created_at']); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-                </div>
+                <h3>📥 Laad bestaande config</h3>
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                    <input type="hidden" name="action" value="load_config">
+                    <div class="form-group">
+                        <label>Selecteer config om te laden:</label>
+                        <select name="load_config_id" required style="max-height:200px;">
+                            <option value="">-- Kies versie --</option>
+                            <?php foreach ($config_versions as $cv): ?>
+                                <option value="<?php echo (int)$cv['id']; ?>">
+                                    #<?php echo (int)$cv['id']; ?> v<?php echo (int)$cv['version_number']; ?> - 
+                                    <?php echo htmlspecialchars($cv['pabx_name'] ?? 'N/A'); ?> / 
+                                    <?php echo htmlspecialchars($cv['type_name'] ?? 'N/A'); ?>
+                                    (<?php echo htmlspecialchars($cv['created_at']); ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button class="btn" type="submit" style="width:100%;">Laden</button>
+                </form>
             </section>
-            
+
             <section class="card" style="margin-top:12px;">
                 <h3>Toewijzen aan Devices</h3>
                 <form method="post">
@@ -310,7 +333,7 @@ try {
                                 <?php foreach ($devices_list as $dev): ?>
                                     <label style="display:block; padding:4px;">
                                         <input type="checkbox" name="device_ids[]" value="<?php echo (int)$dev['id']; ?>">
-                                        <?php echo htmlspecialchars($dev['device_name']); ?> 
+                                        <?php echo htmlspecialchars($dev['device_name']); ?>
                                         <small>(<?php echo htmlspecialchars($dev['type_name'] ?? '-'); ?>)</small>
                                     </label>
                                 <?php endforeach; ?>
@@ -334,9 +357,7 @@ try {
                         <label>Geldigheid (uur)</label>
                         <input name="expires_hours" type="number" min="1" value="24" required>
                     </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn" type="submit">Genereer token</button>
-                    </div>
+                    <button class="btn" type="submit">Genereer token</button>
                 </form>
                 <p class="small">Gebruik dit token in de download-url: <code>/download.php?token=...</code></p>
             </section>
