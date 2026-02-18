@@ -163,6 +163,7 @@ if (in_array('Owner', $user_roles)) {
             display: flex;
             flex-wrap: wrap;
             padding: 0 24px;
+            position: relative;
         }
         
         nav a, nav button {
@@ -175,6 +176,7 @@ if (in_array('Owner', $user_roles)) {
             font-size: 14px;
             transition: all 0.2s;
             border-bottom: 2px solid transparent;
+            position: relative;
         }
         
         nav a:hover, nav button:hover {
@@ -186,6 +188,60 @@ if (in_array('Owner', $user_roles)) {
             color: white;
             border-bottom-color: #4CAF50;
             background: rgba(255,255,255,0.05);
+        }
+        
+        /* Dropdown Menu Styles */
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .nav-dropdown > a {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .nav-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            z-index: 1000;
+            margin-top: 0;
+            overflow: hidden;
+        }
+        
+        .nav-dropdown:hover .nav-dropdown-content {
+            display: block;
+        }
+        
+        .nav-dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            display: block;
+            border-bottom: none;
+            transition: background 0.2s;
+        }
+        
+        .nav-dropdown-content a:hover {
+            background: #f5f5f5;
+            color: #667eea;
+        }
+        
+        .nav-dropdown-content a.active {
+            background: #e8eaf6;
+            color: #667eea;
+            border-left: 3px solid #667eea;
+        }
+        
+        .dropdown-arrow {
+            font-size: 10px;
+            margin-left: 4px;
         }
         
         .container {
@@ -345,10 +401,40 @@ if (in_array('Owner', $user_roles)) {
             nav {
                 width: 100%;
                 border-top: 1px solid rgba(255,255,255,0.1);
+                flex-direction: column;
             }
             
             nav a, nav button {
                 padding: 10px 12px;
+            }
+            
+            .nav-dropdown {
+                width: 100%;
+            }
+            
+            .nav-dropdown-content {
+                position: relative;
+                box-shadow: none;
+                background: rgba(255,255,255,0.1);
+                margin-top: 0;
+                border-radius: 0;
+            }
+            
+            .nav-dropdown-content a {
+                color: rgba(255,255,255,0.9);
+                padding-left: 32px;
+            }
+            
+            .nav-dropdown-content a:hover {
+                background: rgba(255,255,255,0.15);
+                color: white;
+            }
+            
+            .nav-dropdown-content a.active {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border-left: none;
+                border-bottom: none;
             }
         }
     </style>
@@ -394,40 +480,73 @@ if (in_array('Owner', $user_roles)) {
         </a>
         <?php endif; ?>
         
-        <?php if ($can_view_device_types): ?>
-        <a href="/admin/device_types.php" class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php']) ? 'active' : ''; ?>">
-            📦 Device Types
-        </a>
+        <?php if ($can_use_wizard || $can_manage_templates || $is_owner): ?>
+        <div class="nav-dropdown">
+            <a href="#" class="<?php echo in_array($current_page, ['builder.php', 'templates.php', 'device_mapping.php', 'staging_certificates.php']) ? 'active' : ''; ?>">
+                ⚙️ Config <span class="dropdown-arrow">▼</span>
+            </a>
+            <div class="nav-dropdown-content">
+                <?php if ($can_use_wizard): ?>
+                <a href="/settings/builder.php" class="<?php echo $current_page === 'builder.php' ? 'active' : ''; ?>">
+                    🛠️ Config Builder
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($can_manage_templates): ?>
+                <a href="/admin/templates.php" class="<?php echo $current_page === 'templates.php' ? 'active' : ''; ?>">
+                    📋 Templates
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($can_use_wizard): ?>
+                <a href="/settings/device_mapping.php" class="<?php echo $current_page === 'device_mapping.php' ? 'active' : ''; ?>">
+                    🔗 Device Mapping
+                </a>
+                <a href="/admin/staging_certificates.php" class="<?php echo $current_page === 'staging_certificates.php' ? 'active' : ''; ?>">
+                    🔐 Staging Certs
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
         <?php endif; ?>
         
-        <?php if ($can_use_wizard): ?>
-        <a href="/devices/configure_wizard.php" class="<?php echo $current_page === 'configure_wizard.php' ? 'active' : ''; ?>">
-            ⚙️ Config Wizard
-        </a>
-        <?php endif; ?>
-        
-        <?php if ($can_use_wizard): ?>
-        <a href="/admin/staging_certificates.php" class="<?php echo $current_page === 'staging_certificates.php' ? 'active' : ''; ?>">
-            🔐 Staging Certs
-        </a>
-        <?php endif; ?>
-        
-        <?php if ($is_owner): ?>
-        <a href="/admin/staging_credentials.php" class="<?php echo $current_page === 'staging_credentials.php' ? 'active' : ''; ?>" style="background: rgba(220, 53, 69, 0.1);">
-            🔑 Credentials
-        </a>
-        <?php endif; ?>
-        
-        <?php if ($can_manage_templates): ?>
-        <a href="/admin/templates.php" class="<?php echo $current_page === 'templates.php' ? 'active' : ''; ?>">
-            📋 Templates
-        </a>
-        <?php endif; ?>
-        
-        <?php if ($can_manage_customers): ?>
-        <a href="/admin/customers.php" class="<?php echo in_array($current_page, ['customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php']) ? 'active' : ''; ?>">
-            🏢 Klanten
-        </a>
+        <?php if ($can_manage_users || $can_view_device_types || $can_manage_customers || $can_edit_settings || has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
+        <div class="nav-dropdown">
+            <a href="#" class="<?php echo in_array($current_page, ['users.php', 'device_types.php', 'device_types_edit.php', 'customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php', 'settings.php', 'audit.php']) ? 'active' : ''; ?>">
+                👥 Beheer <span class="dropdown-arrow">▼</span>
+            </a>
+            <div class="nav-dropdown-content">
+                <?php if ($can_manage_users): ?>
+                <a href="/admin/users.php" class="<?php echo $current_page === 'users.php' ? 'active' : ''; ?>">
+                    👥 Users
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($can_view_device_types): ?>
+                <a href="/admin/device_types.php" class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php']) ? 'active' : ''; ?>">
+                    📦 Device Types
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($can_manage_customers): ?>
+                <a href="/admin/customers.php" class="<?php echo in_array($current_page, ['customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php']) ? 'active' : ''; ?>">
+                    🏢 Klanten
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($can_edit_settings): ?>
+                <a href="/admin/settings.php" class="<?php echo $current_page === 'settings.php' ? 'active' : ''; ?>">
+                    ⚙️ Settings
+                </a>
+                <?php endif; ?>
+                
+                <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
+                <a href="/admin/audit.php" class="<?php echo $current_page === 'audit.php' ? 'active' : ''; ?>">
+                    📑 Audit Logs
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
         <?php endif; ?>
         
         <?php if ($can_view_accounts): ?>
@@ -436,15 +555,9 @@ if (in_array('Owner', $user_roles)) {
         </a>
         <?php endif; ?>
         
-        <?php if ($can_manage_users): ?>
-        <a href="/admin/users.php" class="<?php echo $current_page === 'users.php' ? 'active' : ''; ?>">
-            👥 Users
-        </a>
-        <?php endif; ?>
-        
-        <?php if ($can_edit_settings): ?>
-        <a href="/admin/settings.php" class="<?php echo $current_page === 'settings.php' ? 'active' : ''; ?>">
-            ⚙️ Settings
+        <?php if ($is_owner): ?>
+        <a href="/admin/staging_credentials.php" class="<?php echo $current_page === 'staging_credentials.php' ? 'active' : ''; ?>" style="background: rgba(220, 53, 69, 0.1);">
+            🔑 Credentials
         </a>
         <?php endif; ?>
     </nav>
