@@ -1,7 +1,7 @@
 <?php
 /**
  * Yealink Staging Provisioning
- * 
+ *
  * Stage 1: Download boot configuration with certificate URLs
  * Phone will then download certificates and full config
  */
@@ -18,7 +18,7 @@ if (!empty($auth_password)) {
     if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) ||
         $_SERVER['PHP_AUTH_USER'] !== $auth_username ||
         $_SERVER['PHP_AUTH_PW'] !== $auth_password) {
-        
+
         header('WWW-Authenticate: Basic realm="Yealink Staging Provisioning"');
         http_response_code(401);
         echo "Authentication required";
@@ -78,24 +78,24 @@ if (!$mac || strlen($mac) !== 12) {
 try {
     // Format MAC for database lookup: 001565AABB20 -> 00:15:65:AA:BB:20
     $mac_formatted = strtoupper(
-        substr($mac, 0, 2) . ':' . 
-        substr($mac, 2, 2) . ':' . 
-        substr($mac, 4, 2) . ':' . 
-        substr($mac, 6, 2) . ':' . 
-        substr($mac, 8, 2) . ':' . 
+        substr($mac, 0, 2) . ':' .
+        substr($mac, 2, 2) . ':' .
+        substr($mac, 4, 2) . ':' .
+        substr($mac, 6, 2) . ':' .
+        substr($mac, 8, 2) . ':' .
         substr($mac, 10, 2)
     );
-    
+
     // Check if device exists and is active
     $stmt = $pdo->prepare('
-        SELECT id, device_name FROM devices 
+        SELECT id, device_name FROM devices
         WHERE REPLACE(REPLACE(UPPER(mac_address), ":", ""), "-", "") = ?
         AND is_active = 1
         LIMIT 1
     ');
     $stmt->execute([$mac]);
     $device = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$device) {
         http_response_code(403);
         header('Content-Type: text/plain');
@@ -103,11 +103,11 @@ try {
         error_log("Staging rejected - Device not found: $mac");
         exit;
     }
-    
+
     // Get server URL for full provisioning
     $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $server_url = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'yealink-cfg.eu');
-    
+
     // Generate boot configuration
     // Using heredoc with single quotes to prevent variable interpolation
     // Placeholders are replaced with str_replace() for clarity and security
@@ -117,19 +117,13 @@ try {
 [DEVICE_INFO]
 device_mac={{DEVICE_MAC}}
 
-[CERTIFICATE]
-# Download trusted CA certificate (shared for all devices)
-static.trusted_certificates.url={{SERVER_URL}}/provision/staging/certificates/ca.crt
-
-# Download shared server certificate (NOT device-specific to prevent MAC spoofing)
-static.server_certificates.url={{SERVER_URL}}/provision/staging/certificates/server.crt
-
-# Enable custom certificate support
-static.security.dev_cert=1
+[CONFIG_FILES]
+# Download certificate configuration from separate file
+static.config_files={{SERVER_URL}}/provision/staging/certificates.php
 
 [AUTO_PROVISION]
 # Full provisioning configuration (device validation happens here)
-static.auto_provision.url={{SERVER_URL}}/provision/?mac={{DEVICE_MAC}}
+static.auto_provision.url={{SERVER_URL}}/provision/
 static.auto_provision.enable=1
 
 # Reboot to apply provisioning
@@ -140,17 +134,17 @@ feature.reboot_on_new_config=1
 static.provisioning.protocol=https
 
 CONFIG;
-    
+
     // Replace placeholders
     $boot_config = str_replace(
         ['{{DEVICE_MAC}}', '{{SERVER_URL}}'],
         [$mac_formatted, $server_url],
         $boot_config
     );
-    
+
     // Log staging request
     $log_stmt = $pdo->prepare('
-        INSERT INTO provision_logs 
+        INSERT INTO provision_logs
         (device_id, mac_address, ip_address, user_agent, provisioned_at)
         VALUES (?, ?, ?, ?, NOW())
     ');
@@ -160,12 +154,12 @@ CONFIG;
         $_SERVER['REMOTE_ADDR'] ?? null,
         $_SERVER['HTTP_USER_AGENT'] ?? null
     ]);
-    
+
     // Return boot configuration
     header('Content-Type: text/plain; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . strtolower($mac) . '.boot"');
     echo $boot_config;
-    
+
 } catch (Exception $e) {
     error_log('Staging provisioning error: ' . $e->getMessage());
     http_response_code(500);
