@@ -86,8 +86,8 @@ static.security.dev_cert=1
 static.auto_provision.url={{SERVER_URL}}/provision/
 static.auto_provision.enable=1
 
-# Reboot to apply provisioning
-feature.reboot_on_new_config=1
+# Reboot after certificate update
+static.auto_provision.reboot_after_update=1
 
 [NETWORK]
 # Force HTTPS for provisioning

@@ -30,7 +30,7 @@ if (!preg_match('/^[0-9A-F]{12}$/', $mac)) {
 }
 
 // Format MAC with colons for database lookup: 001565AABB20 -> 00:15:65:AA:BB:20
-$mac_formatted = substr($mac, 0, 2) . ':' . substr($mac, 2, 2) . ':' . substr($mac, 4, 2) . ':' . 
+$mac_formatted = substr($mac, 0, 2) . ':' . substr($mac, 2, 2) . ':' . substr($mac, 4, 2) . ':' .
                  substr($mac, 6, 2) . ':' . substr($mac, 8, 2) . ':' . substr($mac, 10, 2);
 
 try {
@@ -45,10 +45,10 @@ try {
     ');
     $stmt->execute([$mac_formatted]);
     $device = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$device) {
         error_log("Device not found or inactive for MAC: $mac (formatted: $mac_formatted)");
-        
+
         // Log failed provision attempt
         try {
             $stmt = $pdo->prepare('
@@ -59,14 +59,14 @@ try {
         } catch (Exception $e) {
             error_log("Failed to log provision attempt: " . $e->getMessage());
         }
-        
+
         http_response_code(404);
         exit('Device not found or not active');
     }
-    
+
     if (!$device['config_version_id']) {
         error_log("No config assigned for device: $mac");
-        
+
         // Log failed provision attempt
         try {
             $stmt = $pdo->prepare('
@@ -77,11 +77,11 @@ try {
         } catch (Exception $e) {
             error_log("Failed to log provision attempt: " . $e->getMessage());
         }
-        
+
         http_response_code(404);
         exit('No configuration assigned');
     }
-    
+
     // Get config content and PABX info
     $stmt = $pdo->prepare('
         SELECT cv.config_content, cv.pabx_id,
@@ -92,23 +92,23 @@ try {
     ');
     $stmt->execute([$device['config_version_id']]);
     $config_data = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$config_data || !$config_data['config_content']) {
         error_log("Config not found for device: $mac");
         http_response_code(404);
         exit('Configuration not found');
     }
-    
+
     $config = $config_data['config_content'];
-    
-    // Apply device-specific variables to the config
+
+    // Device-specific variables for variable substitution
     $device_variables = [
+        'DEVICE_MAC' => $mac_formatted,
+        'DEVICE_MAC_PLAIN' => $mac,
         'DEVICE_NAME' => $device['device_name'] ?? '',
-        'DEVICE_MAC' => $mac,
-        'DEVICE_IP' => $device['ip_address'] ?? '',
-        'DEVICE_MODEL' => $device['model'] ?? '',
+        'DEVICE_ID' => $device['id'],
     ];
-    
+
     // Add PABX variables if available
     if ($config_data['pabx_id']) {
         $device_variables['PABX_NAME'] = $config_data['pabx_name'] ?? '';
@@ -116,10 +116,16 @@ try {
         $device_variables['PABX_PORT'] = $config_data['pabx_port'] ?? '';
         $device_variables['PABX_TYPE'] = $config_data['pabx_type'] ?? '';
     }
-    
+
     // Apply variables to config content
     $config = apply_variables_to_content($config, $device_variables);
-    
+
+    // Ensure reboot_after_update is set in final config
+    if (strpos($config, 'static.auto_provision.reboot_after_update') === false) {
+        // Add reboot flag if not already present
+        $config .= "\n# Force reboot after provisioning\nstatic.auto_provision.reboot_after_update=1\n";
+    }
+
     // Log successful provision
     try {
         $stmt = $pdo->prepare('
@@ -127,24 +133,24 @@ try {
             VALUES (?, ?, ?, ?, NOW())
         ');
         $stmt->execute([
-            $device['id'], 
-            $mac_formatted, 
-            $_SERVER['REMOTE_ADDR'], 
+            $device['id'],
+            $mac_formatted,
+            $_SERVER['REMOTE_ADDR'],
             $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
         ]);
     } catch (Exception $e) {
         // Log error but don't fail the provisioning
         error_log("Failed to log successful provision: " . $e->getMessage());
     }
-    
+
     // Return config
     header('Content-Type: text/plain; charset=utf-8');
     header('Content-Disposition: inline; filename="' . $mac . '.cfg"');
     echo $config;
-    
+
 } catch (Exception $e) {
     error_log("Provisioning error: " . $e->getMessage());
     http_response_code(500);
     exit('Server error');
 }
-
+?>
