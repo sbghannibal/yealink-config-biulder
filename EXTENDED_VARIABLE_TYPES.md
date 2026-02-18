@@ -309,7 +309,7 @@ echo render_variable_input($variable, $current_value, [
 
 ### Validatie
 ```php
-require_once __DIR__ . '/config/validator.php';
+require_once __DIR__ . '/settings/validator.php';
 
 // Valideer een enkele waarde
 $result = validate_variable_value($value, $variable);

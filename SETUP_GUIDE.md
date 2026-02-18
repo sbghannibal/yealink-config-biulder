@@ -71,8 +71,8 @@ Zorg dat de volgende bestanden toegankelijk zijn:
 /download.php                    - Config download endpoint (publiek)
 /devices/list.php               - Device lijst (ingelogd)
 /devices/configure_wizard.php   - Config wizard (ingelogd)
-/config/builder.php             - Config builder (ingelogd)
-/config/device_mapping.php      - Device mapping UI (ingelogd)
+/settings/builder.php             - Config builder (ingelogd)
+/settings/device_mapping.php      - Device mapping UI (ingelogd)
 /admin/templates.php            - Template beheer (ingelogd + permissie)
 ```
 
@@ -157,7 +157,7 @@ Audit log voor alle configuratie downloads.
 
 ## Nieuwe Functionaliteit
 
-### 1. Config Generator (`config/generator.php`)
+### 1. Config Generator (`settings/generator.php`)
 
 Core functies voor configuratie generatie:
 
@@ -235,7 +235,7 @@ Uitgebreide device lijst met:
 - ⚙️ Config button - Start wizard voor device
 - Kleur-gecodeerde status (groen = config, geel = geen config)
 
-### 6. Config Builder Extensions (`config/builder.php`)
+### 6. Config Builder Extensions (`settings/builder.php`)
 
 Toegevoegde sectie: "Toewijzen aan Devices"
 
@@ -245,7 +245,7 @@ Toegevoegde sectie: "Toewijzen aan Devices"
 - Bulk assignment
 - Real-time device status
 
-### 7. Device-Config Mapping (`config/device_mapping.php`)
+### 7. Device-Config Mapping (`settings/device_mapping.php`)
 
 Visuele matrix interface voor device-config relaties:
 

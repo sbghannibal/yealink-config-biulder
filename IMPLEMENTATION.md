@@ -14,7 +14,7 @@ Volledig productie-gereed systeem voor Yealink telefoon config generatie, beheer
 - ✅ `config_download_history` - Uitgebreide audit logging voor downloads
 
 ### FASE 2: Core Config Generator ✅
-- ✅ `config/generator.php` - Complete generator library
+- ✅ `settings/generator.php` - Complete generator library
   - `generate_device_config()` - Device-specifieke config generatie
   - `generate_config_from_template()` - Template-based generatie
   - `apply_yealink_formatting()` - Correcte .cfg formatting
@@ -59,14 +59,14 @@ Volledig productie-gereed systeem voor Yealink telefoon config generatie, beheer
   - "⚙️ Config" button per device → start wizard
   - Kleur-gecodeerde status (groen = assigned, geel = unassigned)
   - Enhanced query met LEFT JOINs
-- ✅ `config/builder.php` - Uitgebreid met:
+- ✅ `settings/builder.php` - Uitgebreid met:
   - "Toewijzen aan Devices" sectie
   - Bulk device selector (checkboxes)
   - Multi-device assignment in één actie
   - Device lijst met type names
 
 ### FASE 7: Config Mapping UI ✅
-- ✅ `config/device_mapping.php` - Visual matrix interface
+- ✅ `settings/device_mapping.php` - Visual matrix interface
   - Statistics dashboard (totaal, assigned, unassigned, configs)
   - Twee-koloms layout (devices ↔ configs)
   - Batch operaties met "Select all"
@@ -153,7 +153,7 @@ Login met admin credentials en navigeer naar:
 
 ### Core Files
 ```
-config/generator.php              - Config generation library (280 lines)
+settings/generator.php              - Config generation library (280 lines)
 download.php                      - Download endpoint (170 lines)
 ```
 
@@ -161,7 +161,7 @@ download.php                      - Download endpoint (170 lines)
 ```
 admin/templates.php               - Template CRUD (400+ lines)
 devices/configure_wizard.php      - 5-step wizard (600+ lines)
-config/device_mapping.php         - Mapping UI (400+ lines)
+settings/device_mapping.php         - Mapping UI (400+ lines)
 ```
 
 ### Scripts
@@ -325,7 +325,7 @@ testDownloadWithToken();
 - **Audit** (`includes/audit.php`) - Logging hooks
 - **Tokens** (`includes/token.php`) - Token helpers
 - **Version** (`includes/version.php`) - Config versioning
-- **Database** (`config/database.php`) - PDO connection
+- **Database** (`settings/database.php`) - PDO connection
 
 ### Nieuwe Dependencies
 Geen externe dependencies toegevoegd - 100% vanilla PHP.

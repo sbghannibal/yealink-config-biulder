@@ -7,7 +7,7 @@ This implementation adds 9 new variable types to the Yealink Config Builder, ext
 
 ### New Files Created (8 files)
 1. `migrations/11_extended_variable_types.sql` - Database migration
-2. `config/validator.php` - Server-side validation functions
+2. `settings/validator.php` - Server-side validation functions
 3. `includes/form_helpers.php` - HTML rendering functions
 4. `admin/template_variables.php` - Template variable management UI
 5. `EXTENDED_VARIABLE_TYPES.md` - User documentation
@@ -64,7 +64,7 @@ The migration builds on migration 10 which added:
 
 ## API Functions
 
-### Validation (config/validator.php)
+### Validation (settings/validator.php)
 ```php
 // Validate a single variable value
 $result = validate_variable_value($value, $variable);
