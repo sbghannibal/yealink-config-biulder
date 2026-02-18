@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../settings/database.php';
+require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
 // Ensure logged in
