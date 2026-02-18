@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
 // Ensure logged in
@@ -279,7 +279,7 @@ try {
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                     <button class="btn" type="submit">Opslaan als nieuwe versie</button>
                     <button class="btn" type="submit" onclick="document.querySelector('input[name=action]').value='preview'">Voorbeeld</button>
-                    <a class="btn" href="/config/builder.php" style="background:#6c757d;">Reset</a>
+                    <a class="btn" href="/settings/builder.php" style="background:#6c757d;">Reset</a>
                 </div>
             </form>
 

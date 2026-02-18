@@ -29,7 +29,7 @@ Alle gevraagde functionaliteit is succesvol geïmplementeerd volgens de specific
 **Status:** Compleet - Volledige generator library met alle functies
 
 **Deliverables:**
-- `config/generator.php` (280 lines)
+- `settings/generator.php` (280 lines)
 
 **Functies:**
 1. `generate_device_config($pdo, $device_id, $config_version_id)` ✅
@@ -197,7 +197,7 @@ Alle gevraagde functionaliteit is succesvol geïmplementeerd volgens de specific
 
 **Deliverables:**
 - `devices/list.php` (EXTENDED)
-- `config/builder.php` (EXTENDED)
+- `settings/builder.php` (EXTENDED)
 
 **devices/list.php Enhancements:**
 1. Nieuwe kolommen ✅
@@ -220,7 +220,7 @@ Alle gevraagde functionaliteit is succesvol geïmplementeerd volgens de specific
    - JOIN config_versions
    - Subquery voor download_count
 
-**config/builder.php Enhancements:**
+**settings/builder.php Enhancements:**
 1. "Assign to Devices" sectie ✅
    - Config version ID input
    - Multi-select device lijst
@@ -243,7 +243,7 @@ Alle gevraagde functionaliteit is succesvol geïmplementeerd volgens de specific
 **Status:** Compleet - Visual matrix met batch ops
 
 **Deliverables:**
-- `config/device_mapping.php` (400+ lines)
+- `settings/device_mapping.php` (400+ lines)
 
 **Dashboard Components:**
 
@@ -313,8 +313,8 @@ Alle gevraagde functionaliteit is succesvol geïmplementeerd volgens de specific
 **Files:**
 - admin/templates.php ✅
 - devices/configure_wizard.php ✅
-- config/builder.php ✅ (existing)
-- config/device_mapping.php ✅
+- settings/builder.php ✅ (existing)
+- settings/device_mapping.php ✅
 
 ### ✅ Permission Checks
 **Implementation:** RBAC integration
@@ -325,8 +325,8 @@ Alle gevraagde functionaliteit is succesvol geïmplementeerd volgens de specific
 **Checks in:**
 - admin/templates.php ✅
 - devices/configure_wizard.php ✅
-- config/builder.php ✅ (existing)
-- config/device_mapping.php ✅
+- settings/builder.php ✅ (existing)
+- settings/device_mapping.php ✅
 
 ### ✅ Audit Logging
 **Implementation:** Download history
@@ -371,11 +371,11 @@ Alle gevraagde functionaliteit is succesvol geïmplementeerd volgens de specific
 
 ### Nieuwe Files
 ```
-config/generator.php              280 lines
+settings/generator.php              280 lines
 download.php                      170 lines
 admin/templates.php               400+ lines
 devices/configure_wizard.php      600+ lines
-config/device_mapping.php         400+ lines
+settings/device_mapping.php         400+ lines
 scripts/seed_templates.php        200+ lines
 SETUP_GUIDE.md                    400+ lines
 IMPLEMENTATION.md                 300+ lines
@@ -384,7 +384,7 @@ IMPLEMENTATION.md                 300+ lines
 ### Modified Files
 ```
 devices/list.php                  +50 lines (enhanced query + UI)
-config/builder.php                +60 lines (device assignment)
+settings/builder.php                +60 lines (device assignment)
 ```
 
 ### Migrations

@@ -1,7 +1,7 @@
 <?php
 $page_title = 'Staging Certificates';
 session_start();
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 
 if (!isset($_SESSION['admin_id'])) {

@@ -4,7 +4,7 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/provision_error.log');
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../settings/database.php';
 
 error_log("=== PROVISION REQUEST START ===");
 error_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);

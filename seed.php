@@ -1,7 +1,7 @@
 <?php
 // seed.php - add sample data (admin user, roles, device types, sample devices)
 // Run once after install: php seed.php
-require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/settings/database.php';
 
 function ensure_role($pdo, $role_name, $description = '') {
     $stmt = $pdo->prepare('SELECT id FROM roles WHERE role_name = ?');

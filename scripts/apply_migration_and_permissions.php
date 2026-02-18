@@ -31,10 +31,10 @@ if (!file_exists($sqlFile)) {
 }
 
 // Load database configuration
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../settings/database.php';
 
 if (!isset($pdo)) {
-    die("ERROR: Database connection not established. Check config/database.php" . PHP_EOL);
+    die("ERROR: Database connection not established. Check settings/database.php" . PHP_EOL);
 }
 
 // Read SQL file

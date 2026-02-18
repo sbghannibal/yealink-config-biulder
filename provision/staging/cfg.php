@@ -6,7 +6,7 @@
  * NOTE: No authentication required - MAC validation is security
  */
 
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../settings/database.php';
 
 // Get MAC from request
 $mac = null;
