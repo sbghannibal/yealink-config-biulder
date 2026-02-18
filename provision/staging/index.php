@@ -109,21 +109,15 @@ try {
     $server_url = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'yealink-cfg.eu');
 
     // Generate boot configuration
-    // Using heredoc with single quotes to prevent variable interpolation
-    // Placeholders are replaced with str_replace() for clarity and security
     $boot_config = <<<'CONFIG'
 #!version:1.0.0.1
 
 [DEVICE_INFO]
 device_mac={{DEVICE_MAC}}
 
-[CONFIG_FILES]
-# Download certificate configuration from separate file
-static.config_files={{SERVER_URL}}/provision/staging/certificates.php
-
 [AUTO_PROVISION]
-# Full provisioning configuration (device validation happens here)
-static.auto_provision.url={{SERVER_URL}}/provision/
+# Download device-specific configuration (includes certificates + full config)
+static.auto_provision.url={{SERVER_URL}}/provision/staging/{{DEVICE_MAC_PLAIN}}.cfg
 static.auto_provision.enable=1
 
 # Reboot to apply provisioning
@@ -137,8 +131,8 @@ CONFIG;
 
     // Replace placeholders
     $boot_config = str_replace(
-        ['{{DEVICE_MAC}}', '{{SERVER_URL}}'],
-        [$mac_formatted, $server_url],
+        ['{{DEVICE_MAC}}', '{{DEVICE_MAC_PLAIN}}', '{{SERVER_URL}}'],
+        [$mac_formatted, $mac, $server_url],
         $boot_config
     );
 

@@ -9,6 +9,11 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.+\.boot)$ index.php [QSA,L]
 
+# Rewrite .cfg requests to cfg.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+\.cfg)$ cfg.php [QSA,L]
+
 # Allow .boot files
 <Files "*.boot">
     SSLVerifyClient none
