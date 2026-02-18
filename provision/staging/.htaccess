@@ -14,17 +14,20 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.+\.cfg)$ cfg.php [QSA,L]
 
-# Allow .boot files
+# Allow .boot files - NO AUTH (phone doesn't support it)
 <Files "*.boot">
     SSLVerifyClient none
+    Allow from all
 </Files>
 
-# Allow .cfg files
+# Allow .cfg files - NO AUTH (phone can't authenticate)
 <Files "*.cfg">
     SSLVerifyClient none
+    Allow from all
 </Files>
 
-# Allow certificates
+# Allow certificates - NO AUTH
 <FilesMatch "\.pem$|\.crt$">
     SSLVerifyClient none
+    Allow from all
 </FilesMatch>

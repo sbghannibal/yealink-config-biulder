@@ -4,53 +4,11 @@
  *
  * Stage 1: Download boot configuration with certificate URLs
  * Phone will then download certificates and full config
+ * 
+ * NOTE: No authentication required - MAC validation is security
  */
 
 require_once __DIR__ . '/../../config/database.php';
-
-// HTTP Basic Authentication for staging provisioning
-$auth_username = getenv('STAGING_AUTH_USER') ?: 'provisioning';
-$auth_password = getenv('STAGING_AUTH_PASS') ?: '';
-
-// Check if authentication is configured
-if (!empty($auth_password)) {
-    // Require authentication
-    if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) ||
-        $_SERVER['PHP_AUTH_USER'] !== $auth_username ||
-        $_SERVER['PHP_AUTH_PW'] !== $auth_password) {
-
-        header('WWW-Authenticate: Basic realm="Yealink Staging Provisioning"');
-        http_response_code(401);
-        echo "Authentication required";
-        error_log("Staging auth failed - User: " . ($_SERVER['PHP_AUTH_USER'] ?? 'none'));
-        exit;
-    }
-}
-
-// Security: Verify User-Agent is from Yealink device
-$user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-$is_yealink = false;
-
-// Check if User-Agent contains Yealink identifier
-if (stripos($user_agent, 'yealink') !== false) {
-    $is_yealink = true;
-}
-
-// Allow bypass for testing with specific parameter (only for Owner in development)
-$allow_test = isset($_GET['allow_test']) && $_GET['allow_test'] === getenv('STAGING_TEST_TOKEN');
-
-if (!$is_yealink && !$allow_test) {
-    http_response_code(403);
-    header('Content-Type: text/plain');
-    echo "# Error: Access denied - Invalid device type\n";
-    error_log("Staging rejected - Non-Yealink User-Agent: $user_agent from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-    exit;
-}
-
-// Log the device type for monitoring
-if ($is_yealink) {
-    error_log("Staging request from Yealink device - UA: $user_agent");
-}
 
 // Get MAC from request
 $mac = null;
@@ -66,7 +24,7 @@ if (!$mac && isset($_GET['mac'])) {
 }
 
 // Log request
-error_log("Staging request - MAC: " . ($mac ?? 'UNKNOWN'));
+error_log("Boot: REQUEST_URI=" . $_SERVER['REQUEST_URI'] . " MAC=" . ($mac ?? 'UNKNOWN'));
 
 if (!$mac || strlen($mac) !== 12) {
     http_response_code(400);
@@ -100,7 +58,7 @@ try {
         http_response_code(403);
         header('Content-Type: text/plain');
         echo "# Error: Device not found or inactive\n";
-        error_log("Staging rejected - Device not found: $mac");
+        error_log("Boot: Device not found - $mac");
         exit;
     }
 
@@ -136,18 +94,7 @@ CONFIG;
         $boot_config
     );
 
-    // Log staging request
-    $log_stmt = $pdo->prepare('
-        INSERT INTO provision_logs
-        (device_id, mac_address, ip_address, user_agent, provisioned_at)
-        VALUES (?, ?, ?, ?, NOW())
-    ');
-    $log_stmt->execute([
-        $device['id'],
-        $mac_formatted,
-        $_SERVER['REMOTE_ADDR'] ?? null,
-        $_SERVER['HTTP_USER_AGENT'] ?? null
-    ]);
+    error_log("Boot: Generated config for $mac");
 
     // Return boot configuration
     header('Content-Type: text/plain; charset=utf-8');
@@ -155,7 +102,7 @@ CONFIG;
     echo $boot_config;
 
 } catch (Exception $e) {
-    error_log('Staging provisioning error: ' . $e->getMessage());
+    error_log('Boot provisioning error: ' . $e->getMessage());
     http_response_code(500);
     header('Content-Type: text/plain');
     echo "# Error: Server error\n";

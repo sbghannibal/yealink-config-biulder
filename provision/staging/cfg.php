@@ -2,33 +2,34 @@
 /**
  * Device-Specific Configuration with Certificates
  * Handles requests for {MAC}.cfg files
+ * 
+ * NOTE: No authentication required - MAC validation is security
  */
 
 require_once __DIR__ . '/../../config/database.php';
 
-// HTTP Basic Authentication (same as boot)
-$auth_username = getenv('STAGING_AUTH_USER') ?: 'provisioning';
-$auth_password = getenv('STAGING_AUTH_PASS') ?: '';
-
-if (!empty($auth_password)) {
-    if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) ||
-        $_SERVER['PHP_AUTH_USER'] !== $auth_username ||
-        $_SERVER['PHP_AUTH_PW'] !== $auth_password) {
-        http_response_code(401);
-        exit;
-    }
-}
-
-// Get MAC from request path (e.g., /staging/805e0cf40bb9.cfg)
+// Get MAC from request
 $mac = null;
+
+// Try to get MAC from original request in REQUEST_URI
 if (preg_match('/([0-9a-f]{12})\.cfg$/i', $_SERVER['REQUEST_URI'], $matches)) {
     $mac = strtoupper($matches[1]);
 }
+
+// Fallback: try REDIRECT_URL (set by mod_rewrite)
+if (!$mac && isset($_SERVER['REDIRECT_URL']) && 
+    preg_match('/([0-9a-f]{12})\.cfg$/i', $_SERVER['REDIRECT_URL'], $matches)) {
+    $mac = strtoupper($matches[1]);
+}
+
+error_log("CFG: REQUEST_URI=" . $_SERVER['REQUEST_URI'] . 
+          " Extracted MAC=" . ($mac ?? 'none'));
 
 if (!$mac || strlen($mac) !== 12) {
     http_response_code(400);
     header('Content-Type: text/plain');
     echo "# Error: Invalid MAC address\n";
+    error_log("CFG: Invalid MAC - " . ($mac ?? 'none'));
     exit;
 }
 
@@ -43,7 +44,7 @@ $mac_formatted = strtoupper(
 );
 
 try {
-    // Verify device exists
+    // Verify device exists - THIS IS OUR SECURITY CHECK
     $stmt = $pdo->prepare('
         SELECT id FROM devices
         WHERE REPLACE(REPLACE(UPPER(mac_address), ":", ""), "-", "") = ?
@@ -57,6 +58,7 @@ try {
         http_response_code(403);
         header('Content-Type: text/plain');
         echo "# Error: Device not found or inactive\n";
+        error_log("CFG: Device not found - $mac from IP " . $_SERVER['REMOTE_ADDR']);
         exit;
     }
 
@@ -101,6 +103,8 @@ CONFIG;
         [$mac_formatted, $server_url],
         $config
     );
+
+    error_log("CFG: Generated config for $mac from IP " . $_SERVER['REMOTE_ADDR']);
 
     // Return configuration
     header('Content-Type: text/plain; charset=utf-8');
