@@ -64,7 +64,8 @@ if (!isset($_SESSION['wizard_data'])) {
         'device_type_id' => null,
         'template_id' => null,
         'variables' => [],
-        'config_content' => ''
+        'config_content' => '',
+        'customer_id' => null
     ];
 } elseif ($device_id && $_SESSION['wizard_data']['device_id'] != $device_id) {
     // Reset if device changed
@@ -73,7 +74,8 @@ if (!isset($_SESSION['wizard_data'])) {
         'device_type_id' => null,
         'template_id' => null,
         'variables' => [],
-        'config_content' => ''
+        'config_content' => '',
+        'customer_id' => null
     ];
 }
 
@@ -84,6 +86,7 @@ error_log("=== WIZARD STEP $step ===");
 error_log("session_id: " . session_id());
 error_log("wizard_data keys: " . json_encode(array_keys($wizard_data)));
 error_log("wizard_data['variables']: " . json_encode($wizard_data['variables']));
+error_log("wizard_data['customer_id']: " . ($wizard_data['customer_id'] ?? 'null'));
 
 // Load device if ID provided
 $device = null;
@@ -178,12 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!$result['success']) {
                         $error = $result['error'];
                     } else {
-                        // For now, we'll save without customer_id in config_versions table
-                        // as config_versions doesn't have customer_id yet (it still uses pabx_id)
-                        // We'll need to check if pabx table exists, if not create a dummy entry or skip
-
                         // Check if we can save config - we need a dummy pabx_id for backward compatibility
-                        // Let's create a default customer-based pabx entry if needed
                         $stmt = $pdo->prepare('SELECT id FROM pabx WHERE pabx_name = ? LIMIT 1');
                         $stmt->execute([DEFAULT_CUSTOMER_PABX_NAME]);
                         $default_pabx = $stmt->fetch();
@@ -481,7 +479,7 @@ require_once __DIR__ . '/../admin/_header.php';
                     <select name="customer_id" <?php if ($device_id): ?>required<?php endif; ?>>
                         <option value="">-- Selecteer klant --</option>
                         <?php foreach ($customer_list as $c): ?>
-                            <option value="<?php echo (int)$c['id']; ?>">
+                            <option value="<?php echo (int)$c['id']; ?>" <?php echo (isset($wizard_data['customer_id']) && $wizard_data['customer_id'] == $c['id']) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($c['customer_code'] . ' - ' . $c['company_name']); ?>
                             </option>
                         <?php endforeach; ?>
@@ -492,7 +490,7 @@ require_once __DIR__ . '/../admin/_header.php';
                 </div>
 
                 <div style="display:flex;gap:8px;margin-top:16px;">
-                    <a class="btn" href="?step=3<?php echo $device_id ? "&device_id=$device_id" : ''; ?>" style="background:#6c757d;">&larr; Terug</a>
+                    <a class="btn" href="?step=3<?php echo $device_id ? "&device_id=$device_id" : ''; ?>" style="background:#6c757d;">&larr; Terug naar Variabelen</a>
                     <button class="btn" type="submit">Opslaan & Voltooien</button>
                 </div>
             </form>
@@ -505,6 +503,16 @@ require_once __DIR__ . '/../admin/_header.php';
             <?php if (isset($wizard_data['config_version_id'])): ?>
                 <div style="margin:16px 0;">
                     <p><strong>Config Versie ID:</strong> <?php echo (int)$wizard_data['config_version_id']; ?></p>
+                    <?php if ($wizard_data['customer_id']): ?>
+                        <p><strong>Klant:</strong> 
+                            <?php 
+                            $stmt = $pdo->prepare('SELECT customer_code, company_name FROM customers WHERE id = ?');
+                            $stmt->execute([$wizard_data['customer_id']]);
+                            $cust = $stmt->fetch(PDO::FETCH_ASSOC);
+                            echo htmlspecialchars($cust['customer_code'] . ' - ' . $cust['company_name']);
+                            ?>
+                        </p>
+                    <?php endif; ?>
                     <?php if ($device_id): ?>
                         <p>De configuratie is toegewezen aan device: <strong><?php echo htmlspecialchars($device['device_name']); ?></strong></p>
                     <?php endif; ?>
