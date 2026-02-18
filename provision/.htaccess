@@ -1,15 +1,16 @@
-# Require HTTPS
 RewriteEngine On
+
+# Force HTTPS
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Allow .boot files WITHOUT certificate
-<Files "*.boot">
-    SSLVerifyClient optional
-</Files>
+# Rewrite .cfg requests to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+\.cfg)$ index.php [QSA,L]
 
-# Require certificate for .cfg files
+# Allow .cfg files - NO client cert required
 <Files "*.cfg">
-    SSLVerifyClient require
-    SSLVerifyDepth 10
+    SSLVerifyClient none
+    Allow from all
 </Files>

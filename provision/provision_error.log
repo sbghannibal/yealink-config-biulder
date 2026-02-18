@@ -1,0 +1,81 @@
+[18-Feb-2026 09:45:39 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:45:39 Europe/Brussels] REQUEST_URI: /provision/805e0cf40bb9.cfg
+[18-Feb-2026 09:45:39 Europe/Brussels] USER_AGENT: Yealink W70B 146.87.188.1 80:5e:0c:f4:0b:b9
+[18-Feb-2026 09:45:39 Europe/Brussels] Is Yealink: YES
+[18-Feb-2026 09:45:39 Europe/Brussels] MAC extracted: 805E0CF40BB9
+[18-Feb-2026 09:45:39 Europe/Brussels] MAC formatted: 80:5E:0C:F4:0B:B9
+[18-Feb-2026 09:45:39 Europe/Brussels] Querying database for device...
+[18-Feb-2026 09:45:39 Europe/Brussels] Device found: YES
+[18-Feb-2026 09:45:39 Europe/Brussels] Device ID: 9
+[18-Feb-2026 09:45:39 Europe/Brussels] Config version ID: 14
+[18-Feb-2026 09:45:39 Europe/Brussels] Fetching config version...
+[18-Feb-2026 09:45:39 Europe/Brussels] PHP Warning:  Undefined array key "template_id" in /home/admin/domains/yealink-cfg.eu/public_html/provision/index.php on line 102
+[18-Feb-2026 09:45:39 Europe/Brussels] Config version found, template ID: 
+[18-Feb-2026 09:45:39 Europe/Brussels] Fetching template...
+[18-Feb-2026 09:45:39 Europe/Brussels] PDO Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'admin_yealink.templates' doesn't exist
+[18-Feb-2026 09:45:39 Europe/Brussels] SQL State: 42S02
+[18-Feb-2026 09:49:16 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:49:16 Europe/Brussels] REQUEST_URI: /provision/805e0cf40bb9.cfg
+[18-Feb-2026 09:49:16 Europe/Brussels] USER_AGENT: Yealink W70B 146.87.188.1 80:5e:0c:f4:0b:b9
+[18-Feb-2026 09:49:16 Europe/Brussels] Is Yealink: YES
+[18-Feb-2026 09:49:16 Europe/Brussels] MAC extracted: 805E0CF40BB9
+[18-Feb-2026 09:49:16 Europe/Brussels] MAC formatted: 80:5E:0C:F4:0B:B9
+[18-Feb-2026 09:49:16 Europe/Brussels] Querying database for device...
+[18-Feb-2026 09:49:16 Europe/Brussels] Device found: YES
+[18-Feb-2026 09:49:16 Europe/Brussels] Device ID: 9
+[18-Feb-2026 09:49:16 Europe/Brussels] Config version ID: 14
+[18-Feb-2026 09:49:16 Europe/Brussels] Config found, sending response
+[18-Feb-2026 09:49:16 Europe/Brussels] === PROVISION REQUEST SUCCESS ===
+[18-Feb-2026 09:49:32 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:49:32 Europe/Brussels] REQUEST_URI: /provision/805E0CF40BB9.cfg
+[18-Feb-2026 09:49:32 Europe/Brussels] USER_AGENT: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36
+[18-Feb-2026 09:49:32 Europe/Brussels] Is Yealink: NO
+[18-Feb-2026 09:49:32 Europe/Brussels] Non-Yealink device blocked
+[18-Feb-2026 09:49:55 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:49:55 Europe/Brussels] REQUEST_URI: /provision/y000000000146.cfg
+[18-Feb-2026 09:49:55 Europe/Brussels] USER_AGENT: Yealink W70B 146.87.188.1 80:5e:0c:f4:0b:b9
+[18-Feb-2026 09:49:55 Europe/Brussels] Is Yealink: YES
+[18-Feb-2026 09:49:55 Europe/Brussels] MAC extracted: 000000000146
+[18-Feb-2026 09:49:55 Europe/Brussels] MAC formatted: 00:00:00:00:01:46
+[18-Feb-2026 09:49:55 Europe/Brussels] Querying database for device...
+[18-Feb-2026 09:49:55 Europe/Brussels] Device found: NO
+[18-Feb-2026 09:49:55 Europe/Brussels] Device not found or inactive
+[18-Feb-2026 09:49:55 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:49:55 Europe/Brussels] REQUEST_URI: /provision/805e0cf40bb9.cfg
+[18-Feb-2026 09:49:55 Europe/Brussels] USER_AGENT: Yealink W70B 146.87.188.1 80:5e:0c:f4:0b:b9
+[18-Feb-2026 09:49:55 Europe/Brussels] Is Yealink: YES
+[18-Feb-2026 09:49:55 Europe/Brussels] MAC extracted: 805E0CF40BB9
+[18-Feb-2026 09:49:55 Europe/Brussels] MAC formatted: 80:5E:0C:F4:0B:B9
+[18-Feb-2026 09:49:55 Europe/Brussels] Querying database for device...
+[18-Feb-2026 09:49:55 Europe/Brussels] Device found: YES
+[18-Feb-2026 09:49:55 Europe/Brussels] Device ID: 9
+[18-Feb-2026 09:49:55 Europe/Brussels] Config version ID: 14
+[18-Feb-2026 09:49:55 Europe/Brussels] Config found, sending response
+[18-Feb-2026 09:49:55 Europe/Brussels] === PROVISION REQUEST SUCCESS ===
+[18-Feb-2026 09:50:49 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:50:49 Europe/Brussels] REQUEST_URI: /provision/805e0cf40bb9.cfg
+[18-Feb-2026 09:50:49 Europe/Brussels] USER_AGENT: Yealink W70B 146.87.188.1 80:5e:0c:f4:0b:b9
+[18-Feb-2026 09:50:49 Europe/Brussels] Is Yealink: YES
+[18-Feb-2026 09:50:49 Europe/Brussels] MAC extracted: 805E0CF40BB9
+[18-Feb-2026 09:50:49 Europe/Brussels] MAC formatted: 80:5E:0C:F4:0B:B9
+[18-Feb-2026 09:50:49 Europe/Brussels] Querying database for device...
+[18-Feb-2026 09:50:49 Europe/Brussels] Device found: YES
+[18-Feb-2026 09:50:49 Europe/Brussels] Device ID: 9
+[18-Feb-2026 09:50:49 Europe/Brussels] Config version ID: 14
+[18-Feb-2026 09:50:49 Europe/Brussels] Config found, sending response
+[18-Feb-2026 09:50:49 Europe/Brussels] === PROVISION REQUEST SUCCESS ===
+[18-Feb-2026 09:50:49 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:50:49 Europe/Brussels] REQUEST_URI: /provision/805e0cf40bb9.cfg
+[18-Feb-2026 09:50:49 Europe/Brussels] USER_AGENT: curl/8.5.0
+[18-Feb-2026 09:50:49 Europe/Brussels] Is Yealink: NO
+[18-Feb-2026 09:50:49 Europe/Brussels] Non-Yealink device blocked
+[18-Feb-2026 09:50:49 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:50:49 Europe/Brussels] REQUEST_URI: /provision/805e0cf40bb9.cfg
+[18-Feb-2026 09:50:49 Europe/Brussels] USER_AGENT: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+[18-Feb-2026 09:50:49 Europe/Brussels] Is Yealink: NO
+[18-Feb-2026 09:50:49 Europe/Brussels] Non-Yealink device blocked
+[18-Feb-2026 09:50:50 Europe/Brussels] === PROVISION REQUEST START ===
+[18-Feb-2026 09:50:50 Europe/Brussels] REQUEST_URI: /provision/invalid.cfg
+[18-Feb-2026 09:50:50 Europe/Brussels] USER_AGENT: Yealink W70B
+[18-Feb-2026 09:50:50 Europe/Brussels] Is Yealink: YES
+[18-Feb-2026 09:50:50 Europe/Brussels] MAC extracted: NONE

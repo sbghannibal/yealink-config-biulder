@@ -1,0 +1,14 @@
+[18-Feb-2026 14:11:57 Europe/Brussels] Download request: device_id=9, mac=80:5E:0C:F4:0B:B9
+[18-Feb-2026 14:11:57 Europe/Brussels] Device found: W70B Test apparaat provisioing, MAC: 80:5E:0C:F4:0B:B9
+[18-Feb-2026 14:11:57 Europe/Brussels] Config version ID: 16
+[18-Feb-2026 14:11:57 Europe/Brussels] Config content retrieved, length: 679
+[18-Feb-2026 14:11:57 Europe/Brussels] Applying variables and formatting...
+[18-Feb-2026 14:11:57 Europe/Brussels] Config prepared, sending download...
+[18-Feb-2026 14:11:57 Europe/Brussels] Download sent successfully
+[18-Feb-2026 14:15:44 Europe/Brussels] Download request: device_id=9, mac=80:5E:0C:F4:0B:B9
+[18-Feb-2026 14:15:44 Europe/Brussels] Device found: W70B Test apparaat provisioing, MAC: 80:5E:0C:F4:0B:B9
+[18-Feb-2026 14:15:44 Europe/Brussels] Config version ID: 16
+[18-Feb-2026 14:15:44 Europe/Brussels] Config content retrieved, length: 679
+[18-Feb-2026 14:15:44 Europe/Brussels] Applying variables and formatting...
+[18-Feb-2026 14:15:44 Europe/Brussels] Config prepared, sending download...
+[18-Feb-2026 14:15:44 Europe/Brussels] Download sent successfully

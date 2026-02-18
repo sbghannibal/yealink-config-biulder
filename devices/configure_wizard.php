@@ -1,6 +1,15 @@
 <?php
 $page_title = 'Config Wizard';
 session_start();
+
+// Set error log to app directory
+ini_set('error_log', __DIR__ . '/../logs/wizard.log');
+if (!is_dir(__DIR__ . '/../logs')) {
+    mkdir(__DIR__ . '/../logs', 0755, true);
+}
+error_reporting(E_ALL);
+ini_set('log_errors', 1);
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/generator.php';
 require_once __DIR__ . '/../config/validator.php';
@@ -70,6 +79,12 @@ if (!isset($_SESSION['wizard_data'])) {
 
 $wizard_data = &$_SESSION['wizard_data'];
 
+// DEBUG: Log wizard data per step
+error_log("=== WIZARD STEP $step ===");
+error_log("session_id: " . session_id());
+error_log("wizard_data keys: " . json_encode(array_keys($wizard_data)));
+error_log("wizard_data['variables']: " . json_encode($wizard_data['variables']));
+
 // Load device if ID provided
 $device = null;
 if ($device_id) {
@@ -82,7 +97,7 @@ if ($device_id) {
         ');
         $stmt->execute([$device_id]);
         $device = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($device) {
             $wizard_data['device_type_id'] = $device['device_type_id'];
         }
@@ -94,11 +109,13 @@ if ($device_id) {
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log("POST action: " . ($_POST['action'] ?? 'none'));
+    
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = 'Ongeldige aanvraag (CSRF).';
     } else {
         $action = $_POST['action'] ?? '';
-        
+
         // Step 1: Device Type Selection
         if ($action === 'select_type' && $step === 1) {
             $wizard_data['device_type_id'] = !empty($_POST['device_type_id']) ? (int)$_POST['device_type_id'] : null;
@@ -109,18 +126,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Selecteer een device type.';
             }
         }
-        
+
         // Step 2: Template Selection
         if ($action === 'select_template' && $step === 2) {
             $wizard_data['template_id'] = !empty($_POST['template_id']) ? (int)$_POST['template_id'] : null;
             if ($wizard_data['template_id']) {
+                error_log("Template selected: " . $wizard_data['template_id']);
                 header('Location: ?step=3' . ($device_id ? "&device_id=$device_id" : ''));
                 exit;
             } else {
                 $error = 'Selecteer een template.';
             }
         }
-        
+
         // Step 3: Variable Input
         if ($action === 'set_variables' && $step === 3) {
             // Collect all variable inputs
@@ -136,34 +154,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
+            error_log("=== STEP 3 POST - Variables collected ===");
+            error_log("Total variables: " . count($wizard_data['variables']));
+            error_log("Variables: " . json_encode($wizard_data['variables']));
             header('Location: ?step=4' . ($device_id ? "&device_id=$device_id" : ''));
             exit;
         }
-        
+
         // Step 4: Customer Selection
         if ($action === 'select_customer' && $step === 4) {
             $customer_id = !empty($_POST['customer_id']) ? (int)$_POST['customer_id'] : null;
-            
+
             if (!$customer_id) {
                 $error = 'Selecteer een klant.';
             } else {
                 try {
                     // Generate config from template
-                    $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
+                    error_log("=== STEP 4 POST - Generating config ===");
+                    error_log("Using variables: " . json_encode($wizard_data['variables']));
                     
+                    $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
+
                     if (!$result['success']) {
                         $error = $result['error'];
                     } else {
                         // For now, we'll save without customer_id in config_versions table
                         // as config_versions doesn't have customer_id yet (it still uses pabx_id)
                         // We'll need to check if pabx table exists, if not create a dummy entry or skip
-                        
+
                         // Check if we can save config - we need a dummy pabx_id for backward compatibility
                         // Let's create a default customer-based pabx entry if needed
                         $stmt = $pdo->prepare('SELECT id FROM pabx WHERE pabx_name = ? LIMIT 1');
                         $stmt->execute([DEFAULT_CUSTOMER_PABX_NAME]);
                         $default_pabx = $stmt->fetch();
-                        
+
                         if (!$default_pabx) {
                             // Create a default pabx entry for customer-based configs
                             $stmt = $pdo->prepare('INSERT INTO pabx (pabx_name, pabx_ip, pabx_type, is_active, created_by) VALUES (?, ?, ?, 1, ?)');
@@ -172,18 +196,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         } else {
                             $pabx_id = $default_pabx['id'];
                         }
-                        
+
                         // Save as config version
                         $stmt = $pdo->prepare('
-                            SELECT COALESCE(MAX(version_number), 0) + 1 AS next_ver 
-                            FROM config_versions 
+                            SELECT COALESCE(MAX(version_number), 0) + 1 AS next_ver
+                            FROM config_versions
                             WHERE pabx_id = ? AND device_type_id = ?
                         ');
                         $stmt->execute([$pabx_id, $wizard_data['device_type_id']]);
                         $next_ver = (int) $stmt->fetchColumn();
-                        
+
                         $stmt = $pdo->prepare('
-                            INSERT INTO config_versions 
+                            INSERT INTO config_versions
                             (pabx_id, device_type_id, version_number, config_content, changelog, is_active, created_by, created_at)
                             VALUES (?, ?, ?, ?, ?, 1, ?, NOW())
                         ');
@@ -197,27 +221,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $admin_id
                         ]);
                         $config_version_id = $pdo->lastInsertId();
-                        
+
                         // Assign to device if device_id provided and update customer_id
                         if ($device_id) {
                             // Update device customer_id
                             $stmt = $pdo->prepare('UPDATE devices SET customer_id = ? WHERE id = ?');
                             $stmt->execute([$customer_id, $device_id]);
-                            
+
                             // Assign config to device
                             $stmt = $pdo->prepare('
-                                INSERT INTO device_config_assignments 
+                                INSERT INTO device_config_assignments
                                 (device_id, config_version_id, assigned_by, assigned_at)
                                 VALUES (?, ?, ?, NOW())
                                 ON DUPLICATE KEY UPDATE config_version_id = VALUES(config_version_id), assigned_at = NOW()
                             ');
                             $stmt->execute([$device_id, $config_version_id, $admin_id]);
                         }
-                        
+
                         $wizard_data['config_version_id'] = $config_version_id;
                         $wizard_data['config_content'] = $result['content'];
                         $wizard_data['customer_id'] = $customer_id;
-                        
+
                         header('Location: ?step=5' . ($device_id ? "&device_id=$device_id" : ''));
                         exit;
                     }
@@ -243,40 +267,42 @@ try {
         $stmt = $pdo->query('SELECT id, type_name, description FROM device_types ORDER BY type_name');
         $device_types = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     // Load templates for step 2
     if ($step === 2 && $wizard_data['device_type_id']) {
         $stmt = $pdo->prepare('
-            SELECT * FROM config_templates 
-            WHERE device_type_id = ? AND is_active = 1 
+            SELECT * FROM config_templates
+            WHERE device_type_id = ? AND is_active = 1
             ORDER BY is_default DESC, category, template_name
         ');
         $stmt->execute([$wizard_data['device_type_id']]);
         $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     // Load template variables for step 3
     if ($step === 3 && $wizard_data['template_id']) {
         $stmt = $pdo->prepare('
-            SELECT * FROM template_variables 
-            WHERE template_id = ? 
+            SELECT * FROM template_variables
+            WHERE template_id = ?
             ORDER BY display_order, var_name
         ');
         $stmt->execute([$wizard_data['template_id']]);
         $template_variables = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Also load global variables for reference
         $stmt = $pdo->query('SELECT var_name, var_value FROM variables');
         $global_variables = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
-    
+
     // Load customer list for step 4
     if ($step === 4) {
         $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 ORDER BY company_name');
         $customer_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Generate preview
+
+        // Generate preview - use stored variables from session
         if ($wizard_data['template_id']) {
+            error_log("=== STEP 4 GET - Generating preview ===");
+            error_log("Using variables: " . json_encode($wizard_data['variables']));
             $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
             if ($result['success']) {
                 $wizard_data['config_content'] = $result['content'];
@@ -337,7 +363,7 @@ require_once __DIR__ . '/../admin/_header.php';
     </style>
 
     <h2>Device Configuratie Wizard <?php if ($device): ?><small>voor <?php echo htmlspecialchars($device['device_name']); ?></small><?php endif; ?></h2>
-    
+
     <ul class="wizard-steps">
         <li class="wizard-step <?php echo $step === 1 ? 'active' : ($step > 1 ? 'completed' : ''); ?>">1. Device Type</li>
         <li class="wizard-step <?php echo $step === 2 ? 'active' : ($step > 2 ? 'completed' : ''); ?>">2. Template</li>
@@ -345,11 +371,11 @@ require_once __DIR__ . '/../admin/_header.php';
         <li class="wizard-step <?php echo $step === 4 ? 'active' : ($step > 4 ? 'completed' : ''); ?>">4. Preview</li>
         <li class="wizard-step <?php echo $step === 5 ? 'active' : ''; ?>">5. Voltooid</li>
     </ul>
-    
+
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
     <?php if ($debug_info): echo $debug_info; endif; // DEBUG ?>
-    
+
     <div class="wizard-content card">
         <?php if ($step === 1): ?>
             <!-- Step 1: Device Type Selection -->
@@ -380,7 +406,7 @@ require_once __DIR__ . '/../admin/_header.php';
                     <button class="btn" type="submit">Volgende →</button>
                 </form>
             <?php endif; ?>
-            
+
         <?php elseif ($step === 2): ?>
             <!-- Step 2: Template Selection -->
             <h3>Stap 2: Selecteer Config Template</h3>
@@ -408,7 +434,7 @@ require_once __DIR__ . '/../admin/_header.php';
                     </div>
                 </form>
             <?php endif; ?>
-            
+
         <?php elseif ($step === 3): ?>
             <!-- Step 3: Variable Input -->
             <h3>Stap 3: Configureer Variabelen</h3>
@@ -416,40 +442,40 @@ require_once __DIR__ . '/../admin/_header.php';
             <form method="post">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                 <input type="hidden" name="action" value="set_variables">
-                
+
                 <?php if (empty($template_variables)): ?>
                     <p style="color:#666;">Dit template heeft geen specifieke variabelen. Globale variabelen worden automatisch toegepast.</p>
                 <?php else: ?>
                     <?php foreach ($template_variables as $var): ?>
                         <?php
                         // Get current value from wizard data, default value, or global variables
-                        $current_value = $wizard_data['variables'][$var['var_name']] ?? 
-                                       $var['default_value'] ?? 
+                        $current_value = $wizard_data['variables'][$var['var_name']] ??
+                                       $var['default_value'] ??
                                        ($global_variables[$var['var_name']] ?? '');
-                        
+
                         // Render the input using the helper function
                         echo render_variable_input($var, $current_value, ['show_label' => true]);
                         ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
-                
+
                 <div style="display:flex;gap:8px;margin-top:16px;">
                     <a class="btn" href="?step=2<?php echo $device_id ? "&device_id=$device_id" : ''; ?>" style="background:#6c757d;">&larr; Terug</a>
                     <button class="btn" type="submit">Volgende →</button>
                 </div>
             </form>
-            
+
         <?php elseif ($step === 4): ?>
             <!-- Step 4: Customer Selection & Preview -->
             <h3>Stap 4: Selecteer Klant & Preview</h3>
             <p>Controleer de gegenereerde configuratie en selecteer een klant:</p>
-            
+
             <div class="config-preview"><?php echo htmlspecialchars($wizard_data['config_content']); ?></div>
-            
+
             <form method="post" style="margin-top:16px;">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                 <input type="hidden" name="action" value="select_customer">
-                
+
                 <div class="form-group">
                     <label>Selecteer Klant <?php if ($device_id): ?>*<?php endif; ?></label>
                     <select name="customer_id" <?php if ($device_id): ?>required<?php endif; ?>>
@@ -464,18 +490,18 @@ require_once __DIR__ . '/../admin/_header.php';
                         <small style="color:#6c757d;">Optioneel wanneer geen device is geselecteerd</small>
                     <?php endif; ?>
                 </div>
-                
+
                 <div style="display:flex;gap:8px;margin-top:16px;">
                     <a class="btn" href="?step=3<?php echo $device_id ? "&device_id=$device_id" : ''; ?>" style="background:#6c757d;">&larr; Terug</a>
                     <button class="btn" type="submit">Opslaan & Voltooien</button>
                 </div>
             </form>
-            
+
         <?php elseif ($step === 5): ?>
             <!-- Step 5: Complete -->
             <h3>✓ Configuratie Voltooid!</h3>
             <p>De configuratie is succesvol aangemaakt en opgeslagen.</p>
-            
+
             <?php if (isset($wizard_data['config_version_id'])): ?>
                 <div style="margin:16px 0;">
                     <p><strong>Config Versie ID:</strong> <?php echo (int)$wizard_data['config_version_id']; ?></p>
@@ -483,7 +509,7 @@ require_once __DIR__ . '/../admin/_header.php';
                         <p>De configuratie is toegewezen aan device: <strong><?php echo htmlspecialchars($device['device_name']); ?></strong></p>
                     <?php endif; ?>
                 </div>
-                
+
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
                     <a class="btn" href="/devices/list.php">← Terug naar Devices</a>
                     <a class="btn" href="/config/builder.php" style="background:#28a745;">Config Builder</a>
@@ -498,6 +524,6 @@ require_once __DIR__ . '/../admin/_header.php';
 <?php
 // Clear wizard data after completion
 if ($step === 5 && isset($_SESSION['wizard_data']) && isset($wizard_data['config_version_id'])) {
-    // Keep it for display, but mark for clearing on next page load
+    unset($_SESSION['wizard_data']);
 }
 ?>

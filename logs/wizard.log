@@ -1,0 +1,96 @@
+[18-Feb-2026 14:10:38 Europe/Brussels] === WIZARD STEP 1 ===
+[18-Feb-2026 14:10:38 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:38 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:38 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:39 Europe/Brussels] === WIZARD STEP 1 ===
+[18-Feb-2026 14:10:39 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:39 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:39 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:39 Europe/Brussels] POST action: select_type
+[18-Feb-2026 14:10:39 Europe/Brussels] === WIZARD STEP 2 ===
+[18-Feb-2026 14:10:39 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:39 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:39 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:41 Europe/Brussels] === WIZARD STEP 2 ===
+[18-Feb-2026 14:10:41 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:41 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:41 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:41 Europe/Brussels] POST action: select_template
+[18-Feb-2026 14:10:41 Europe/Brussels] Template selected: 7
+[18-Feb-2026 14:10:41 Europe/Brussels] === WIZARD STEP 3 ===
+[18-Feb-2026 14:10:41 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:41 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:41 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:44 Europe/Brussels] === WIZARD STEP 3 ===
+[18-Feb-2026 14:10:44 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:44 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:44 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:44 Europe/Brussels] POST action: set_variables
+[18-Feb-2026 14:10:44 Europe/Brussels] === STEP 3 POST - Variables collected ===
+[18-Feb-2026 14:10:44 Europe/Brussels] Total variables: 10
+[18-Feb-2026 14:10:44 Europe/Brussels] Variables: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:44 Europe/Brussels] === WIZARD STEP 4 ===
+[18-Feb-2026 14:10:44 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:44 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:44 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:44 Europe/Brussels] === STEP 4 GET - Generating preview ===
+[18-Feb-2026 14:10:44 Europe/Brussels] Using variables: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:49 Europe/Brussels] === WIZARD STEP 4 ===
+[18-Feb-2026 14:10:49 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:49 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:10:49 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:49 Europe/Brussels] POST action: select_customer
+[18-Feb-2026 14:10:49 Europe/Brussels] === STEP 4 POST - Generating config ===
+[18-Feb-2026 14:10:49 Europe/Brussels] Using variables: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:10:49 Europe/Brussels] === WIZARD STEP 5 ===
+[18-Feb-2026 14:10:49 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:10:49 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content","config_version_id","customer_id"]
+[18-Feb-2026 14:10:49 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"VADV","AUTH_NAME":"DAVDAV","USER_NAME":"DAVADVDAVA","PASSWORD":"ADVADVAD","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:19:36 Europe/Brussels] === WIZARD STEP 1 ===
+[18-Feb-2026 14:19:36 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:19:36 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:19:36 Europe/Brussels] wizard_data['variables']: []
+[18-Feb-2026 14:19:38 Europe/Brussels] === WIZARD STEP 1 ===
+[18-Feb-2026 14:19:38 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:19:38 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:19:38 Europe/Brussels] wizard_data['variables']: []
+[18-Feb-2026 14:19:38 Europe/Brussels] POST action: select_type
+[18-Feb-2026 14:19:38 Europe/Brussels] === WIZARD STEP 2 ===
+[18-Feb-2026 14:19:38 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:19:38 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:19:38 Europe/Brussels] wizard_data['variables']: []
+[18-Feb-2026 14:19:39 Europe/Brussels] === WIZARD STEP 2 ===
+[18-Feb-2026 14:19:39 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:19:39 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:19:39 Europe/Brussels] wizard_data['variables']: []
+[18-Feb-2026 14:19:39 Europe/Brussels] POST action: select_template
+[18-Feb-2026 14:19:39 Europe/Brussels] Template selected: 7
+[18-Feb-2026 14:19:39 Europe/Brussels] === WIZARD STEP 3 ===
+[18-Feb-2026 14:19:39 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:19:39 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:19:39 Europe/Brussels] wizard_data['variables']: []
+[18-Feb-2026 14:19:54 Europe/Brussels] === WIZARD STEP 3 ===
+[18-Feb-2026 14:19:54 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:19:54 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:19:54 Europe/Brussels] wizard_data['variables']: []
+[18-Feb-2026 14:19:54 Europe/Brussels] POST action: set_variables
+[18-Feb-2026 14:19:54 Europe/Brussels] === STEP 3 POST - Variables collected ===
+[18-Feb-2026 14:19:54 Europe/Brussels] Total variables: 10
+[18-Feb-2026 14:19:54 Europe/Brussels] Variables: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"cad","AUTH_NAME":"acd","USER_NAME":"adca","PASSWORD":"adad","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:19:54 Europe/Brussels] === WIZARD STEP 4 ===
+[18-Feb-2026 14:19:54 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:19:54 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:19:54 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"cad","AUTH_NAME":"acd","USER_NAME":"adca","PASSWORD":"adad","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:19:54 Europe/Brussels] === STEP 4 GET - Generating preview ===
+[18-Feb-2026 14:19:54 Europe/Brussels] Using variables: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"cad","AUTH_NAME":"acd","USER_NAME":"adca","PASSWORD":"adad","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:20:05 Europe/Brussels] === WIZARD STEP 4 ===
+[18-Feb-2026 14:20:05 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:20:05 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content"]
+[18-Feb-2026 14:20:05 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"cad","AUTH_NAME":"acd","USER_NAME":"adca","PASSWORD":"adad","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:20:05 Europe/Brussels] POST action: select_customer
+[18-Feb-2026 14:20:05 Europe/Brussels] === STEP 4 POST - Generating config ===
+[18-Feb-2026 14:20:05 Europe/Brussels] Using variables: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"cad","AUTH_NAME":"acd","USER_NAME":"adca","PASSWORD":"adad","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
+[18-Feb-2026 14:20:05 Europe/Brussels] === WIZARD STEP 5 ===
+[18-Feb-2026 14:20:05 Europe/Brussels] session_id: 3kdj30dn7rsna5gqsblau8altn
+[18-Feb-2026 14:20:05 Europe/Brussels] wizard_data keys: ["device_id","device_type_id","template_id","variables","config_content","config_version_id","customer_id"]
+[18-Feb-2026 14:20:05 Europe/Brussels] wizard_data['variables']: {"PROVISIONING_URL":"https:\/\/yealink-cfg.eu\/provision\/","ACCOUNT_LABEL":"Line 1","DISPLAY_NAME":"cad","AUTH_NAME":"acd","USER_NAME":"adca","PASSWORD":"adad","PABX_IP":"192.168.1.1","PABX_PORT":"5060","wui_secure_domain_list":"any","wui_limit_ip":"195.13.20.17, 195.13.20.21, 10.*.*.*, 192.168.*.*, 172.16.*.* , 172.17.*.*, 172.18.*.*, 172.19.*.*, 172.20.*.*, 172.21.*.*, 172.22.*.*, 172.23.*.*, 172.24.*.*, 172.25.*.*, 172.26.*.*, 172.27.*.*, 172.28.*.*, 172.29.*.*, 172.30.*.*, 172.31.*.*"}
