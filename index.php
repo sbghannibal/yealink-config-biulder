@@ -360,7 +360,7 @@ require_once __DIR__ . '/admin/_header.php';
             <h3>⚙️ Config Versies</h3>
             <p class="number"><?php echo $stats['config_versions']; ?></p>
             <?php if (has_permission($pdo, $admin_id, 'config.manage')): ?>
-            <p><a href="/settings/versions.php">Beheer versies</a></p>
+            <p><a href="/settings/builder.php">Beheer versies</a></p>
             <?php endif; ?>
         </div>
 

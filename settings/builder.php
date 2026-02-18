@@ -205,8 +205,11 @@ $total_count = 0;
 $config_versions = [];
 
 try {
-    // Build count query
-    $count_sql = "SELECT COUNT(*) as total FROM config_versions cv WHERE 1=1";
+    // Build count query - count only configs with devices OR recently modified
+    $count_sql = "SELECT COUNT(DISTINCT cv.id) as total 
+                  FROM config_versions cv 
+                  LEFT JOIN device_config_assignments dca ON dca.config_version_id = cv.id
+                  WHERE (dca.device_id IS NOT NULL OR cv.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY))";
     $count_params = [];
     
     if ($filter_pabx) {
@@ -222,14 +225,18 @@ try {
     $count_stmt->execute($count_params);
     $total_count = (int) $count_stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Build main query with sorting
+    // Build main query with sorting - join through devices to get customer info
     $sql = "SELECT cv.id, cv.version_number, cv.pabx_id, cv.device_type_id, cv.changelog, 
                    cv.created_at, cv.is_active, p.pabx_name, dt.type_name, a.username,
-                   (SELECT COUNT(*) FROM device_config_assignments dca WHERE dca.config_version_id = cv.id) as device_count
+                   COUNT(DISTINCT dca.device_id) as device_count,
+                   GROUP_CONCAT(DISTINCT c.company_name ORDER BY c.company_name SEPARATOR ', ') as customer_names
             FROM config_versions cv 
             LEFT JOIN pabx p ON cv.pabx_id = p.id 
             LEFT JOIN device_types dt ON cv.device_type_id = dt.id 
             LEFT JOIN admins a ON cv.created_by = a.id 
+            LEFT JOIN device_config_assignments dca ON dca.config_version_id = cv.id
+            LEFT JOIN devices d ON d.id = dca.device_id
+            LEFT JOIN customers c ON c.id = d.customer_id
             WHERE 1=1";
     
     $params = [];
@@ -242,6 +249,13 @@ try {
         $sql .= " AND cv.device_type_id = ?";
         $params[] = $filter_device_type;
     }
+    
+    // Group by config version to aggregate device and customer info
+    $sql .= " GROUP BY cv.id, cv.version_number, cv.pabx_id, cv.device_type_id, cv.changelog, 
+                       cv.created_at, cv.is_active, p.pabx_name, dt.type_name, a.username";
+    
+    // Filter to show only configs with active device assignments OR recently modified (last 30 days)
+    $sql .= " HAVING device_count > 0 OR cv.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
     
     // Apply sorting
     switch ($sort_by) {
@@ -487,12 +501,12 @@ try {
                                 <tr>
                                     <th style="width: 60px;">ID</th>
                                     <th style="width: 80px;">Versie</th>
-                                    <th>PABX</th>
+                                    <th>Klanten</th>
                                     <th>Type</th>
                                     <th>Changelog</th>
                                     <th style="width: 130px;">Datum</th>
                                     <th style="width: 80px;">Devices</th>
-                                    <th style="width: 80px;">Status</th>
+                                    <th style="width: 100px;">Status</th>
                                     <th style="width: 200px;">Acties</th>
                                 </tr>
                             </thead>
@@ -501,16 +515,39 @@ try {
                                     <tr>
                                         <td><strong>#<?php echo (int)$cv['id']; ?></strong></td>
                                         <td><span class="badge info">v<?php echo (int)$cv['version_number']; ?></span></td>
-                                        <td><?php echo htmlspecialchars($cv['pabx_name'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <?php 
+                                            if (!empty($cv['customer_names'])) {
+                                                echo '<small>' . htmlspecialchars($cv['customer_names']) . '</small>';
+                                            } else {
+                                                echo '<small style="color: #999;">Geen klant</small>';
+                                            }
+                                            ?>
+                                        </td>
                                         <td><?php echo htmlspecialchars($cv['type_name'] ?? 'N/A'); ?></td>
                                         <td><small><?php echo htmlspecialchars($cv['changelog'] ?? '-'); ?></small></td>
                                         <td><small><?php echo date('d-m-Y H:i', strtotime($cv['created_at'])); ?></small></td>
-                                        <td><?php echo (int)($cv['device_count'] ?? 0); ?>x</td>
                                         <td>
-                                            <?php if ($cv['is_active']): ?>
-                                                <span class="badge success">✓ Actief</span>
+                                            <?php 
+                                            $device_count = (int)($cv['device_count'] ?? 0);
+                                            if ($device_count > 0) {
+                                                echo '<span class="badge success">' . $device_count . 'x</span>';
+                                            } else {
+                                                echo '<span style="color: #999;">0x</span>';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php 
+                                            $device_count = (int)($cv['device_count'] ?? 0);
+                                            if ($device_count > 0 && $cv['is_active']): ?>
+                                                <span class="badge success" style="background: #28a745;">✓ Actief</span>
+                                            <?php elseif ($device_count > 0 && !$cv['is_active']): ?>
+                                                <span class="badge" style="background: #6c757d; color: white;">Toegewezen</span>
+                                            <?php elseif ($cv['is_active']): ?>
+                                                <span class="badge" style="background: #17a2b8; color: white;">Beschikbaar</span>
                                             <?php else: ?>
-                                                <span class="badge">Inactief</span>
+                                                <span class="badge" style="background: #e0e0e0; color: #666;">Inactief</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
