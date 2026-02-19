@@ -163,5 +163,11 @@ $redirect_delay = 10; // seconds
             ⏱️ Je wordt automatisch doorgestuurd over <span class="countdown" id="countdown"><?php echo $redirect_delay; ?></span> seconden...
         </div>
     </div>
+<footer style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: rgba(255,255,255,0.85); padding: 14px 24px; font-size: 13px; margin-top: 40px; position: fixed; bottom: 0; width: 100%;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span>&#9742;&#65039; Yealink Config Builder</span>
+        <span>&copy; <?php echo date('Y') > 2026 ? '2026 &ndash; ' . date('Y') : '2026'; ?> &mdash; Alle rechten voorbehouden</span>
+    </div>
+</footer>
 </body>
 </html>

@@ -3,6 +3,19 @@
  * Reusable header with dynamic navigation based on permissions
  */
 
+// Auto-inject footer before </body> on every page that includes this header
+ob_start(function ($buffer) {
+    $currentYear  = (int) date('Y');
+    $copyrightYears = $currentYear > 2026 ? '2026 &ndash; ' . $currentYear : '2026';
+    $footer = "\n" . '<footer class="app-footer">'
+        . '<div class="app-footer-inner">'
+        . '<span>&#9742;&#65039; Yealink Config Builder</span>'
+        . '<span>&copy; ' . $copyrightYears . ' &mdash; Alle rechten voorbehouden</span>'
+        . '</div>'
+        . '</footer>';
+    return str_replace('</body>', $footer . "\n</body>", $buffer);
+});
+
 // Ensure session and dependencies are loaded
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -386,6 +399,32 @@ if (in_array('Owner', $user_roles)) {
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
+        /* ── Footer ── */
+        .app-footer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: rgba(255,255,255,0.85);
+            padding: 14px 24px;
+            font-size: 13px;
+            margin-top: 40px;
+        }
+
+        .app-footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .app-footer-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
         @media (max-width: 768px) {
             .header-top {
                 flex-direction: column;
