@@ -1,4 +1,5 @@
 <?php
+$page_title = 'Config Builder';
 session_start();
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
@@ -10,14 +11,14 @@ if (!isset($_SESSION['admin_id'])) {
 }
 $admin_id = (int) $_SESSION['admin_id'];
 
-// Permission required to access builder
+// Permission check
 if (!has_permission($pdo, $admin_id, 'config.manage')) {
     http_response_code(403);
     header('Location: /access_denied.php');
     exit;
 }
 
-// CSRF token ensure
+// CSRF token
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 }
@@ -25,905 +26,694 @@ $csrf = $_SESSION['csrf_token'];
 
 $error = '';
 $success = '';
-$preview = '';
-$loaded_config = null;
 
-// Pagination and filtering parameters
-$per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 25;
-$per_page = in_array($per_page, [10, 25, 50, 100]) ? $per_page : 25;
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$offset = ($page - 1) * $per_page;
-
-$filter_pabx = isset($_GET['filter_pabx']) && $_GET['filter_pabx'] !== '' ? (int)$_GET['filter_pabx'] : null;
-$filter_device_type = isset($_GET['filter_device_type']) && $_GET['filter_device_type'] !== '' ? (int)$_GET['filter_device_type'] : null;
-$sort_by = $_GET['sort_by'] ?? 'recent';
-
-// Load PABX list and device types
+// Get default PABX ID
+$default_pabx_id = 1;
 try {
-    $pstmt = $pdo->query('SELECT id, pabx_name FROM pabx WHERE is_active = 1 ORDER BY pabx_name ASC');
-    $pabx_list = $pstmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $tstmt = $pdo->query('SELECT id, type_name FROM device_types ORDER BY type_name ASC');
-    $device_types = $tstmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Load global variables
-    $vstmt = $pdo->query('SELECT var_name, var_value FROM variables');
-    $variables = $vstmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stmt = $pdo->query('SELECT id FROM pabx WHERE is_active = 1 ORDER BY id ASC LIMIT 1');
+    $pabx = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($pabx) {
+        $default_pabx_id = (int)$pabx['id'];
+    }
 } catch (Exception $e) {
-    error_log('builder load error: ' . $e->getMessage());
-    $pabx_list = $device_types = [];
-    $variables = [];
-    $error = 'Kon builder-gegevens niet ophalen.';
+    error_log('Error getting default PABX: ' . $e->getMessage());
 }
 
-// Helper: apply variables in template content using {{VAR_NAME}} syntax
-function apply_variables($content, $variables) {
-    if (empty($variables)) return $content;
-    return preg_replace_callback('/\{\{\s*([A-Z0-9_]+)\s*\}\}/', function($m) use ($variables) {
-        $key = $m[1];
-        return array_key_exists($key, $variables) ? $variables[$key] : $m[0];
-    }, $content);
+// Handle AJAX request to load config
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'load_config') {
+    if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
+        die(json_encode(['error' => 'CSRF token invalid']));
+    }
+    
+    $config_id = (int)($_POST['config_id'] ?? 0);
+    
+    if (!$config_id) {
+        die(json_encode(['error' => 'Config ID required']));
+    }
+    
+    try {
+        $stmt = $pdo->prepare('
+            SELECT cv.config_content, cv.version_number
+            FROM config_versions cv
+            WHERE cv.id = ?
+        ');
+        $stmt->execute([$config_id]);
+        $config = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$config) {
+            die(json_encode(['error' => 'Config not found']));
+        }
+        
+        die(json_encode([
+            'success' => true,
+            'config_content' => $config['config_content'],
+            'version_number' => $config['version_number']
+        ]));
+    } catch (Exception $e) {
+        die(json_encode(['error' => $e->getMessage()]));
+    }
 }
 
-// Handle actions: load_config, save_config, generate_token, preview
+// Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $posted = $_POST;
-
-    if (!hash_equals($csrf, $posted['csrf_token'] ?? '')) {
+    if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = 'Ongeldige aanvraag (CSRF).';
     } else {
-        $action = $posted['action'] ?? 'save_config';
+        $action = $_POST['action'] ?? '';
 
-        // LOAD existing config for editing
-        if ($action === 'load_config') {
-            $config_version_id = !empty($posted['load_config_id']) ? (int)$posted['load_config_id'] : null;
-            if ($config_version_id) {
-                try {
-                    $stmt = $pdo->prepare('SELECT * FROM config_versions WHERE id = ?');
-                    $stmt->execute([$config_version_id]);
-                    $loaded_config = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if ($loaded_config) {
-                        $success = "Config versie #{$loaded_config['id']} geladen. Je kunt deze nu aanpassen.";
-                    } else {
-                        $error = 'Config versie niet gevonden.';
-                    }
-                } catch (Exception $e) {
-                    error_log('Load config error: ' . $e->getMessage());
-                    $error = 'Kon config niet laden.';
-                }
-            }
-        }
+        // Create new config version
+        if ($action === 'create_config') {
+            $device_id = (int)($_POST['device_id'] ?? 0);
+            $config_content = $_POST['config_content'] ?? '';
+            $set_active = isset($_POST['set_active']) && $_POST['set_active'] === '1' ? true : false;
 
-        $pabx_id = !empty($posted['pabx_id']) ? (int)$posted['pabx_id'] : null;
-        $device_type_id = !empty($posted['device_type_id']) ? (int)$posted['device_type_id'] : null;
-        $raw_content = trim($posted['config_content'] ?? '');
-        $changelog = trim($posted['changelog'] ?? '');
-
-        // Basic validation
-        if (!$pabx_id || !$device_type_id || $raw_content === '') {
-            if ($action === 'save_config') {
-                $error = 'Kies PABX, apparaat-type en vul config-inhoud in.';
-            }
-        } else {
-            // If preview requested: apply variables and show
-            if ($action === 'preview') {
-                $preview = apply_variables($raw_content, $variables);
-            }
-
-            // Save config version
-            if ($action === 'save_config') {
-                try {
-                    // compute next version_number for this pabx + device_type
-                    $vstmt = $pdo->prepare('SELECT COALESCE(MAX(version_number), 0) + 1 AS next_ver FROM config_versions WHERE pabx_id = ? AND device_type_id = ?');
-                    $vstmt->execute([$pabx_id, $device_type_id]);
-                    $next_ver = (int) $vstmt->fetchColumn();
-
-                    $ins = $pdo->prepare('INSERT INTO config_versions (pabx_id, device_type_id, version_number, config_content, changelog, is_active, created_by, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, NOW())');
-                    $ins->execute([$pabx_id, $device_type_id, $next_ver, $raw_content, $changelog, $admin_id]);
-                    $newId = $pdo->lastInsertId();
-
-                    // Audit log
-                    try {
-                        $alog = $pdo->prepare('INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, new_value, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)');
-                        $alog->execute([
-                            $admin_id,
-                            'create_config_version',
-                            'config_version',
-                            $newId,
-                            json_encode(['pabx_id' => $pabx_id, 'device_type_id' => $device_type_id, 'version' => $next_ver]),
-                            $_SERVER['REMOTE_ADDR'] ?? null,
-                            $_SERVER['HTTP_USER_AGENT'] ?? null
-                        ]);
-                    } catch (Exception $e) {
-                        error_log('builder audit error: ' . $e->getMessage());
-                    }
-
-                    $success = 'Configuratie opgeslagen als versie ' . $next_ver . '.';
-                } catch (Exception $e) {
-                    error_log('builder save error: ' . $e->getMessage());
-                    $error = 'Kon configuratie niet opslaan.';
-                }
-            }
-
-            // Generate download token for the provided content/version (optional)
-            if ($action === 'generate_token') {
-                $config_version_id = !empty($posted['config_version_id']) ? (int)$posted['config_version_id'] : null;
-                $expires_hours = !empty($posted['expires_hours']) ? (int)$posted['expires_hours'] : 24;
-                if (!$config_version_id) {
-                    $error = 'Geef een config versie-id op om een token voor te genereren.';
-                } else {
-                    try {
-                        // create token
-                        $token = bin2hex(random_bytes(24));
-                        $expires_at = date('Y-m-d H:i:s', time() + max(3600, $expires_hours * 3600));
-                        $ins = $pdo->prepare('INSERT INTO download_tokens (token, config_version_id, mac_address, device_model, pabx_id, expires_at, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())');
-                        $ins->execute([$token, $config_version_id, null, null, $pabx_id, $expires_at, $admin_id]);
-
-                        // build token URL (best effort - adjust host as needed)
-                        $host = ($_SERVER['HTTPS'] ?? '') ? 'https://' . ($_SERVER['HTTP_HOST'] ?? '') : 'http://' . ($_SERVER['HTTP_HOST'] ?? '');
-                        $token_url = rtrim($host, '/') . '/download.php?token=' . $token;
-
-                        $success = 'Download token aangemaakt. Geldig tot ' . $expires_at . ". URL: $token_url";
-                    } catch (Exception $e) {
-                        error_log('builder token error: ' . $e->getMessage());
-                        $error = 'Kon download token niet aanmaken.';
-                    }
-                }
-            }
-        }
-
-        // Assign config to devices (bulk)
-        if ($action === 'assign_to_devices') {
-            $config_version_id = !empty($posted['config_version_id']) ? (int)$posted['config_version_id'] : null;
-            $device_ids = !empty($posted['device_ids']) ? $posted['device_ids'] : [];
-
-            if (!$config_version_id || empty($device_ids)) {
-                $error = 'Selecteer een configuratie en minimaal één device.';
+            if (!$device_id || empty($config_content)) {
+                $error = 'Device ID en config content zijn vereist.';
             } else {
                 try {
-                    $assigned_count = 0;
-                    foreach ($device_ids as $device_id) {
-                        $device_id = (int) $device_id;
-                        $stmt = $pdo->prepare('INSERT INTO device_config_assignments (device_id, config_version_id, assigned_by, assigned_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE config_version_id = VALUES(config_version_id), assigned_at = NOW()');
-                        $stmt->execute([(int)$device_id, $config_version_id, $admin_id]);
-                        $assigned_count++;
+                    $pdo->beginTransaction();
+
+                    // Get highest version number for this device
+                    $stmt = $pdo->prepare('
+                        SELECT MAX(cv.version_number) as max_version
+                        FROM device_config_assignments dca
+                        INNER JOIN config_versions cv ON dca.config_version_id = cv.id
+                        WHERE dca.device_id = ?
+                    ');
+                    $stmt->execute([$device_id]);
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $next_version = ((int)($result['max_version'] ?? 0)) + 1;
+
+                    // Get device type
+                    $stmt = $pdo->prepare('SELECT device_type_id FROM devices WHERE id = ?');
+                    $stmt->execute([$device_id]);
+                    $device_row = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $device_type_id = $device_row['device_type_id'] ?? null;
+
+                    // Create new config version with default PABX ID
+                    $stmt = $pdo->prepare('
+                        INSERT INTO config_versions (pabx_id, device_type_id, version_number, config_content, created_at, created_by)
+                        VALUES (?, ?, ?, ?, NOW(), ?)
+                    ');
+                    $stmt->execute([$default_pabx_id, $device_type_id, $next_version, $config_content, $admin_id]);
+                    $config_version_id = $pdo->lastInsertId();
+
+                    // Deactivate old configs if set_active is true
+                    if ($set_active) {
+                        $stmt = $pdo->prepare('
+                            UPDATE device_config_assignments
+                            SET is_active = 0, activated_at = NULL
+                            WHERE device_id = ?
+                        ');
+                        $stmt->execute([$device_id]);
                     }
 
-                    $success = "Configuratie toegewezen aan $assigned_count device(s).";
+                    // Assign new config to device
+                    $stmt = $pdo->prepare('
+                        INSERT INTO device_config_assignments (device_id, config_version_id, is_active, assigned_by, assigned_at)
+                        VALUES (?, ?, ?, ?, NOW())
+                    ');
+                    $stmt->execute([$device_id, $config_version_id, $set_active ? 1 : 0, $admin_id]);
+
+                    // Log to history if set active
+                    if ($set_active) {
+                        $stmt = $pdo->prepare('
+                            INSERT INTO config_version_history (device_id, config_version_id, is_active, activated_at, activated_by)
+                            VALUES (?, ?, 1, NOW(), ?)
+                        ');
+                        $stmt->execute([$device_id, $config_version_id, $admin_id]);
+                    }
+
+                    $pdo->commit();
+                    $success = 'Config v' . $next_version . ' created successfully!' . ($set_active ? ' Config is now active.' : '');
+                    
+                    // Redirect to keep selected device
+                    header('Location: ?device_id=' . $device_id);
+                    exit;
                 } catch (Exception $e) {
-                    error_log('Config assignment error: ' . $e->getMessage());
-                    $error = 'Kon configuratie niet toewijzen.';
+                    $pdo->rollBack();
+                    error_log('Create config error: ' . $e->getMessage());
+                    $error = 'Failed to create config: ' . $e->getMessage();
                 }
             }
         }
     }
 }
 
-// Fetch config versions with pagination and filtering
-$total_count = 0;
-$config_versions = [];
+// Get search/filter parameters
+$search_device = isset($_GET['search_device']) ? trim($_GET['search_device']) : '';
+$search_customer = isset($_GET['search_customer']) ? trim($_GET['search_customer']) : '';
+$search_customer_code = isset($_GET['search_customer_code']) ? trim($_GET['search_customer_code']) : '';
+$filter_type = isset($_GET['filter_type']) ? (int)$_GET['filter_type'] : 0;
+$selected_device_id = isset($_GET['device_id']) ? (int)$_GET['device_id'] : 0;
 
+// Get device types for filter
+$device_types = [];
 try {
-    // Build count query - count only configs with devices OR recently modified
-    $count_sql = "SELECT COUNT(DISTINCT cv.id) as total 
-                  FROM config_versions cv 
-                  LEFT JOIN device_config_assignments dca ON dca.config_version_id = cv.id
-                  WHERE (dca.device_id IS NOT NULL OR cv.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY))";
-    $count_params = [];
-    
-    if ($filter_pabx) {
-        $count_sql .= " AND cv.pabx_id = ?";
-        $count_params[] = $filter_pabx;
-    }
-    if ($filter_device_type) {
-        $count_sql .= " AND cv.device_type_id = ?";
-        $count_params[] = $filter_device_type;
-    }
-    
-    $count_stmt = $pdo->prepare($count_sql);
-    $count_stmt->execute($count_params);
-    $total_count = (int) $count_stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Build main query with sorting - join through devices to get customer info
-    $sql = "SELECT cv.id, cv.version_number, cv.pabx_id, cv.device_type_id, cv.changelog, 
-                   cv.created_at, cv.is_active, p.pabx_name, dt.type_name, a.username,
-                   COUNT(DISTINCT dca.device_id) as device_count,
-                   GROUP_CONCAT(DISTINCT c.company_name ORDER BY c.company_name SEPARATOR ', ') as customer_names
-            FROM config_versions cv 
-            LEFT JOIN pabx p ON cv.pabx_id = p.id 
-            LEFT JOIN device_types dt ON cv.device_type_id = dt.id 
-            LEFT JOIN admins a ON cv.created_by = a.id 
-            LEFT JOIN device_config_assignments dca ON dca.config_version_id = cv.id
-            LEFT JOIN devices d ON d.id = dca.device_id
-            LEFT JOIN customers c ON c.id = d.customer_id
-            WHERE 1=1";
-    
-    $params = [];
-    
-    if ($filter_pabx) {
-        $sql .= " AND cv.pabx_id = ?";
-        $params[] = $filter_pabx;
-    }
-    if ($filter_device_type) {
-        $sql .= " AND cv.device_type_id = ?";
-        $params[] = $filter_device_type;
-    }
-    
-    // Group by config version to aggregate device and customer info
-    $sql .= " GROUP BY cv.id, cv.version_number, cv.pabx_id, cv.device_type_id, cv.changelog, 
-                       cv.created_at, cv.is_active, p.pabx_name, dt.type_name, a.username";
-    
-    // Filter to show only configs with active device assignments OR recently modified (last 30 days)
-    $sql .= " HAVING device_count > 0 OR cv.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
-    
-    // Apply sorting
-    switch ($sort_by) {
-        case 'oldest':
-            $sql .= " ORDER BY cv.created_at ASC";
-            break;
-        case 'version':
-            $sql .= " ORDER BY cv.version_number DESC";
-            break;
-        case 'recent':
-        default:
-            $sql .= " ORDER BY cv.created_at DESC";
-            break;
-    }
-    
-    $sql .= " LIMIT ? OFFSET ?";
-    $params[] = (int)$per_page;
-    $params[] = (int)$offset;
-    
-    $cvstmt = $pdo->prepare($sql);
-    $cvstmt->execute($params);
-    $config_versions = $cvstmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->query('SELECT id, type_name FROM device_types ORDER BY type_name ASC');
+    $device_types = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    error_log('Config versions fetch error: ' . $e->getMessage());
-    $config_versions = [];
+    error_log('Device types error: ' . $e->getMessage());
 }
 
-$total_pages = $total_count > 0 ? ceil($total_count / $per_page) : 1;
-$page = min($page, $total_pages);
+// Build search query for devices - Get UNIQUE devices only
+$devices = [];
+$query = '
+    SELECT DISTINCT
+        d.id,
+        d.device_name,
+        d.mac_address,
+        d.is_active,
+        dt.type_name,
+        c.company_name,
+        c.customer_code,
+        (SELECT dca.config_version_id FROM device_config_assignments dca WHERE dca.device_id = d.id AND dca.is_active = 1 LIMIT 1) as config_version_id,
+        (SELECT cv.version_number FROM device_config_assignments dca INNER JOIN config_versions cv ON dca.config_version_id = cv.id WHERE dca.device_id = d.id AND dca.is_active = 1 LIMIT 1) as version_number,
+        (SELECT COUNT(*) FROM device_config_assignments dca WHERE dca.device_id = d.id AND dca.is_active = 1) as has_active_config
+    FROM devices d
+    LEFT JOIN device_types dt ON d.device_type_id = dt.id
+    LEFT JOIN customers c ON d.customer_id = c.id
+    WHERE 1=1
+';
 
-// Fetch devices for assignment
-try {
-    $dstmt = $pdo->query('SELECT d.id, d.device_name, dt.type_name FROM devices d LEFT JOIN device_types dt ON d.device_type_id = dt.id WHERE d.is_active = 1 ORDER BY d.device_name');
-    $devices_list = $dstmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    $devices_list = [];
+$params = [];
+
+if (!empty($search_device)) {
+    $query .= ' AND d.device_name LIKE ?';
+    $params[] = '%' . $search_device . '%';
 }
-$page_title = 'Config Builder';
-require_once __DIR__ . '/../admin/_header.php';
-?>
-<style>
-    .main-grid {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 20px;
-        align-items: start;
-        margin-top: 20px;
-    }
 
-    @media (max-width: 992px) {
-        .main-grid {
-            grid-template-columns: 1fr;
+if (!empty($search_customer)) {
+    $query .= ' AND c.company_name LIKE ?';
+    $params[] = '%' . $search_customer . '%';
+}
+
+if (!empty($search_customer_code)) {
+    $query .= ' AND c.customer_code LIKE ?';
+    $params[] = '%' . $search_customer_code . '%';
+}
+
+if ($filter_type > 0) {
+    $query .= ' AND d.device_type_id = ?';
+    $params[] = $filter_type;
+}
+
+$query .= ' ORDER BY d.device_name ASC';
+
+try {
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+    $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log('Device search error: ' . $e->getMessage());
+    $error = 'Error searching devices: ' . $e->getMessage();
+    $devices = [];
+}
+
+// If device is selected, get all its configs
+$selected_device = null;
+$device_configs = [];
+
+if ($selected_device_id > 0) {
+    try {
+        // Get device info
+        $stmt = $pdo->prepare('
+            SELECT d.id, d.device_name, d.mac_address, d.is_active, dt.type_name, c.company_name, c.customer_code, dt.id as device_type_id
+            FROM devices d
+            LEFT JOIN device_types dt ON d.device_type_id = dt.id
+            LEFT JOIN customers c ON d.customer_id = c.id
+            WHERE d.id = ?
+        ');
+        $stmt->execute([$selected_device_id]);
+        $selected_device = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($selected_device) {
+            // Get all configs for this device
+            $stmt = $pdo->prepare('
+                SELECT
+                    cv.id,
+                    cv.version_number,
+                    cv.created_at,
+                    cv.config_content,
+                    dt.type_name,
+                    dca.is_active,
+                    dca.activated_at,
+                    a.username as assigned_by_name
+                FROM device_config_assignments dca
+                INNER JOIN config_versions cv ON dca.config_version_id = cv.id
+                LEFT JOIN device_types dt ON cv.device_type_id = dt.id
+                LEFT JOIN admins a ON dca.assigned_by = a.id
+                WHERE dca.device_id = ?
+                ORDER BY dca.is_active DESC, cv.created_at DESC
+            ');
+            $stmt->execute([$selected_device_id]);
+            $device_configs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+    } catch (Exception $e) {
+        error_log('Selected device error: ' . $e->getMessage());
+        $error = 'Error loading device details: ' . $e->getMessage();
     }
+}
 
-    .editor-section {
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+// Include header
+if (file_exists(__DIR__ . '/../admin/_header.php')) {
+    include __DIR__ . '/../admin/_header.php';
+}
+?>
 
-    .sidebar {
-        position: sticky;
-        top: 20px;
-    }
-</style>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>🛠️ Config Builder</h2>
-        <a class="btn" href="/settings/builder.php" style="background: #6c757d;">🔄 Reset</a>
-    </div>
+<main class="container">
+    <h2>🛠️ Config Builder</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-    <?php if ($success): ?><div class="alert alert-success"><?php echo nl2br(htmlspecialchars($success)); ?></div><?php endif; ?>
+    <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
-    <div class="main-grid">
-        <!-- Sidebar with Filters -->
-        <aside class="sidebar">
-            <!-- Device Search -->
-            <div class="filter-section">
-                <h4>🔍 Zoek Device</h4>
-                <div class="device-search">
-                    <input type="text" 
-                           id="deviceSearch" 
-                           placeholder="Typ device of klant naam..." 
-                           autocomplete="off">
-                    <span class="search-icon">🔍</span>
-                    <div class="device-results" id="deviceResults" style="display: none;"></div>
-                </div>
-                <div id="selectedDeviceInfo" style="display: none;"></div>
+    <!-- Search & Filter Section -->
+    <div class="card">
+        <h3>🔍 Search & Filter Devices</h3>
+        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0;">
+            <div>
+                <label>Device Name:</label>
+                <input type="text" name="search_device" placeholder="E.g. Reception Phone" value="<?php echo htmlspecialchars($search_device); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
-
-            <!-- PABX Filter -->
-            <div class="filter-section">
-                <h4>Filter op PABX</h4>
-                <select id="filterPabx" onchange="applyFilters()">
-                    <option value="">Alle PABX'en</option>
-                    <?php foreach ($pabx_list as $p): ?>
-                        <option value="<?php echo (int)$p['id']; ?>" <?php echo $filter_pabx == $p['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($p['pabx_name']); ?>
+            <div>
+                <label>Customer Name:</label>
+                <input type="text" name="search_customer" placeholder="E.g. Acme Corp" value="<?php echo htmlspecialchars($search_customer); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+                <label>Customer Code:</label>
+                <input type="text" name="search_customer_code" placeholder="E.g. CUST001" value="<?php echo htmlspecialchars($search_customer_code); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+                <label>Device Type:</label>
+                <select name="filter_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- All Types --</option>
+                    <?php foreach ($device_types as $type): ?>
+                        <option value="<?php echo (int)$type['id']; ?>" <?php echo $filter_type == $type['id'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($type['type_name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
-
-            <!-- Device Type Filter -->
-            <div class="filter-section">
-                <h4>Filter op Type</h4>
-                <select id="filterDeviceType" onchange="applyFilters()">
-                    <option value="">Alle types</option>
-                    <?php foreach ($device_types as $t): ?>
-                        <option value="<?php echo (int)$t['id']; ?>" <?php echo $filter_device_type == $t['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($t['type_name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+                <button type="submit" class="btn" style="flex: 1; background: #007bff;">🔍 Search</button>
+                <a href="/settings/builder.php" class="btn" style="background: #6c757d; text-decoration: none; flex: 1; text-align: center;">Clear</a>
             </div>
+        </form>
+    </div>
 
-            <!-- Sort Options -->
-            <div class="filter-section">
-                <h4>Sorteren</h4>
-                <select id="sortBy" onchange="applyFilters()">
-                    <option value="recent" <?php echo $sort_by === 'recent' ? 'selected' : ''; ?>>Meest recent</option>
-                    <option value="oldest" <?php echo $sort_by === 'oldest' ? 'selected' : ''; ?>>Oudste eerst</option>
-                    <option value="version" <?php echo $sort_by === 'version' ? 'selected' : ''; ?>>Versie nummer</option>
-                </select>
-            </div>
+    <!-- Main Content Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
 
-            <!-- Available Variables -->
-            <div class="filter-section">
-                <h4>Beschikbare Variabelen</h4>
-                <?php if (empty($variables)): ?>
-                    <p style="font-size: 12px; color: #6c757d;">Geen variabelen</p>
-                <?php else: ?>
-                    <div style="max-height: 200px; overflow-y: auto;">
-                        <?php foreach ($variables as $k => $v): ?>
-                            <div style="font-size: 11px; margin-bottom: 6px;">
-                                <code style="background: #f1f3f5; padding: 2px 4px; border-radius: 2px;">{{<?php echo htmlspecialchars($k); ?>}}</code>
-                                <br>
-                                <small style="color: #6c757d;"><?php echo htmlspecialchars($v); ?></small>
+        <!-- Device List -->
+        <div class="card">
+            <h3>📱 Devices (<?php echo count($devices); ?> found)</h3>
+
+            <?php if (empty($devices)): ?>
+                <p style="color: #999; padding: 20px; text-align: center;">No devices found. Try adjusting your search.</p>
+            <?php else: ?>
+                <div style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+                    <?php foreach ($devices as $idx => $device): ?>
+                        <div
+                            style="
+                                padding: 12px;
+                                border-bottom: 1px solid #eee;
+                                cursor: pointer;
+                                background: <?php echo $selected_device_id == $device['id'] ? '#e8f4f8' : '#fff'; ?>;
+                                border-left: 4px solid <?php echo $device['has_active_config'] ? '#28a745' : '#ffc107'; ?>;
+                                transition: background 0.2s;
+                            "
+                            onclick="window.location.href='?device_id=<?php echo (int)$device['id']; ?>&search_device=<?php echo urlencode($search_device); ?>&search_customer=<?php echo urlencode($search_customer); ?>&search_customer_code=<?php echo urlencode($search_customer_code); ?>&filter_type=<?php echo $filter_type; ?>';"
+                            onmouseover="this.style.background='#f5f5f5';"
+                            onmouseout="this.style.background='<?php echo $selected_device_id == $device['id'] ? '#e8f4f8' : '#fff'; ?>';"
+                        >
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
+                                <strong><?php echo htmlspecialchars($device['device_name']); ?></strong>
+                                <?php if ($device['has_active_config']): ?>
+                                    <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">✓ ACTIVE</span>
+                                <?php else: ?>
+                                    <span style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">⚠ NO CONFIG</span>
+                                <?php endif; ?>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </aside>
 
-        <!-- Main Content -->
-        <div>
-            <!-- Config Editor Form -->
-            <div class="editor-section">
-                <?php if ($loaded_config): ?>
-                    <div class="selected-device-info">
-                        <strong>✓ Config geladen:</strong> Versie #<?php echo (int)$loaded_config['id']; ?> (v<?php echo (int)$loaded_config['version_number']; ?>)
-                        <br><small>Aangepast: <?php echo htmlspecialchars($loaded_config['created_at']); ?></small>
-                    </div>
-                <?php endif; ?>
+                            <small style="color: #666; display: block; margin-bottom: 4px;">
+                                Type: <?php echo htmlspecialchars($device['type_name'] ?? '-'); ?>
+                            </small>
 
-                <form method="post" id="configForm">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
-                    <input type="hidden" name="action" value="save_config">
+                            <?php if ($device['company_name']): ?>
+                                <small style="color: #666; display: block;">
+                                    Customer: <?php echo htmlspecialchars($device['company_name']); ?>
+                                    <?php if ($device['customer_code']): ?>
+                                        (<?php echo htmlspecialchars($device['customer_code']); ?>)
+                                    <?php endif; ?>
+                                </small>
+                            <?php endif; ?>
 
-                    <div class="form-group">
-                        <label>PABX *</label>
-                        <select name="pabx_id" id="formPabx" required>
-                            <option value="">-- Kies PABX --</option>
-                            <?php foreach ($pabx_list as $p): ?>
-                                <option value="<?php echo (int)$p['id']; ?>" <?php echo (isset($_POST['pabx_id']) && $_POST['pabx_id'] == $p['id']) || ($loaded_config && $loaded_config['pabx_id'] == $p['id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($p['pabx_name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Device Type *</label>
-                        <select name="device_type_id" id="formDeviceType" required>
-                            <option value="">-- Kies type --</option>
-                            <?php foreach ($device_types as $t): ?>
-                                <option value="<?php echo (int)$t['id']; ?>" <?php echo (isset($_POST['device_type_id']) && $_POST['device_type_id'] == $t['id']) || ($loaded_config && $loaded_config['device_type_id'] == $t['id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($t['type_name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Changelog</label>
-                        <input name="changelog" type="text" placeholder="Beschrijf de wijzigingen..." 
-                               value="<?php echo htmlspecialchars($_POST['changelog'] ?? ($loaded_config ? 'Aangepast van versie #' . $loaded_config['id'] : '')); ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Config Inhoud *</label>
-                        <div class="config-editor">
-                            <textarea name="config_content" 
-                                      id="configContent" 
-                                      required 
-                                      oninput="updateCharCounter(); debouncePreview();"><?php echo htmlspecialchars($_POST['config_content'] ?? ($loaded_config ? $loaded_config['config_content'] : "server={{SERVER_IP}}\nport={{SERVER_PORT}}\nntp={{NTP_SERVER}}")); ?></textarea>
-                            <div class="char-counter" id="charCounter">0 tekens</div>
+                            <?php if ($device['has_active_config'] && $device['version_number']): ?>
+                                <small style="color: #28a745; display: block; margin-top: 4px;">
+                                    → Config v<?php echo (int)$device['version_number']; ?>
+                                </small>
+                            <?php endif; ?>
                         </div>
-                    </div>
-
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;">
-                        <button class="btn" type="submit" style="background: #28a745;">💾 Opslaan als nieuwe versie</button>
-                        <button class="btn" type="button" onclick="showLivePreview()" style="background: #17a2b8;">👁️ Preview</button>
-                    </div>
-                </form>
-
-                <!-- Live Preview Section -->
-                <div id="livePreview" class="preview-panel" style="display: none;">
-                    <h4>Preview (met variabelen)</h4>
-                    <pre id="previewContent"></pre>
+                    <?php endforeach; ?>
                 </div>
-            </div>
+            <?php endif; ?>
+        </div>
 
-            <!-- Config Versions Table -->
-            <div class="editor-section" style="margin-top: 20px;">
-                <h3>📋 Config Versies (<?php echo $total_count; ?>)</h3>
-                
-                <?php if ($total_count === 0): ?>
-                    <div style="padding: 40px; text-align: center; color: #6c757d;">
-                        <?php if ($filter_pabx || $filter_device_type): ?>
-                            Geen configs gevonden met de geselecteerde filters.
-                        <?php else: ?>
-                            Nog geen config versies aangemaakt.
-                        <?php endif; ?>
-                    </div>
-                <?php else: ?>
-                    <div style="overflow-x: auto;">
-                        <table class="config-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px;">ID</th>
-                                    <th style="width: 80px;">Versie</th>
-                                    <th>Klanten</th>
-                                    <th>Type</th>
-                                    <th>Changelog</th>
-                                    <th style="width: 130px;">Datum</th>
-                                    <th style="width: 80px;">Devices</th>
-                                    <th style="width: 100px;">Status</th>
-                                    <th style="width: 200px;">Acties</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($config_versions as $cv): ?>
-                                    <tr>
-                                        <td><strong>#<?php echo (int)$cv['id']; ?></strong></td>
-                                        <td><span class="badge info">v<?php echo (int)$cv['version_number']; ?></span></td>
-                                        <td>
-                                            <?php 
-                                            if (!empty($cv['customer_names'])) {
-                                                echo '<small>' . htmlspecialchars($cv['customer_names']) . '</small>';
-                                            } else {
-                                                echo '<small style="color: #999;">Geen klant</small>';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($cv['type_name'] ?? 'N/A'); ?></td>
-                                        <td><small><?php echo htmlspecialchars($cv['changelog'] ?? '-'); ?></small></td>
-                                        <td><small><?php echo date('d-m-Y H:i', strtotime($cv['created_at'])); ?></small></td>
-                                        <td>
-                                            <?php 
-                                            $device_count = (int)($cv['device_count'] ?? 0);
-                                            if ($device_count > 0) {
-                                                echo '<span class="badge success">' . $device_count . 'x</span>';
-                                            } else {
-                                                echo '<span style="color: #999;">0x</span>';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            $device_count = (int)($cv['device_count'] ?? 0);
-                                            if ($device_count > 0 && $cv['is_active']): ?>
-                                                <span class="badge success" style="background: #28a745;">✓ Actief</span>
-                                            <?php elseif ($device_count > 0 && !$cv['is_active']): ?>
-                                                <span class="badge" style="background: #6c757d; color: white;">Toegewezen</span>
-                                            <?php elseif ($cv['is_active']): ?>
-                                                <span class="badge" style="background: #17a2b8; color: white;">Beschikbaar</span>
-                                            <?php else: ?>
-                                                <span class="badge" style="background: #e0e0e0; color: #666;">Inactief</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <div class="action-btns">
-                                                <form method="post" style="display: inline;">
-                                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
-                                                    <input type="hidden" name="action" value="load_config">
-                                                    <input type="hidden" name="load_config_id" value="<?php echo (int)$cv['id']; ?>">
-                                                    <button type="submit" class="btn-sm btn-load" title="Laden">📝 Laden</button>
-                                                </form>
-                                                <button class="btn-sm btn-copy" onclick="copyConfig(<?php echo (int)$cv['id']; ?>)" title="Kopiëren">📋</button>
-                                                <button class="btn-sm btn-stats" onclick="showStats(<?php echo (int)$cv['id']; ?>)" title="Statistieken">📊</button>
-                                                <button class="btn-sm btn-delete" onclick="deleteConfig(<?php echo (int)$cv['id']; ?>)" title="Verwijderen">🗑️</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+        <!-- Config Editor & Preview -->
+        <div class="card">
+            <h3>✏️ Configuration Editor</h3>
 
-                    <!-- Pagination -->
-                    <?php if ($total_pages > 1): ?>
-                        <div class="pagination-wrapper">
-                            <div class="pagination-info">
-                                Toont <?php echo (($page - 1) * $per_page) + 1; ?> tot <?php echo min($page * $per_page, $total_count); ?> van <?php echo $total_count; ?>
-                            </div>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <div style="display: flex; gap: 4px; align-items: center; font-size: 13px;">
-                                    <span>Per pagina:</span>
-                                    <select id="perPage" onchange="applyFilters()" style="padding: 4px;">
-                                        <?php foreach ([10, 25, 50, 100] as $pp): ?>
-                                            <option value="<?php echo $pp; ?>" <?php echo $pp == $per_page ? 'selected' : ''; ?>><?php echo $pp; ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="pagination-controls">
-                                    <?php if ($page > 1): ?>
-                                        <button onclick="goToPage(1)">« Eerste</button>
-                                        <button onclick="goToPage(<?php echo $page - 1; ?>)">‹ Vorige</button>
-                                    <?php else: ?>
-                                        <button disabled>« Eerste</button>
-                                        <button disabled>‹ Vorige</button>
+            <?php if (!$selected_device): ?>
+                <div style="text-align: center; padding: 60px 20px; color: #999;">
+                    <p style="font-size: 40px; margin: 0;">👈</p>
+                    <p>Select a device from the left to edit or create configurations</p>
+                </div>
+            <?php else: ?>
+                <!-- Device Info -->
+                <div style="margin-bottom: 16px; padding: 12px; background: #f0f8ff; border-radius: 4px; border-left: 4px solid #007bff;">
+                    <strong><?php echo htmlspecialchars($selected_device['device_name']); ?></strong>
+                    <br>
+                    <small style="color: #666;">
+                        Type: <?php echo htmlspecialchars($selected_device['type_name'] ?? '-'); ?>
+                    </small>
+                    <?php if ($selected_device['company_name']): ?>
+                        <br>
+                        <small style="color: #666;">
+                            Customer: <?php echo htmlspecialchars($selected_device['company_name']); ?>
+                            <?php if ($selected_device['customer_code']): ?>
+                                (<?php echo htmlspecialchars($selected_device['customer_code']); ?>)
+                            <?php endif; ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Tabs for Existing Configs vs New Config -->
+                <div style="margin-bottom: 16px;">
+                    <button 
+                        type="button"
+                        class="btn"
+                        style="background: #007bff; margin-right: 8px;"
+                        onclick="document.getElementById('configs-list').style.display='block'; document.getElementById('new-config-form').style.display='none';"
+                    >
+                        📋 View Existing Configs (<?php echo count($device_configs); ?>)
+                    </button>
+                    <button 
+                        type="button"
+                        class="btn"
+                        style="background: #28a745;"
+                        onclick="document.getElementById('configs-list').style.display='none'; document.getElementById('new-config-form').style.display='block';"
+                    >
+                        ➕ Create New Config
+                    </button>
+                </div>
+
+                <!-- Existing Configs List -->
+                <div id="configs-list" style="display: block;">
+                    <?php if (empty($device_configs)): ?>
+                        <p style="color: #999; text-align: center; padding: 20px;">
+                            No configurations assigned to this device yet.
+                        </p>
+                    <?php else: ?>
+                        <div style="max-height: 800px; overflow-y: auto;">
+                            <?php foreach ($device_configs as $config): ?>
+                                <div style="
+                                    padding: 12px;
+                                    margin-bottom: 12px;
+                                    border: 2px solid <?php echo $config['is_active'] ? '#28a745' : '#ddd'; ?>;
+                                    border-radius: 4px;
+                                    background: <?php echo $config['is_active'] ? '#f0fff4' : '#fff'; ?>;
+                                ">
+                                    <!-- Config Header -->
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <strong>Version <?php echo (int)$config['version_number']; ?></strong>
+                                        <?php if ($config['is_active']): ?>
+                                            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: bold;">✓ ACTIVE</span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Config Details -->
+                                    <small style="color: #666; display: block;">
+                                        Created: <?php echo date('Y-m-d H:i', strtotime($config['created_at'])); ?>
+                                    </small>
+                                    <?php if ($config['activated_at']): ?>
+                                        <small style="color: #666; display: block;">
+                                            Activated: <?php echo date('Y-m-d H:i', strtotime($config['activated_at'])); ?>
+                                        </small>
                                     <?php endif; ?>
-                                    
-                                    <button class="active">Pagina <?php echo $page; ?> / <?php echo $total_pages; ?></button>
-                                    
-                                    <?php if ($page < $total_pages): ?>
-                                        <button onclick="goToPage(<?php echo $page + 1; ?>)">Volgende ›</button>
-                                        <button onclick="goToPage(<?php echo $total_pages; ?>)">Laatste »</button>
-                                    <?php else: ?>
-                                        <button disabled>Volgende ›</button>
-                                        <button disabled>Laatste »</button>
-                                    <?php endif; ?>
+
+                                    <!-- Buttons -->
+                                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                                        <button
+                                            type="button"
+                                            class="btn"
+                                            style="background: #007bff; font-size: 12px; padding: 6px 12px; flex: 1; min-width: 120px;"
+                                            onclick="
+                                                const preview = document.getElementById('preview-<?php echo (int)$config['id']; ?>');
+                                                preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+                                            "
+                                        >
+                                            📄 Preview
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn"
+                                            style="background: #17a2b8; font-size: 12px; padding: 6px 12px; flex: 1; min-width: 120px;"
+                                            onclick="copyConfigToEditor(<?php echo (int)$config['id']; ?>, 'v<?php echo (int)$config['version_number']; ?>')"
+                                        >
+                                            📋 Copy & Edit
+                                        </button>
+                                    </div>
+
+                                    <!-- Preview Content -->
+                                    <div id="preview-<?php echo (int)$config['id']; ?>" style="
+                                        display: none;
+                                        background: #1e1e1e;
+                                        color: #00ff00;
+                                        padding: 12px;
+                                        border-radius: 4px;
+                                        max-height: 300px;
+                                        overflow-y: auto;
+                                        font-family: 'Courier New', monospace;
+                                        font-size: 11px;
+                                        white-space: pre-wrap;
+                                        word-break: break-word;
+                                        margin-top: 8px;
+                                        border: 1px solid #444;
+                                    ">
+<?php echo htmlspecialchars($config['config_content'] ?? ''); ?>
+                                    </div>
                                 </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
-                <?php endif; ?>
-            </div>
+                </div>
+
+                <!-- New Config Form -->
+                <div id="new-config-form" style="display: none;">
+                    <form method="post" style="display: flex; flex-direction: column; gap: 12px;">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                        <input type="hidden" name="action" value="create_config">
+                        <input type="hidden" name="device_id" value="<?php echo (int)$selected_device['id']; ?>">
+
+                        <!-- Source Config Info -->
+                        <div id="source-config-info" style="display: none; background: #d1ecf1; border: 1px solid #bee5eb; padding: 12px; border-radius: 4px;">
+                            <small style="color: #0c5460; display: block;">
+                                📋 Based on: <strong id="source-config-name"></strong>
+                            </small>
+                            <small style="color: #0c5460; display: block;">
+                                You can now edit this configuration to create a new version
+                            </small>
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">
+                                Configuration Content:
+                            </label>
+                            <textarea
+                                id="config-content"
+                                name="config_content"
+                                style="
+                                    width: 100%;
+                                    height: 400px;
+                                    padding: 12px;
+                                    font-family: 'Courier New', monospace;
+                                    font-size: 12px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    resize: vertical;
+                                    background: #1e1e1e;
+                                    color: #00ff00;
+                                "
+                                placeholder="Paste or edit the device configuration here..."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 4px;">
+                            <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer;">
+                                <input type="checkbox" name="set_active" value="1" id="set_active_checkbox">
+                                <strong>Set as Active Config</strong>
+                            </label>
+                            <small style="color: #666; display: block; margin-top: 6px;">
+                                If checked, this new config will be activated immediately and all existing versions will be deactivated.
+                            </small>
+                        </div>
+
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" class="btn" style="flex: 1; background: #28a745; font-weight: 600;">
+                                ✓ Create & Save Config
+                            </button>
+                            <button 
+                                type="button" 
+                                class="btn" 
+                                style="flex: 1; background: #6c757d;"
+                                onclick="
+                                    document.getElementById('config-content').value = '';
+                                    document.getElementById('source-config-info').style.display = 'none';
+                                    document.getElementById('configs-list').style.display='block'; 
+                                    document.getElementById('new-config-form').style.display='none';
+                                "
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
+
 </main>
 
-<!-- Statistics Modal -->
-<div class="modal-overlay" id="statsModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>📊 Config Statistieken</h3>
-            <button class="modal-close" onclick="closeModal('statsModal')">&times;</button>
-        </div>
-        <div class="modal-body" id="statsModalContent">
-            <div style="text-align: center; padding: 20px;">
-                <div class="spinner"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-// Configuration constants
-const CONFIG = {
-    SEARCH_DEBOUNCE_MS: 300,
-    PREVIEW_DEBOUNCE_MS: 1000
-};
-
-const csrfToken = <?php echo json_encode($csrf); ?>;
-const variables = <?php echo json_encode($variables); ?>;
-
-// Device search with debounce
-let searchTimeout;
-document.getElementById('deviceSearch')?.addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    const query = this.value.trim();
+function copyConfigToEditor(configId, versionName) {
+    const csrfToken = '<?php echo htmlspecialchars($csrf); ?>';
     
-    if (query.length < 2) {
-        document.getElementById('deviceResults').style.display = 'none';
-        return;
-    }
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Loading...';
+    btn.disabled = true;
     
-    searchTimeout = setTimeout(() => {
-        fetch(`/settings/builder-actions.php?action=search_devices&q=${encodeURIComponent(query)}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    displayDeviceResults(data.devices);
-                }
-            })
-            .catch(e => console.error('Search error:', e));
-    }, CONFIG.SEARCH_DEBOUNCE_MS);
-});
-
-function displayDeviceResults(devices) {
-    const results = document.getElementById('deviceResults');
-    
-    if (devices.length === 0) {
-        results.innerHTML = '<div class="no-results">Geen devices gevonden</div>';
-        results.style.display = 'block';
-        return;
-    }
-    
-    results.innerHTML = devices.map(d => {
-        const deviceJson = JSON.stringify(d).replace(/"/g, '&quot;');
-        return `
-        <div class="device-item" data-device='${deviceJson}'>
-            <strong>${escapeHtml(d.device_name)}</strong>
-            <small>
-                ${d.company_name ? escapeHtml(d.company_name) : ''} 
-                ${d.customer_code ? '(' + escapeHtml(d.customer_code) + ')' : ''}
-                | ${escapeHtml(d.type_name || 'Unknown')} 
-                | ${escapeHtml(d.mac_address || '')}
-            </small>
-        </div>
-    `;
-    }).join('');
-    results.style.display = 'block';
-    
-    // Add event listeners to device items
-    results.querySelectorAll('.device-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const deviceData = JSON.parse(this.getAttribute('data-device').replace(/&quot;/g, '"'));
-            selectDevice(deviceData);
-        });
-    });
-}
-
-function selectDevice(device) {
-    document.getElementById('deviceResults').style.display = 'none';
-    document.getElementById('deviceSearch').value = device.device_name;
-    
-    // Show selected device info
-    const info = document.getElementById('selectedDeviceInfo');
-    info.innerHTML = `
-        <div class="selected-device-info">
-            <strong>✓ Device geselecteerd:</strong> ${escapeHtml(device.device_name)}<br>
-            <small>
-                Type: ${escapeHtml(device.type_name || 'Unknown')} | 
-                MAC: ${escapeHtml(device.mac_address || 'N/A')}
-                ${device.company_name ? ' | Klant: ' + escapeHtml(device.company_name) : ''}
-            </small>
-        </div>
-    `;
-    info.style.display = 'block';
-    
-    // Auto-fill device type filter
-    if (device.device_type_id) {
-        document.getElementById('filterDeviceType').value = device.device_type_id;
-        document.getElementById('formDeviceType').value = device.device_type_id;
-        applyFilters();
-    }
-}
-
-// Click outside to close search results
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.device-search')) {
-        document.getElementById('deviceResults').style.display = 'none';
-    }
-});
-
-// Character counter
-function updateCharCounter() {
-    const textarea = document.getElementById('configContent');
-    const counter = document.getElementById('charCounter');
-    if (textarea && counter) {
-        const length = textarea.value.length;
-        counter.textContent = `${length} tekens`;
-    }
-}
-
-// Live preview with debounce
-let previewTimeout;
-function debouncePreview() {
-    clearTimeout(previewTimeout);
-    previewTimeout = setTimeout(showLivePreview, CONFIG.PREVIEW_DEBOUNCE_MS);
-}
-
-function showLivePreview() {
-    const content = document.getElementById('configContent').value;
-    let preview = content;
-    
-    // Apply variables
-    for (const [key, value] of Object.entries(variables)) {
-        const regex = new RegExp('\\{\\{\\s*' + key + '\\s*\\}\\}', 'g');
-        preview = preview.replace(regex, value);
-    }
-    
-    document.getElementById('previewContent').textContent = preview;
-    document.getElementById('livePreview').style.display = 'block';
-}
-
-// Filter and pagination functions
-function applyFilters() {
-    const pabx = document.getElementById('filterPabx').value;
-    const deviceType = document.getElementById('filterDeviceType').value;
-    const sortBy = document.getElementById('sortBy').value;
-    const perPage = document.getElementById('perPage')?.value || 25;
-    
-    const params = new URLSearchParams();
-    params.set('page', '1');
-    params.set('per_page', perPage);
-    if (pabx) params.set('filter_pabx', pabx);
-    if (deviceType) params.set('filter_device_type', deviceType);
-    if (sortBy) params.set('sort_by', sortBy);
-    
-    window.location.href = '/settings/builder.php?' + params.toString();
-}
-
-function goToPage(page) {
-    const params = new URLSearchParams(window.location.search);
-    params.set('page', page);
-    window.location.href = '/settings/builder.php?' + params.toString();
-}
-
-// Copy config
-function copyConfig(configId) {
-    if (!confirm('Wil je deze config kopiëren als een nieuwe versie?')) return;
-    
-    const formData = new FormData();
-    formData.append('action', 'copy_config');
-    formData.append('config_id', configId);
-    formData.append('csrf_token', csrfToken);
-    
-    fetch('/settings/builder-actions.php', {
+    fetch('/settings/builder.php', {
         method: 'POST',
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert('Fout: ' + data.error);
-        }
-    })
-    .catch(e => {
-        console.error('Copy error:', e);
-        alert('Er is een fout opgetreden bij het kopiëren.');
-    });
-}
-
-// Delete config
-function deleteConfig(configId) {
-    if (!confirm('Weet je zeker dat je deze config wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
-    
-    const formData = new FormData();
-    formData.append('action', 'delete_config');
-    formData.append('config_id', configId);
-    formData.append('csrf_token', csrfToken);
-    
-    fetch('/settings/builder-actions.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert('Fout: ' + data.error);
-        }
-    })
-    .catch(e => {
-        console.error('Delete error:', e);
-        alert('Er is een fout opgetreden bij het verwijderen.');
-    });
-}
-
-// Show stats modal
-function showStats(configId) {
-    const modal = document.getElementById('statsModal');
-    modal.classList.add('active');
-    
-    fetch(`/settings/builder-actions.php?action=get_stats&config_id=${configId}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                displayStats(data);
-            } else {
-                document.getElementById('statsModalContent').innerHTML = 
-                    `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
-            }
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'action': 'load_config',
+            'config_id': configId,
+            'csrf_token': csrfToken
         })
-        .catch(e => {
-            console.error('Stats error:', e);
-            document.getElementById('statsModalContent').innerHTML = 
-                '<div class="alert alert-error">Fout bij ophalen statistieken</div>';
-        });
-}
-
-function displayStats(data) {
-    const config = data.config;
-    const devices = data.devices;
-    
-    let html = `
-        <div style="margin-bottom: 20px;">
-            <h4>Config Versie #${config.id} - v${config.version_number}</h4>
-            <p><strong>PABX:</strong> ${escapeHtml(config.pabx_name || 'N/A')}</p>
-            <p><strong>Type:</strong> ${escapeHtml(config.type_name || 'N/A')}</p>
-            <p><strong>Aangemaakt:</strong> ${escapeHtml(config.created_at)} door ${escapeHtml(config.username || 'Unknown')}</p>
-            <p><strong>Downloads:</strong> ${data.download_count}x</p>
-        </div>
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.textContent = originalText;
+        btn.disabled = false;
         
-        <h4>Toegewezen aan ${data.device_count} device(s)</h4>
-    `;
-    
-    if (devices.length === 0) {
-        html += '<p style="color: #6c757d;">Deze config is nog niet toegewezen aan devices.</p>';
-    } else {
-        html += '<div style="max-height: 300px; overflow-y: auto; margin-top: 12px;">';
-        html += '<table class="config-table"><thead><tr><th>Device</th><th>Type</th><th>Klant</th><th>Toegewezen</th></tr></thead><tbody>';
-        
-        devices.forEach(d => {
-            html += `
-                <tr>
-                    <td>
-                        <strong>${escapeHtml(d.device_name)}</strong><br>
-                        <small style="color: #6c757d;">${escapeHtml(d.mac_address || 'N/A')}</small>
-                    </td>
-                    <td>${escapeHtml(d.type_name || 'N/A')}</td>
-                    <td>
-                        ${d.company_name ? escapeHtml(d.company_name) : '-'}
-                        ${d.customer_code ? '<br><small style="color: #6c757d;">' + escapeHtml(d.customer_code) + '</small>' : ''}
-                    </td>
-                    <td><small>${escapeHtml(d.assigned_at)}</small></td>
-                </tr>
-            `;
-        });
-        
-        html += '</tbody></table></div>';
-    }
-    
-    document.getElementById('statsModalContent').innerHTML = html;
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
-}
-
-// Close modal on overlay click
-document.querySelectorAll('.modal-overlay').forEach(modal => {
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.remove('active');
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
         }
+        
+        // Load config into editor
+        document.getElementById('config-content').value = data.config_content;
+        document.getElementById('source-config-name').textContent = 'Config ' + versionName;
+        document.getElementById('source-config-info').style.display = 'block';
+        
+        // Switch to editor tab
+        document.getElementById('configs-list').style.display = 'none';
+        document.getElementById('new-config-form').style.display = 'block';
+        
+        // Scroll to editor
+        document.getElementById('new-config-form').scrollIntoView({ behavior: 'smooth' });
+    })
+    .catch(error => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        alert('Error loading config: ' + error);
     });
-});
-
-// Utility function
-function escapeHtml(text) {
-    if (text == null) return '';
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
-
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    updateCharCounter();
-});
 </script>
+
+<style>
+    .alert {
+        padding: 12px;
+        margin-bottom: 16px;
+        border-radius: 4px;
+        border-left: 4px solid;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+        transition: opacity 0.2s;
+    }
+
+    .btn:hover:not(:disabled) {
+        opacity: 0.9;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .card {
+        background: white;
+        padding: 16px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 18px;
+    }
+
+    label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select,
+    textarea {
+        font-size: 14px;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 28px;
+    }
+</style>
+
 </body>
 </html>

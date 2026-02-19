@@ -2,6 +2,7 @@
 /**
  * Download Device Config
  * Allows logged-in users to download device configurations directly
+ * FIXED: Downloads ACTIVE config, not latest assigned
  */
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
@@ -39,13 +40,12 @@ if (!$device_id || !$mac_param) {
 try {
     error_log("Download request: device_id=$device_id, mac=$mac_param");
 
-    // Fetch device from database
+    // Fetch device from database - FIXED: Get ACTIVE config
     $stmt = $pdo->prepare('
         SELECT d.*, dt.type_name as model_name,
                (SELECT dca.config_version_id
                 FROM device_config_assignments dca
-                WHERE dca.device_id = d.id
-                ORDER BY dca.assigned_at DESC
+                WHERE dca.device_id = d.id AND dca.is_active = 1
                 LIMIT 1) as config_version_id
         FROM devices d
         LEFT JOIN device_types dt ON d.device_type_id = dt.id
@@ -69,14 +69,14 @@ try {
         exit('MAC address verification failed');
     }
 
-    // Check if device has a config assigned
+    // Check if device has an ACTIVE config assigned
     if (!$device['config_version_id']) {
-        error_log("No config assigned to device $device_id");
+        error_log("No ACTIVE config assigned to device $device_id");
         http_response_code(404);
-        exit('No configuration assigned to this device');
+        exit('No active configuration assigned to this device');
     }
 
-    error_log("Config version ID: {$device['config_version_id']}");
+    error_log("Active config version ID: {$device['config_version_id']}");
 
     // Get config content and PABX info
     $stmt = $pdo->prepare('
@@ -139,7 +139,7 @@ try {
             'config.download',
             'device',
             $device_id,
-            json_encode(['device_name' => $device['device_name'], 'mac_address' => $device['mac_address']]),
+            json_encode(['device_name' => $device['device_name'], 'mac_address' => $device['mac_address'], 'config_version_id' => $device['config_version_id']]),
             $_SERVER['REMOTE_ADDR'] ?? '',
             $_SERVER['HTTP_USER_AGENT'] ?? ''
         ]);
@@ -159,7 +159,7 @@ try {
     header('Pragma: no-cache');
 
     echo $config_content;
-    error_log("Download sent successfully");
+    error_log("Download sent successfully for active config version {$device['config_version_id']}");
     exit;
 
 } catch (PDOException $e) {

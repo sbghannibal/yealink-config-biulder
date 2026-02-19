@@ -56,22 +56,21 @@ error_log("MAC formatted: $mac_formatted");
 
 try {
     error_log("Querying database for device...");
-    
-    // Find device by MAC and get latest config version
+
+    // Find device by MAC and get ACTIVE config version (FIXED)
     $stmt = $pdo->prepare('
         SELECT d.*, cv.id as config_version_id, cv.config_content
         FROM devices d
-        LEFT JOIN device_config_assignments dca ON d.id = dca.device_id
+        LEFT JOIN device_config_assignments dca ON d.id = dca.device_id AND dca.is_active = 1
         LEFT JOIN config_versions cv ON dca.config_version_id = cv.id
         WHERE d.mac_address = ? AND d.is_active = 1
-        ORDER BY dca.assigned_at DESC
         LIMIT 1
     ');
     $stmt->execute([$mac_formatted]);
     $device = $stmt->fetch(PDO::FETCH_ASSOC);
 
     error_log("Device found: " . ($device ? 'YES' : 'NO'));
-    
+
     if (!$device) {
         error_log("Device not found or inactive");
         http_response_code(404);
@@ -82,12 +81,12 @@ try {
     error_log("Config version ID: " . ($device['config_version_id'] ?? 'NONE'));
 
     if (!$device['config_version_id']) {
-        error_log("No config version assigned");
+        error_log("No ACTIVE config version assigned");
         http_response_code(404);
-        exit('No configuration assigned');
+        exit('No active configuration assigned');
     }
 
-    error_log("Config found, sending response");
+    error_log("ACTIVE config found, sending response");
 
     // Log provision
     try {
@@ -105,7 +104,7 @@ try {
     header('Content-Disposition: attachment; filename="' . strtolower($mac) . '.cfg"');
     echo $device['config_content'];
 
-    error_log("=== PROVISION REQUEST SUCCESS ===");
+    error_log("=== PROVISION REQUEST SUCCESS - Config version {$device['config_version_id']} ===");
 
 } catch (PDOException $e) {
     error_log("PDO Error: " . $e->getMessage());

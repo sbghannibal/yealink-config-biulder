@@ -1,0 +1,7 @@
+Voeg dit toe in admin/_header.php, in de nav-dropdown-content voor Config:
+
+                <?php if ($can_use_wizard): ?>
+                <a href="/admin/config_cleanup.php" class="<?php echo $current_page === 'config_cleanup.php' ? 'active' : ''; ?>">
+                    🗑️ Config Cleanup
+                </a>
+                <?php endif; ?>
