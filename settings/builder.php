@@ -293,46 +293,36 @@ try {
 } catch (Exception $e) {
     $devices_list = [];
 }
+$page_title = 'Config Builder';
+require_once __DIR__ . '/../admin/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Config Builder - Yealink Config Builder</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/builder.css">
-    <style>
+<style>
+    .main-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 20px;
+        align-items: start;
+        margin-top: 20px;
+    }
+
+    @media (max-width: 992px) {
         .main-grid {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 20px;
-            align-items: start;
-            margin-top: 20px;
+            grid-template-columns: 1fr;
         }
-        
-        @media (max-width: 992px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .editor-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .sidebar {
-            position: sticky;
-            top: 20px;
-        }
-    </style>
-</head>
-<body>
-<?php if (file_exists(__DIR__ . '/../admin/_header.php')) include __DIR__ . '/../admin/_header.php'; ?>
-<main class="container">
+    }
+
+    .editor-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 20px;
+    }
+</style>
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>🛠️ Config Builder</h2>
         <a class="btn" href="/settings/builder.php" style="background: #6c757d;">🔄 Reset</a>

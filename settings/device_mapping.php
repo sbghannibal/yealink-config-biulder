@@ -157,56 +157,48 @@ try {
     $devices = [];
     $configs = [];
 }
+$page_title = 'Device Config Mapping';
+require_once __DIR__ . '/../admin/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Device Config Mapping - Yealink Config Builder</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .stats { display: flex; gap: 16px; margin-bottom: 16px; }
-        .stat-card { flex: 1; padding: 12px; background: #f5f5f5; border-radius: 4px; text-align: center; }
-        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
-        .mapping-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .device-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #ddd; margin-bottom: 4px; border-radius: 3px; }
-        .device-row:hover { background: #f9f9f9; }
-        .device-row.assigned { border-left: 3px solid #28a745; }
-        .device-row.unassigned { border-left: 3px solid #ffc107; }
-        .device-info { flex: 1; }
-        .device-actions { display: flex; gap: 4px; }
-        .config-card { padding: 12px; border: 1px solid #ddd; margin-bottom: 8px; border-radius: 4px; }
-        .config-card:hover { background: #f9f9f9; }
-        .badge { display: inline-block; padding: 2px 6px; font-size: 10px; border-radius: 3px; background: #6c757d; color: white; }
-        .badge.success { background: #28a745; }
-        .badge.warning { background: #ffc107; color: #000; }
-        .batch-actions { background: #e9ecef; padding: 12px; border-radius: 4px; margin-bottom: 16px; }
-        .selected-count { font-weight: bold; color: #007bff; }
-    </style>
-    <script>
-        function selectAll(checked) {
-            document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = checked);
-            updateSelectedCount();
+<style>
+    .stats { display: flex; gap: 16px; margin-bottom: 16px; }
+    .stat-card { flex: 1; padding: 12px; background: #f5f5f5; border-radius: 4px; text-align: center; }
+    .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+    .mapping-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .device-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #ddd; margin-bottom: 4px; border-radius: 3px; }
+    .device-row:hover { background: #f9f9f9; }
+    .device-row.assigned { border-left: 3px solid #28a745; }
+    .device-row.unassigned { border-left: 3px solid #ffc107; }
+    .device-info { flex: 1; }
+    .device-actions { display: flex; gap: 4px; }
+    .config-card { padding: 12px; border: 1px solid #ddd; margin-bottom: 8px; border-radius: 4px; }
+    .config-card:hover { background: #f9f9f9; }
+    .badge { display: inline-block; padding: 2px 6px; font-size: 10px; border-radius: 3px; background: #6c757d; color: white; }
+    .badge.success { background: #28a745; }
+    .badge.warning { background: #ffc107; color: #000; }
+    .batch-actions { background: #e9ecef; padding: 12px; border-radius: 4px; margin-bottom: 16px; }
+    .selected-count { font-weight: bold; color: #007bff; }
+</style>
+<script>
+    function selectAll(checked) {
+        document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = checked);
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const count = document.querySelectorAll('.device-checkbox:checked').length;
+        document.getElementById('selected-count').textContent = count;
+    }
+
+    function confirmBatchUnassign() {
+        const count = document.querySelectorAll('.device-checkbox:checked').length;
+        if (count === 0) {
+            alert('Selecteer minimaal één device.');
+            return false;
         }
-        
-        function updateSelectedCount() {
-            const count = document.querySelectorAll('.device-checkbox:checked').length;
-            document.getElementById('selected-count').textContent = count;
-        }
-        
-        function confirmBatchUnassign() {
-            const count = document.querySelectorAll('.device-checkbox:checked').length;
-            if (count === 0) {
-                alert('Selecteer minimaal één device.');
-                return false;
-            }
-            return confirm(`Weet je zeker dat je de toewijzing van ${count} device(s) wilt verwijderen?`);
-        }
-    </script>
-</head>
-<body>
-<?php if (file_exists(__DIR__ . '/../admin/_admin_nav.php')) include __DIR__ . '/../admin/_admin_nav.php'; ?>
-<main class="container">
+        return confirm(`Weet je zeker dat je de toewijzing van ${count} device(s) wilt verwijderen?`);
+    }
+</script>
     <h2>Device ↔ Config Mapping</h2>
     
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
