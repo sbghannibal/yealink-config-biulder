@@ -18,6 +18,26 @@ if (!has_permission($pdo, $current_admin_id, 'admin.users.edit')) {
 
 $error = '';
 $success = '';
+
+function validate_password($password) {
+    if (strlen($password) < 8) {
+        return "Wachtwoord moet minimaal 8 karakters bevatten.";
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        return "Wachtwoord moet minimaal 1 hoofdletter bevatten.";
+    }
+    if (!preg_match('/[a-z]/', $password)) {
+        return "Wachtwoord moet minimaal 1 kleine letter bevatten.";
+    }
+    if (!preg_match('/[0-9]/', $password)) {
+        return "Wachtwoord moet minimaal 1 cijfer bevatten.";
+    }
+    if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+        return "Wachtwoord moet minimaal 1 speciaal karakter bevatten.";
+    }
+    return true;
+}
+
 // Ensure CSRF token
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
@@ -53,7 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($username === '' || $email === '') {
             $error = 'Vul gebruikersnaam en e-mail in.';
-        } else {
+        } elseif ($password !== '') {
+            $pw_error = validate_password($password);
+            if ($pw_error !== true) {
+                $error = $pw_error;
+            }
+        }
+
+        if ($error === '') {
             try {
                 $pdo->beginTransaction();
 
@@ -144,7 +171,13 @@ require_once __DIR__ . '/_header.php';
 
             <div class="form-group">
                 <label>Nieuw wachtwoord (leeg laten om ongewijzigd)</label>
-                <input name="password" type="password" autocomplete="new-password">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <input name="password" id="password-field" type="password" autocomplete="new-password" style="flex:1; min-width:200px;" oninput="checkPasswordStrength(this.value)">
+                    <button type="button" onclick="generatePassword()" style="padding:8px 12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">🔑 Genereer wachtwoord</button>
+                    <button type="button" onclick="togglePasswordVisibility()" style="padding:8px 12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">👁️</button>
+                </div>
+                <div id="password-strength" style="margin-top:6px; font-size:13px;"></div>
+                <small style="display:block; margin-top:4px; color:#666;">Minimaal 8 karakters, met hoofdletter, kleine letter, cijfer en speciaal karakter.</small>
             </div>
 
             <div class="form-group">
@@ -179,6 +212,65 @@ require_once __DIR__ . '/_header.php';
             <a class="btn" href="/admin/users.php" style="background:#6c757d;">Annuleren</a>
         </form>
     </div>
-</main>
-</body>
-</html>
+
+<script>
+function generatePassword() {
+    const length = Math.floor(Math.random() * 6) + 10; // 10-15
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    const all = uppercase + lowercase + numbers + special;
+
+    let password = '';
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+
+    for (let i = password.length; i < length; i++) {
+        password += all[Math.floor(Math.random() * all.length)];
+    }
+
+    // Fisher-Yates shuffle
+    const arr = password.split('');
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    password = arr.join('');
+
+    const field = document.getElementById('password-field');
+    field.value = password;
+    field.type = 'text';
+    checkPasswordStrength(password);
+    setTimeout(() => { field.type = 'password'; }, 3000);
+}
+
+function togglePasswordVisibility() {
+    const field = document.getElementById('password-field');
+    field.type = field.type === 'password' ? 'text' : 'password';
+}
+
+function checkPasswordStrength(password) {
+    const indicator = document.getElementById('password-strength');
+    if (!password) {
+        indicator.innerHTML = '';
+        return;
+    }
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    let label, color;
+    if (score <= 2) { label = 'Zwak'; color = '#dc3545'; }
+    else if (score <= 3) { label = 'Matig'; color = '#ffc107'; }
+    else { label = 'Sterk'; color = '#28a745'; }
+
+    indicator.innerHTML = '<span style="color:' + color + '; font-weight:600;">' + label + '</span>';
+}
+</script>
+<?php require_once __DIR__ . '/_footer.php'; ?>

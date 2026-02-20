@@ -145,6 +145,4 @@ require_once __DIR__ . '/_header.php';
             </table>
         <?php endif; ?>
     </div>
-</main>
-</body>
-</html>
+<?php require_once __DIR__ . '/_footer.php'; ?>

@@ -583,7 +583,6 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
         </div>
     </div>
 
-</main>
 
 <script>
 function copyConfigToEditor(configId, versionName) {
@@ -714,6 +713,4 @@ function copyConfigToEditor(configId, versionName) {
         font-size: 28px;
     }
 </style>
-
-</body>
-</html>
+<?php require_once __DIR__ . '/../admin/_footer.php'; ?>

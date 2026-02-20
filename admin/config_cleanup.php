@@ -499,6 +499,4 @@ require_once __DIR__ . '/_header.php';
     }
 </style>
 
-</main>
-</body>
-</html>
+<?php require_once __DIR__ . '/_footer.php'; ?>

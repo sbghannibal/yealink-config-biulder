@@ -119,6 +119,5 @@ require_once __DIR__ . '/../admin/_header.php';
 
         <a class="btn" href="/devices/list.php" style="background:#6c757d; margin-left:8px;">Annuleren</a>
     </div>
-</main>
-</body>
-</html>
+
+<?php require_once __DIR__ . '/../admin/_footer.php'; ?>

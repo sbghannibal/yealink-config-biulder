@@ -70,6 +70,4 @@ require_once __DIR__ . '/_header.php';
             </tbody>
         </table>
     </div>
-</main>
-</body>
-</html>
+<?php require_once __DIR__ . '/_footer.php'; ?>

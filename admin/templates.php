@@ -310,11 +310,9 @@ require_once __DIR__ . '/_header.php';
             </div>
         </div>
     </div>
-</main>
 <script>
 document.getElementById('helpButton').addEventListener('click', function() {
     window.open('/template_help.php', 'help', 'width=900,height=700');
 });
 </script>
-</body>
-</html>
+<?php require_once __DIR__ . '/_footer.php'; ?>
