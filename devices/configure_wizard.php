@@ -526,9 +526,7 @@ require_once __DIR__ . '/../admin/_header.php';
             <?php endif; ?>
         <?php endif; ?>
     </div>
-</main>
-</body>
-</html>
+<?php require_once __DIR__ . '/../admin/_footer.php'; ?>
 <?php
 // Clear wizard data after completion
 if ($step === 5 && isset($_SESSION['wizard_data']) && isset($wizard_data['config_version_id'])) {

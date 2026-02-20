@@ -290,7 +290,4 @@ require_once __DIR__ . '/_header.php';
     </div>
 </div>
 
-</main>
-
-</body>
-</html>
+<?php require_once __DIR__ . '/_footer.php'; ?>

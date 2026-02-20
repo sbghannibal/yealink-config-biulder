@@ -299,6 +299,5 @@ require_once __DIR__ . '/admin/_header.php';
             </div>
         </div>
     </div>
-</main>
-</body>
-</html>
+
+<?php require_once __DIR__ . '/admin/_footer.php'; ?>

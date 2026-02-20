@@ -208,6 +208,4 @@ require_once __DIR__ . '/_header.php';
             <strong>Note:</strong> Device types that are in use cannot be deleted. You must first reassign or delete all devices using this type.
         </p>
     </div>
-</main>
-</body>
-</html>
+<?php require_once __DIR__ . '/_footer.php'; ?>

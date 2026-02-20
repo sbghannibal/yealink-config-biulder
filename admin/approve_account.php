@@ -313,6 +313,4 @@ document.addEventListener('keydown', function(e) { if(e.key === 'Escape') { clos
 document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', function(e) { if(e.target === this) this.classList.remove('active'); }); });
 </script>
 
-</main>
-</body>
-</html>
+<?php require_once __DIR__ . '/_footer.php'; ?>
