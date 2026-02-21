@@ -138,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'execu
                         cv.config_content,
                         cv.version_number,
                         cv.device_type_id,
+                        cv.pabx_id,
                         dca.device_id
                     FROM device_config_assignments dca
                     JOIN config_versions cv ON dca.config_version_id = cv.id
@@ -153,20 +154,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'execu
                         // Voer replace uit
                         $new_content = str_replace($search_term, $replace_term, $config['config_content']);
 
+                        // Gebruik pabx_id van oude config
+                        $pabx_id = $config['pabx_id'] ?? 1;
+
                         // Maak nieuwe versie (gebruik MAX om collision te vermijden)
                         $vstmt = $pdo->prepare("SELECT COALESCE(MAX(version_number), 0) + 1 FROM config_versions WHERE device_type_id = ?");
                         $vstmt->execute([$config['device_type_id']]);
                         $new_version = (int)$vstmt->fetchColumn();
                         $stmt = $pdo->prepare("
                             INSERT INTO config_versions
-                            (device_type_id, config_content, version_number, created_by, created_at)
-                            VALUES (?, ?, ?, ?, NOW())
+                            (device_type_id, config_content, version_number, created_by, pabx_id, created_at)
+                            VALUES (?, ?, ?, ?, ?, NOW())
                         ");
                         $stmt->execute([
                             $config['device_type_id'],
                             $new_content,
                             $new_version,
-                            $admin_id
+                            $admin_id,
+                            $pabx_id
                         ]);
                         $new_config_id = $pdo->lastInsertId();
 
