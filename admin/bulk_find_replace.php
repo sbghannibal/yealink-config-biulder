@@ -24,6 +24,7 @@ $csrf = $_SESSION['csrf_token'];
 $error = '';
 $success = '';
 $preview_results = [];
+$total_matches = 0;
 $step = $_GET['step'] ?? 'search';
 
 // Maak tabellen aan als ze niet bestaan
@@ -63,6 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'previ
     } else {
         $search_term = $_POST['search_term'] ?? '';
         $replace_term = $_POST['replace_term'] ?? '';
+        $enable_limit = isset($_POST['enable_limit']) && $_POST['enable_limit'] === '1';
+        $limit_count = (int)($_POST['limit_count'] ?? 0);
 
         if (empty($search_term)) {
             $error = 'Zoekterm is verplicht.';
@@ -99,6 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'previ
                     }
                 }
 
+                $total_matches = count($preview_results);
+
+                if ($enable_limit && $limit_count > 0 && $total_matches > $limit_count) {
+                    $preview_results = array_slice($preview_results, 0, $limit_count);
+                }
+
                 if (empty($preview_results)) {
                     $error = 'Geen overeenkomsten gevonden in actieve configs.';
                 } else {
@@ -119,6 +128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'execu
     } else {
         $search_term = $_POST['search_term'] ?? '';
         $replace_term = $_POST['replace_term'] ?? '';
+        $enable_limit = isset($_POST['enable_limit']) && $_POST['enable_limit'] === '1';
+        $limit_count = (int)($_POST['limit_count'] ?? 0);
 
         if (empty($search_term)) {
             $error = 'Zoekterm is verplicht.';
@@ -151,6 +162,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'execu
                 foreach ($configs as $config) {
                     $matches = substr_count($config['config_content'], $search_term);
                     if ($matches > 0) {
+                        // Check limit
+                        if ($enable_limit && $limit_count > 0 && $affected >= $limit_count) {
+                            break;
+                        }
+
                         // Voer replace uit
                         $new_content = str_replace($search_term, $replace_term, $config['config_content']);
 
@@ -204,7 +220,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'execu
                 $stmt->execute([$affected, $bulk_op_id]);
 
                 $pdo->commit();
-                $success = "$affected config(s) succesvol bijgewerkt en geactiveerd!";
+
+                if ($enable_limit && $limit_count > 0) {
+                    $total_possible = 0;
+                    foreach ($configs as $config) {
+                        if (substr_count($config['config_content'], $search_term) > 0) {
+                            $total_possible++;
+                        }
+                    }
+                    $remaining = $total_possible - $affected;
+                    if ($remaining > 0) {
+                        $success = "$affected config(s) succesvol bijgewerkt en geactiveerd! (Limiet bereikt - nog $remaining configs over)";
+                    } else {
+                        $success = "$affected config(s) succesvol bijgewerkt en geactiveerd!";
+                    }
+                } else {
+                    $success = "$affected config(s) succesvol bijgewerkt en geactiveerd!";
+                }
+
                 $step = 'complete';
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -312,6 +345,13 @@ require_once __DIR__ . '/_header.php';
         border-color: #28a745;
         background: #d4edda;
     }
+    .form-group {
+        margin-bottom: 16px;
+    }
+    .alert {
+        border-radius: 4px;
+        margin-bottom: 16px;
+    }
 </style>
 
 <h2>🔍 Bulk Find &amp; Replace</h2>
@@ -354,6 +394,24 @@ require_once __DIR__ . '/_header.php';
             <input type="text" name="replace_term" placeholder="bijv. https://yealink-cfg.eu/download/file/rom2.rom" style="width:100%;">
         </div>
 
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="enable_limit" id="enable_limit" value="1">
+                Limiteer aantal wijzigingen
+            </label>
+            <div id="limit_input" style="display:none; margin-top:8px; margin-left:24px;">
+                <label>Max aantal configs</label>
+                <input type="number" name="limit_count" min="1" max="1000" value="5" style="width:100px;">
+                <small style="color:#666;">Test eerst een paar configs voordat je alles aanpast</small>
+            </div>
+        </div>
+
+        <script>
+        document.getElementById('enable_limit').addEventListener('change', function() {
+            document.getElementById('limit_input').style.display = this.checked ? 'block' : 'none';
+        });
+        </script>
+
         <button class="btn" type="submit">🔍 Preview</button>
     </form>
 </div>
@@ -362,7 +420,21 @@ require_once __DIR__ . '/_header.php';
 <?php if ($step === 'preview' && !empty($preview_results)): ?>
 <div class="card">
     <h3>Stap 2: Preview resultaten</h3>
-    <p><strong><?php echo count($preview_results); ?> config(s)</strong> bevatten de zoekterm.</p>
+
+    <?php
+    $enable_limit = isset($_POST['enable_limit']) && $_POST['enable_limit'] === '1';
+    $limit_count = (int)($_POST['limit_count'] ?? 0);
+    $showing_limited = $enable_limit && $limit_count > 0 && $total_matches > $limit_count;
+    ?>
+
+    <?php if ($showing_limited): ?>
+        <div class="alert" style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px; margin-bottom:16px;">
+            <strong>⚠️ Limiet actief:</strong> Eerste <?php echo $limit_count; ?> van <?php echo $total_matches; ?> configs worden aangepast.
+            <br><small>Er zijn nog <?php echo ($total_matches - $limit_count); ?> andere configs die deze zoekterm bevatten.</small>
+        </div>
+    <?php else: ?>
+        <p><strong><?php echo count($preview_results); ?> config(s)</strong> bevatten de zoekterm.</p>
+    <?php endif; ?>
 
     <table class="preview-table">
         <thead>
@@ -385,11 +457,13 @@ require_once __DIR__ . '/_header.php';
         </tbody>
     </table>
 
-    <form method="post" style="margin-top:20px;" onsubmit="return confirm('Weet je zeker dat je <?php echo count($preview_results); ?> config(s) wilt bijwerken? Er wordt automatisch een nieuwe versie aangemaakt en geactiveerd.');">
+    <form method="post" style="margin-top:20px;" onsubmit="return confirm('Weet je zeker dat je <?php echo count($preview_results); ?> config(s) wilt bijwerken?<?php if ($showing_limited) echo ' (Limiet actief - nog ' . ($total_matches - $limit_count) . ' configs over)'; ?>');">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
         <input type="hidden" name="action" value="execute">
         <input type="hidden" name="search_term" value="<?php echo htmlspecialchars($_POST['search_term'] ?? ''); ?>">
         <input type="hidden" name="replace_term" value="<?php echo htmlspecialchars($_POST['replace_term'] ?? ''); ?>">
+        <input type="hidden" name="enable_limit" value="<?php echo $enable_limit ? '1' : '0'; ?>">
+        <input type="hidden" name="limit_count" value="<?php echo $limit_count; ?>">
 
         <button class="btn" type="submit" style="background:#28a745;">✅ Uitvoeren</button>
         <a class="btn" href="?step=search" style="background:#6c757d;">Annuleren</a>
@@ -401,6 +475,14 @@ require_once __DIR__ . '/_header.php';
 <div class="card">
     <h3>✅ Voltooid!</h3>
     <p><?php echo htmlspecialchars($success); ?></p>
+
+    <?php if (isset($remaining) && $remaining > 0): ?>
+        <div class="alert" style="background:#e7f3ff; border-left:4px solid #0066cc; padding:12px; margin:16px 0;">
+            <strong>ℹ️ Let op:</strong> Er zijn nog <?php echo $remaining; ?> configs die deze zoekterm bevatten.
+            <br><small>Voer dezelfde zoekopdracht opnieuw uit zonder limiet om alle configs bij te werken.</small>
+        </div>
+    <?php endif; ?>
+
     <a class="btn" href="?step=search">Nieuwe operatie</a>
     <a class="btn" href="/settings/device_mapping.php" style="background:#6c757d;">Naar Device Mapping</a>
 </div>
