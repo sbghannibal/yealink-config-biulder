@@ -331,7 +331,7 @@ function can_access($permission, $permission_map) {
         <!-- CONFIG DROPDOWN -->
         <?php if (can_access('admin.device_types.manage', $permission_map) || can_access('config.manage', $permission_map) || can_access('admin.templates.manage', $permission_map)): ?>
         <div class="nav-dropdown">
-            <a class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php', 'builder.php', 'device_mapping.php', 'templates.php', 'template_variables.php', 'config_cleanup.php']) ? 'active' : ''; ?>">
+            <a class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php', 'builder.php', 'device_mapping.php', 'templates.php', 'template_variables.php', 'config_cleanup.php', 'bulk_find_replace.php']) ? 'active' : ''; ?>">
                 ⚙️ Config <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
@@ -362,6 +362,12 @@ function can_access($permission, $permission_map) {
                 <?php if (can_access('config.cleanup', $permission_map)): ?>
                 <a href="/admin/config_cleanup.php" class="<?php echo $current_page === 'config_cleanup.php' ? 'active' : ''; ?>">
                     🗑️ Config Cleanup
+                </a>
+                <?php endif; ?>
+
+                <?php if (in_array('Expert', $user_roles) || in_array('Owner', $user_roles)): ?>
+                <a href="/admin/bulk_find_replace.php" class="<?php echo $current_page === 'bulk_find_replace.php' ? 'active' : ''; ?>">
+                    🔍 Bulk Find &amp; Replace
                 </a>
                 <?php endif; ?>
             </div>
