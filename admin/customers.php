@@ -170,10 +170,10 @@ require_once __DIR__ . '/_header.php';
                     <th><?php echo __('table.id'); ?></th>
                     <th><?php echo __('form.customer_code'); ?></th>
                     <th><?php echo __('form.company_name'); ?></th>
-                    <th>Contactpersoon</th>
+                    <th><?php echo __('label.contact_person'); ?></th>
                     <th><?php echo __('table.email'); ?></th>
                     <th><?php echo __('form.phone'); ?></th>
-                    <th>Devices</th>
+                    <th><?php echo __('label.devices_count'); ?></th>
                     <th><?php echo __('table.status'); ?></th>
                     <th><?php echo __('table.actions'); ?></th>
                 </tr>

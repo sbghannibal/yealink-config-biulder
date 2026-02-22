@@ -441,4 +441,136 @@ return [
     'label.currently_active'         => 'Actuellement actif',
     'label.status_active_icon'       => '🟢 Actif',
     'label.status_inactive_icon'     => '⏸️ Inactif',
+
+    // audit.php
+    'label.admin_id'              => 'Admin ID',
+    'label.date_from'             => 'Date du',
+    'label.date_to'               => "Date jusqu'au",
+
+    // approve_account.php
+    'form.rejection_reason'       => 'Motif du refus',
+    'page.delete_request.heading' => 'Supprimer la demande',
+    'label.reason'                => 'Raison',
+
+    // bulk_find_replace.php
+    'label.step1.name'            => '1. Recherche',
+    'label.step1.desc'            => 'Saisissez les termes de recherche et de remplacement',
+    'label.step2.desc'            => 'Voir les configs affectées',
+    'label.step3.name'            => '3. Terminé',
+    'label.step3.desc'            => 'Modifications appliquées',
+    'label.bulk_step1.heading'    => 'Étape 1 : Rechercher et remplacer',
+    'label.bulk_step1.description' => 'Recherchez une chaîne de texte dans toutes les configs actives et remplacez-la.',
+    'label.search_term'           => 'Terme de recherche',
+    'label.replace_term'          => 'Terme de remplacement',
+    'label.limit_changes'         => 'Limiter le nombre de modifications',
+    'label.max_configs'           => 'Nombre maximum de configs',
+    'label.test_first_tip'        => 'Testez quelques configs avant de tout modifier',
+    'label.bulk_step2.heading'    => 'Étape 2 : Aperçu des résultats',
+    'table.matches'               => 'Correspondances',
+    'label.bulk_step3.heading'    => 'Terminé !',
+    'label.new_operation'         => 'Nouvelle opération',
+    'label.to_device_mapping'     => 'Vers la gestion des appareils',
+    'label.recent_ops_rollback'   => 'Opérations récentes et annulation',
+    'table.search_replace_terms'  => 'Terme de recherche → Terme de remplacement',
+    'table.configs'               => 'Configs',
+    'table.executed_by'           => 'Exécuté par',
+    'label.rolled_back_by'        => 'Annulé par',
+    'button.rollback'             => 'Annuler',
+
+    // config_cleanup.php
+    'label.last_cleanup_summary'  => 'Résumé du dernier nettoyage',
+    'label.last_cleanup'          => 'Dernier nettoyage',
+    'label.today'                 => "Aujourd'hui",
+    'label.days_ago'              => 'jour(s) passé(s)',
+    'label.cleaned_by'            => 'Nettoyé par',
+    'label.last_deleted'          => 'Derniers supprimés',
+    'label.total_deleted_alltime' => 'Total supprimé (tout temps)',
+    'label.no_cleanup_yet'        => 'Aucun historique de nettoyage. Effectuez un nettoyage ci-dessous.',
+    'label.execute_cleanup'       => 'Exécuter le nettoyage',
+    'label.remove_config_desc'    => 'Supprimez les versions de configuration plus anciennes que la période sélectionnée et non actives.',
+    'label.delete_configs_older_than' => 'Supprimer les configs plus anciennes que :',
+    'label.days'                  => 'jours',
+    'button.cleanup_now'          => 'Nettoyer maintenant',
+    'confirm.cleanup_run'         => 'Exécuter le nettoyage ? Cela supprimera les configs plus anciennes que la période sélectionnée.',
+    'label.cleanup_tip'           => 'Seules les configs inactives sont supprimées. Les configs actives sont toujours protégées.',
+    'label.configs_to_delete'     => 'config(s) à supprimer',
+    'label.not_active_paren'      => '(inactifs)',
+    'label.cleanup_history'       => 'Historique des nettoyages (5 derniers)',
+    'label.no_cleanup_history'    => 'Aucun historique de nettoyage.',
+    'table.date_time'             => 'Date & Heure',
+    'table.reason'                => 'Raison',
+    'table.cleaned_by'            => 'Nettoyé par',
+    'label.deleted_count'         => 'supprimé(s)',
+    'label.no_changes'            => 'Aucune modification',
+
+    // customers.php / customers_add.php / customers_edit.php
+    'label.contact_person'        => 'Personne de contact',
+    'label.devices_count'         => 'Appareils',
+    'error.fetch_customer'        => 'Erreur lors de la récupération du client. Vérifiez les journaux.',
+
+    // customers_delete.php / roles_delete.php
+    'label.warning_attention'     => 'Attention',
+    'label.action_cannot_be_undone' => 'Cette action est irréversible !',
+
+    // device_types_edit.php
+    'error.cannot_delete_type'    => "Impossible de supprimer - %d appareil(s) utilisent ce type. Veuillez d'abord réaffecter ces appareils.",
+    'label.device_type_info'      => "Informations sur le type d'appareil",
+    'label.devices_using'         => 'Appareils utilisant :',
+    'table.created'               => 'Créé',
+    'table.last_updated'          => 'Dernière mise à jour',
+    'label.type_in_use_note'      => "Les types d'appareils utilisés ne peuvent pas être supprimés. Vous devez d'abord réaffecter ou supprimer tous les appareils utilisant ce type.",
+    'confirm.delete_device_type'  => "Êtes-vous sûr de vouloir supprimer ce type d'appareil ? Cette action est irréversible.",
+    'label.devices_in_use'        => "appareil(s) en cours d'utilisation",
+    'label.cannot_delete_type_title' => 'Impossible de supprimer - des appareils utilisent ce type',
+    'label.users_will_be_reassigned' => 'utilisateur(s) ont ce rôle et seront automatiquement réaffectés au rôle utilisateur.',
+
+    // roles_edit.php / roles_delete.php
+    'error.fetch_role'            => 'Erreur lors de la récupération du rôle.',
+
+    // settings.php
+    'form.dashboard_title'        => 'Titre du tableau de bord',
+    'form.dashboard_text'         => 'Texte du tableau de bord (texte brut, entrée = nouvelle ligne)',
+
+    // staging_certificates.php
+    'error.access_denied'         => 'Accès refusé.',
+    'label.auth_settings'         => "Paramètres d'authentification",
+    'label.auth_settings_desc'    => "Configurer l'authentification HTTP de base pour les points de provisionnement",
+    'label.auth_enabled_msg'      => "L'authentification est ACTIVÉE",
+    'label.auth_disabled_msg'     => "L'authentification est DÉSACTIVÉE - Tout le monde peut accéder aux fichiers staging !",
+    'form.test_token'             => 'Jeton de test (facultatif)',
+    'button.update_auth'          => "Mettre à jour l'authentification",
+    'label.current_settings'      => 'Paramètres actuels',
+    'label.ca_cert_upload'        => 'Télécharger le certificat CA racine',
+    'label.ca_cert_file'          => 'Fichier de certificat CA (.crt)',
+    'button.upload_ca_cert'       => 'Télécharger le certificat CA',
+    'label.ca_cert_present'       => '✅ Certificat CA : présent',
+    'label.ca_cert_missing'       => '❌ Certificat CA : manquant',
+    'label.server_cert_upload'    => 'Télécharger le certificat serveur',
+    'label.server_cert_file'      => 'Fichier de certificat serveur (.crt)',
+    'button.upload_server_cert'   => 'Télécharger le certificat serveur',
+    'label.server_cert_present'   => '✅ Certificat serveur : présent',
+    'label.server_cert_missing'   => '❌ Certificat serveur : manquant',
+
+    // staging_credentials.php
+    'label.login_credentials'     => 'Identifiants de connexion',
+    'button.show'                 => 'Afficher',
+    'button.hide'                 => 'Masquer',
+
+    // tokens.php
+    'label.config_version_id'     => 'ID de version de config',
+    'label.validity_hours'        => 'Validité (heures)',
+    'label.optional_device_model' => "Modèle d'appareil optionnel",
+    'label.recent_tokens'         => 'Tokens récents',
+    'table.token'                 => 'Jeton',
+    'table.config_version'        => 'Version de config',
+    'table.created_by'            => 'Créé par',
+    'button.revoke'               => 'Révoquer',
+    'form.choose_version'         => '-- Choisir une version --',
+
+    // index.php / dashboard_alt.php
+    'label.manage_devices'        => 'Gérez vos appareils Yealink',
+    'label.to_devices'            => 'Vers les appareils',
+    'label.build_manage_configs'  => 'Créez et gérez des configurations',
+    'label.config_builder'        => 'Config Builder',
+    'label.edit_dashboard_text'   => 'Modifier le texte du tableau de bord',
 ];

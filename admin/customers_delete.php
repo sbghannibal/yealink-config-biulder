@@ -40,7 +40,8 @@ try {
     }
 } catch (Exception $e) {
     error_log('admin/customers_delete fetch error: ' . $e->getMessage());
-    echo 'Fout bij ophalen klant. Controleer logs.';
+    require_once __DIR__ . '/../includes/i18n.php';
+    echo __('error.fetch_customer');
     exit;
 }
 
@@ -91,17 +92,17 @@ require_once __DIR__ . '/_header.php';
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
     <div class="card">
-        <p><strong>Let op:</strong> Je staat op het punt om de volgende klant te verwijderen:</p>
+        <p><strong><?php echo __('label.warning_attention'); ?>:</strong> <?php echo __('confirm.delete_customer'); ?></p>
         
         <div style="background:#f8f9fa; padding:16px; border-radius:4px; margin:16px 0;">
             <p><strong><?php echo __('form.customer_code'); ?>:</strong> <?php echo htmlspecialchars($customer['customer_code']); ?></p>
             <p><strong><?php echo __('form.company_name'); ?>:</strong> <?php echo htmlspecialchars($customer['company_name']); ?></p>
             <?php if ($customer['device_count'] > 0): ?>
-                <p style="color:#dc3545;"><strong>⚠️ Let op:</strong> Deze klant heeft <?php echo (int)$customer['device_count']; ?> device(s). De devices blijven bestaan maar worden ontkoppeld van deze klant.</p>
+                <p style="color:#dc3545;"><strong>⚠️ <?php echo __('label.warning_attention'); ?>:</strong> <?php echo sprintf(__('error.cannot_delete_type'), (int)$customer['device_count']); ?></p>
             <?php endif; ?>
         </div>
         
-        <p style="color:#dc3545;"><strong>Deze actie kan niet ongedaan worden gemaakt!</strong></p>
+        <p style="color:#dc3545;"><strong><?php echo __('label.action_cannot_be_undone'); ?></strong></p>
         
         <form method="post" style="margin-top:16px;">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">

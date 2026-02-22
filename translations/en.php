@@ -441,4 +441,136 @@ return [
     'label.currently_active'         => 'Currently active',
     'label.status_active_icon'       => '🟢 Active',
     'label.status_inactive_icon'     => '⏸️ Inactive',
+
+    // audit.php
+    'label.admin_id'              => 'Admin ID',
+    'label.date_from'             => 'Date from',
+    'label.date_to'               => 'Date to',
+
+    // approve_account.php
+    'form.rejection_reason'       => 'Rejection reason',
+    'page.delete_request.heading' => 'Delete Request',
+    'label.reason'                => 'Reason',
+
+    // bulk_find_replace.php
+    'label.step1.name'            => '1. Search',
+    'label.step1.desc'            => 'Enter search and replace terms',
+    'label.step2.desc'            => 'Review affected configs',
+    'label.step3.name'            => '3. Complete',
+    'label.step3.desc'            => 'Changes applied',
+    'label.bulk_step1.heading'    => 'Step 1: Find & Replace',
+    'label.bulk_step1.description' => 'Search a text string in all active configs and replace it.',
+    'label.search_term'           => 'Search term',
+    'label.replace_term'          => 'Replace term',
+    'label.limit_changes'         => 'Limit number of changes',
+    'label.max_configs'           => 'Max number of configs',
+    'label.test_first_tip'        => 'Test a few configs first before changing everything',
+    'label.bulk_step2.heading'    => 'Step 2: Preview results',
+    'table.matches'               => 'Matches',
+    'label.bulk_step3.heading'    => 'Completed!',
+    'label.new_operation'         => 'New operation',
+    'label.to_device_mapping'     => 'To Device Mapping',
+    'label.recent_ops_rollback'   => 'Recent operations & Rollback',
+    'table.search_replace_terms'  => 'Search term → Replace term',
+    'table.configs'               => 'Configs',
+    'table.executed_by'           => 'Executed by',
+    'label.rolled_back_by'        => 'Rolled back by',
+    'button.rollback'             => 'Rollback',
+
+    // config_cleanup.php
+    'label.last_cleanup_summary'  => 'Last Cleanup Summary',
+    'label.last_cleanup'          => 'Last Cleanup',
+    'label.today'                 => 'Today',
+    'label.days_ago'              => 'day(s) ago',
+    'label.cleaned_by'            => 'Cleaned by',
+    'label.last_deleted'          => 'Last deleted',
+    'label.total_deleted_alltime' => 'Total deleted (all time)',
+    'label.no_cleanup_yet'        => 'No cleanup history yet. Run a cleanup below.',
+    'label.execute_cleanup'       => 'Execute Cleanup',
+    'label.remove_config_desc'    => 'Remove configuration versions that are older than the selected period and are not currently active.',
+    'label.delete_configs_older_than' => 'Delete configs older than:',
+    'label.days'                  => 'days',
+    'button.cleanup_now'          => 'Cleanup Now',
+    'confirm.cleanup_run'         => 'Run cleanup? This will delete configs older than the selected period.',
+    'label.cleanup_tip'           => 'Only inactive configs are deleted. Active configs are always protected.',
+    'label.configs_to_delete'     => 'config(s) to delete',
+    'label.not_active_paren'      => '(not active)',
+    'label.cleanup_history'       => 'Cleanup History (Last 5)',
+    'label.no_cleanup_history'    => 'No cleanup history yet.',
+    'table.date_time'             => 'Date & Time',
+    'table.reason'                => 'Reason',
+    'table.cleaned_by'            => 'Cleaned by',
+    'label.deleted_count'         => 'deleted',
+    'label.no_changes'            => 'No changes',
+
+    // customers.php / customers_add.php / customers_edit.php
+    'label.contact_person'        => 'Contact person',
+    'label.devices_count'         => 'Devices',
+    'error.fetch_customer'        => 'Error fetching customer. Check logs.',
+
+    // customers_delete.php / roles_delete.php
+    'label.warning_attention'     => 'Warning',
+    'label.action_cannot_be_undone' => 'This action cannot be undone!',
+
+    // device_types_edit.php
+    'error.cannot_delete_type'    => 'Cannot delete - %d device(s) are using this type. Please reassign those devices first.',
+    'label.device_type_info'      => 'Device Type Information',
+    'label.devices_using'         => 'Devices using:',
+    'table.created'               => 'Created',
+    'table.last_updated'          => 'Last updated',
+    'label.type_in_use_note'      => 'Device types that are in use cannot be deleted. You must first reassign or delete all devices using this type.',
+    'confirm.delete_device_type'  => 'Are you sure you want to delete this device type? This action cannot be undone.',
+    'label.devices_in_use'        => 'device(s) in use',
+    'label.cannot_delete_type_title' => 'Cannot delete - devices are using this type',
+    'label.users_will_be_reassigned' => 'user(s) have this role and will be automatically reassigned to the user role.',
+
+    // roles_edit.php / roles_delete.php
+    'error.fetch_role'            => 'Error fetching role.',
+
+    // settings.php
+    'form.dashboard_title'        => 'Dashboard Title',
+    'form.dashboard_text'         => 'Dashboard Text (plain text, press enter for new line)',
+
+    // staging_certificates.php
+    'error.access_denied'         => 'Access denied.',
+    'label.auth_settings'         => 'Authentication Settings',
+    'label.auth_settings_desc'    => 'Configure HTTP Basic Authentication for staging provisioning endpoints',
+    'label.auth_enabled_msg'      => 'Authentication is ENABLED',
+    'label.auth_disabled_msg'     => 'Authentication is DISABLED - Anyone can access staging files!',
+    'form.test_token'             => 'Test Token (Optional)',
+    'button.update_auth'          => 'Update Authentication',
+    'label.current_settings'      => 'Current Settings',
+    'label.ca_cert_upload'        => 'Upload Root CA Certificate',
+    'label.ca_cert_file'          => 'CA Certificate File (.crt)',
+    'button.upload_ca_cert'       => 'Upload CA Certificate',
+    'label.ca_cert_present'       => '✅ CA Certificate: Present',
+    'label.ca_cert_missing'       => '❌ CA Certificate: Missing',
+    'label.server_cert_upload'    => 'Upload Server Certificate',
+    'label.server_cert_file'      => 'Server Certificate File (.crt)',
+    'button.upload_server_cert'   => 'Upload Server Certificate',
+    'label.server_cert_present'   => '✅ Server Certificate: Present',
+    'label.server_cert_missing'   => '❌ Server Certificate: Missing',
+
+    // staging_credentials.php
+    'label.login_credentials'     => 'Login Credentials',
+    'button.show'                 => 'Show',
+    'button.hide'                 => 'Hide',
+
+    // tokens.php
+    'label.config_version_id'     => 'Config version ID',
+    'label.validity_hours'        => 'Validity (hours)',
+    'label.optional_device_model' => 'Optional device model',
+    'label.recent_tokens'         => 'Recent tokens',
+    'table.token'                 => 'Token',
+    'table.config_version'        => 'Config version',
+    'table.created_by'            => 'Created by',
+    'button.revoke'               => 'Revoke',
+    'form.choose_version'         => '-- Choose version --',
+
+    // index.php / dashboard_alt.php
+    'label.manage_devices'        => 'Manage your Yealink devices',
+    'label.to_devices'            => 'To Devices',
+    'label.build_manage_configs'  => 'Build and manage configurations',
+    'label.config_builder'        => 'Config Builder',
+    'label.edit_dashboard_text'   => 'Edit dashboard text',
 ];

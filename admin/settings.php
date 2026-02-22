@@ -84,12 +84,12 @@ require_once __DIR__ . '/_header.php';
         <form method="post">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <div class="form-group">
-                <label>Dashboard Titel</label>
+                <label><?php echo __('form.dashboard_title'); ?></label>
                 <input name="dashboard_title" type="text" value="<?php echo htmlspecialchars($dashboard_title); ?>">
             </div>
 
             <div class="form-group">
-                <label>Dashboard Tekst (plain text, enter = nieuwe regel)</label>
+                <label><?php echo __('form.dashboard_text'); ?></label>
                 <textarea name="dashboard_text" rows="8"><?php echo htmlspecialchars($dashboard_text); ?></textarea>
             </div>
 

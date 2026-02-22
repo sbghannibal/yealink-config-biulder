@@ -3,6 +3,7 @@ $page_title = 'Staging Certificates';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -13,7 +14,7 @@ $admin_id = (int) $_SESSION['admin_id'];
 
 if (!has_permission($pdo, $admin_id, 'config.manage')) {
     http_response_code(403);
-    echo 'Toegang geweigerd.';
+    echo __('error.access_denied');
     exit;
 }
 
@@ -141,41 +142,41 @@ require_once __DIR__ . '/_header.php';
 <?php endif; ?>
 
 <div class="card">
-    <h3>🔐 Authentication Settings</h3>
-    <p>Configure HTTP Basic Authentication for staging provisioning endpoints</p>
+    <h3>🔐 <?php echo __('label.auth_settings'); ?></h3>
+    <p><?php echo __('label.auth_settings_desc'); ?></p>
     
     <?php if ($auth_enabled): ?>
         <div class="alert alert-success" style="margin-bottom: 16px;">
-            ✅ Authentication is <strong>ENABLED</strong>
+            ✅ <?php echo __('label.auth_enabled_msg'); ?>
         </div>
     <?php else: ?>
         <div class="alert alert-warning" style="margin-bottom: 16px;">
-            ⚠️ Authentication is <strong>DISABLED</strong> - Anyone can access staging files!
+            ⚠️ <?php echo __('label.auth_disabled_msg'); ?>
         </div>
     <?php endif; ?>
     
     <form method="post">
         <input type="hidden" name="action" value="update_auth">
         <div class="form-group">
-            <label>Username</label>
+            <label><?php echo __('form.username'); ?></label>
             <input type="text" name="auth_username" value="<?php echo htmlspecialchars($current_auth_user); ?>" required>
             <small>Username for HTTP Basic Authentication</small>
         </div>
         <div class="form-group">
-            <label>Password</label>
+            <label><?php echo __('form.password'); ?></label>
             <input type="password" name="auth_password" value="<?php echo htmlspecialchars($current_auth_pass); ?>" placeholder="Enter password to enable authentication">
             <small>Leave empty to disable authentication (NOT RECOMMENDED)</small>
         </div>
         <div class="form-group">
-            <label>Test Token (Optional)</label>
+            <label><?php echo __('form.test_token'); ?></label>
             <input type="text" name="test_token" value="<?php echo htmlspecialchars($current_test_token); ?>" placeholder="For testing without Yealink device">
             <small>Generate with: <code>openssl rand -hex 32</code> - Allows testing from browser/curl</small>
         </div>
-        <button class="btn" type="submit">Update Authentication</button>
+        <button class="btn" type="submit"><?php echo __('button.update_auth'); ?></button>
     </form>
     
     <div style="margin-top: 16px; padding: 12px; background: #f0f0f0; border-radius: 4px;">
-        <strong>Current Settings:</strong><br>
+        <strong><?php echo __('label.current_settings'); ?>:</strong><br>
         Username: <code><?php echo htmlspecialchars($current_auth_user); ?></code><br>
         Password: <code><?php echo $auth_enabled ? '••••••••' : '(not set)'; ?></code><br>
         Test Token: <code><?php echo !empty($current_test_token) ? '••••••••' : '(not set)'; ?></code><br>
@@ -197,42 +198,42 @@ require_once __DIR__ . '/_header.php';
 </div>
 
 <div class="card" style="margin-top: 16px;">
-    <h3>1️⃣ Upload Root CA Certificate</h3>
+    <h3>1️⃣ <?php echo __('label.ca_cert_upload'); ?></h3>
     <p>Upload Yealink Root CA certificate (ca.crt)</p>
     <form method="post" enctype="multipart/form-data">
         <input type="hidden" name="action" value="upload_ca">
         <div class="form-group">
-            <label>CA Certificate File (.crt)</label>
+            <label><?php echo __('label.ca_cert_file'); ?></label>
             <input type="file" name="ca_cert" accept=".crt" required>
             <small>Root certificate authority certificate - get from Yealink</small>
         </div>
-        <button class="btn" type="submit">Upload CA Certificate</button>
+        <button class="btn" type="submit"><?php echo __('button.upload_ca_cert'); ?></button>
     </form>
     
     <?php if (file_exists($cert_dir . '/ca.crt')): ?>
-        <p style="margin-top: 12px;">✅ CA Certificate: <strong>Present</strong></p>
+        <p style="margin-top: 12px;"><?php echo __('label.ca_cert_present'); ?></p>
     <?php else: ?>
-        <p style="margin-top: 12px;">❌ CA Certificate: <strong>Missing</strong></p>
+        <p style="margin-top: 12px;"><?php echo __('label.ca_cert_missing'); ?></p>
     <?php endif; ?>
 </div>
 
 <div class="card" style="margin-top: 16px;">
-    <h3>2️⃣ Upload Server Certificate</h3>
+    <h3>2️⃣ <?php echo __('label.server_cert_upload'); ?></h3>
     <p>Upload shared server certificate (server.crt) - used by ALL devices</p>
     <form method="post" enctype="multipart/form-data">
         <input type="hidden" name="action" value="upload_server">
         <div class="form-group">
-            <label>Server Certificate File (.crt)</label>
+            <label><?php echo __('label.server_cert_file'); ?></label>
             <input type="file" name="server_cert" accept=".crt" required>
             <small>Shared certificate for all phones (prevents MAC spoofing attacks)</small>
         </div>
-        <button class="btn" type="submit">Upload Server Certificate</button>
+        <button class="btn" type="submit"><?php echo __('button.upload_server_cert'); ?></button>
     </form>
     
     <?php if (file_exists($cert_dir . '/server.crt')): ?>
-        <p style="margin-top: 12px;">✅ Server Certificate: <strong>Present</strong></p>
+        <p style="margin-top: 12px;"><?php echo __('label.server_cert_present'); ?></p>
     <?php else: ?>
-        <p style="margin-top: 12px;">❌ Server Certificate: <strong>Missing</strong></p>
+        <p style="margin-top: 12px;"><?php echo __('label.server_cert_missing'); ?></p>
     <?php endif; ?>
 </div>
 

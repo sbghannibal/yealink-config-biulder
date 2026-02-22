@@ -441,4 +441,136 @@ return [
     'label.currently_active'         => 'Momenteel actief',
     'label.status_active_icon'       => '🟢 Actief',
     'label.status_inactive_icon'     => '⏸️ Inactief',
+
+    // audit.php
+    'label.admin_id'              => 'Admin ID',
+    'label.date_from'             => 'Datum van',
+    'label.date_to'               => 'Datum tot',
+
+    // approve_account.php
+    'form.rejection_reason'       => 'Afwijzingsreden',
+    'page.delete_request.heading' => 'Verzoek Verwijderen',
+    'label.reason'                => 'Reden',
+
+    // bulk_find_replace.php
+    'label.step1.name'            => '1. Zoeken',
+    'label.step1.desc'            => 'Voer zoek- en vervangterm in',
+    'label.step2.desc'            => 'Bekijk getroffen configs',
+    'label.step3.name'            => '3. Voltooid',
+    'label.step3.desc'            => 'Wijzigingen toegepast',
+    'label.bulk_step1.heading'    => 'Stap 1: Zoek & Vervang',
+    'label.bulk_step1.description' => 'Zoek een tekststring in alle actieve configs en vervang deze.',
+    'label.search_term'           => 'Zoekterm',
+    'label.replace_term'          => 'Vervangterm',
+    'label.limit_changes'         => 'Limiteer aantal wijzigingen',
+    'label.max_configs'           => 'Max aantal configs',
+    'label.test_first_tip'        => 'Test eerst een paar configs voordat je alles aanpast',
+    'label.bulk_step2.heading'    => 'Stap 2: Preview resultaten',
+    'table.matches'               => 'Matches',
+    'label.bulk_step3.heading'    => 'Voltooid!',
+    'label.new_operation'         => 'Nieuwe operatie',
+    'label.to_device_mapping'     => 'Naar Device Mapping',
+    'label.recent_ops_rollback'   => 'Recente operaties & Rollback',
+    'table.search_replace_terms'  => 'Zoekterm → Vervangterm',
+    'table.configs'               => 'Configs',
+    'table.executed_by'           => 'Uitgevoerd door',
+    'label.rolled_back_by'        => 'Rolled back door',
+    'button.rollback'             => 'Rollback',
+
+    // config_cleanup.php
+    'label.last_cleanup_summary'  => 'Samenvatting laatste opschoning',
+    'label.last_cleanup'          => 'Laatste opschoning',
+    'label.today'                 => 'Vandaag',
+    'label.days_ago'              => 'dag(en) geleden',
+    'label.cleaned_by'            => 'Opgeschoond door',
+    'label.last_deleted'          => 'Laatste verwijderd',
+    'label.total_deleted_alltime' => 'Totaal verwijderd (alle tijden)',
+    'label.no_cleanup_yet'        => 'Nog geen opschoningshistorie. Voer een opschoning uit.',
+    'label.execute_cleanup'       => 'Opschoning uitvoeren',
+    'label.remove_config_desc'    => 'Verwijder configuratieversies die ouder zijn dan de geselecteerde periode en momenteel niet actief zijn.',
+    'label.delete_configs_older_than' => 'Verwijder configs ouder dan:',
+    'label.days'                  => 'dagen',
+    'button.cleanup_now'          => 'Nu opschonen',
+    'confirm.cleanup_run'         => 'Opschoning uitvoeren? Dit verwijdert configs ouder dan de geselecteerde periode.',
+    'label.cleanup_tip'           => 'Alleen inactieve configs worden verwijderd. Actieve configs zijn altijd beschermd.',
+    'label.configs_to_delete'     => 'config(s) te verwijderen',
+    'label.not_active_paren'      => '(niet actief)',
+    'label.cleanup_history'       => 'Opschoningshistorie (Laatste 5)',
+    'label.no_cleanup_history'    => 'Geen opschoningshistorie.',
+    'table.date_time'             => 'Datum & Tijd',
+    'table.reason'                => 'Reden',
+    'table.cleaned_by'            => 'Opgeschoond door',
+    'label.deleted_count'         => 'verwijderd',
+    'label.no_changes'            => 'Geen wijzigingen',
+
+    // customers.php / customers_add.php / customers_edit.php
+    'label.contact_person'        => 'Contactpersoon',
+    'label.devices_count'         => 'Apparaten',
+    'error.fetch_customer'        => 'Fout bij ophalen klant. Controleer logs.',
+
+    // customers_delete.php / roles_delete.php
+    'label.warning_attention'     => 'Let op',
+    'label.action_cannot_be_undone' => 'Deze actie kan niet ongedaan worden gemaakt!',
+
+    // device_types_edit.php
+    'error.cannot_delete_type'    => 'Kan niet verwijderen - %d apparaat/apparaten gebruiken dit type. Wijs die apparaten eerst opnieuw toe.',
+    'label.device_type_info'      => 'Apparaattype informatie',
+    'label.devices_using'         => 'Apparaten gebruiken:',
+    'table.created'               => 'Aangemaakt',
+    'table.last_updated'          => 'Laatst bijgewerkt',
+    'label.type_in_use_note'      => 'Apparaattypen in gebruik kunnen niet worden verwijderd. U moet alle apparaten die dit type gebruiken eerst opnieuw toewijzen of verwijderen.',
+    'confirm.delete_device_type'  => 'Weet je zeker dat je dit apparaattype wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.',
+    'label.devices_in_use'        => 'apparaat/apparaten in gebruik',
+    'label.cannot_delete_type_title' => 'Kan niet verwijderen - apparaten gebruiken dit type',
+    'label.users_will_be_reassigned' => 'gebruiker(s) hebben deze rol en worden automatisch toegewezen aan de gebruikersrol.',
+
+    // roles_edit.php / roles_delete.php
+    'error.fetch_role'            => 'Fout bij ophalen rol.',
+
+    // settings.php
+    'form.dashboard_title'        => 'Dashboard Titel',
+    'form.dashboard_text'         => 'Dashboard Tekst (plain text, enter = nieuwe regel)',
+
+    // staging_certificates.php
+    'error.access_denied'         => 'Toegang geweigerd.',
+    'label.auth_settings'         => 'Authenticatie-instellingen',
+    'label.auth_settings_desc'    => 'Stel HTTP Basic Authentication in voor staging provisioning endpoints',
+    'label.auth_enabled_msg'      => 'Authenticatie is INGESCHAKELD',
+    'label.auth_disabled_msg'     => 'Authenticatie is UITGESCHAKELD - Iedereen kan staging bestanden downloaden!',
+    'form.test_token'             => 'Test Token (optioneel)',
+    'button.update_auth'          => 'Authenticatie bijwerken',
+    'label.current_settings'      => 'Huidige instellingen',
+    'label.ca_cert_upload'        => 'Root CA-certificaat uploaden',
+    'label.ca_cert_file'          => 'CA-certificaatbestand (.crt)',
+    'button.upload_ca_cert'       => 'CA-certificaat uploaden',
+    'label.ca_cert_present'       => '✅ CA Certificaat: Aanwezig',
+    'label.ca_cert_missing'       => '❌ CA Certificaat: Ontbreekt',
+    'label.server_cert_upload'    => 'Servercertificaat uploaden',
+    'label.server_cert_file'      => 'Servercertificaatbestand (.crt)',
+    'button.upload_server_cert'   => 'Servercertificaat uploaden',
+    'label.server_cert_present'   => '✅ Servercertificaat: Aanwezig',
+    'label.server_cert_missing'   => '❌ Servercertificaat: Ontbreekt',
+
+    // staging_credentials.php
+    'label.login_credentials'     => 'Login Gegevens',
+    'button.show'                 => 'Toon',
+    'button.hide'                 => 'Verberg',
+
+    // tokens.php
+    'label.config_version_id'     => 'Config versie ID',
+    'label.validity_hours'        => 'Geldigheid (uur)',
+    'label.optional_device_model' => 'Optioneel apparaat-model',
+    'label.recent_tokens'         => 'Recente tokens',
+    'table.token'                 => 'Token',
+    'table.config_version'        => 'Config versie',
+    'table.created_by'            => 'Aangemaakt door',
+    'button.revoke'               => 'Intrekken',
+    'form.choose_version'         => '-- Kies versie --',
+
+    // index.php / dashboard_alt.php
+    'label.manage_devices'        => 'Beheer je Yealink devices',
+    'label.to_devices'            => 'Naar Devices',
+    'label.build_manage_configs'  => 'Bouw en beheer configuraties',
+    'label.config_builder'        => 'Config Builder',
+    'label.edit_dashboard_text'   => 'Bewerk dashboard-tekst',
 ];

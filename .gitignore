@@ -3,3 +3,7 @@ config/.env
 .env
 config/.env
 *.backup
+
+# Downloads folder — keep the folder but ignore its contents
+downloads/*
+!downloads/.gitkeep

@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/settings/database.php';
 require_once __DIR__ . '/includes/rbac.php';
+require_once __DIR__ . '/includes/i18n.php';
 
 // Fetch settings helper
 function get_setting($pdo, $key, $default = '') {
@@ -60,21 +61,21 @@ $dashboard_text  = get_setting($pdo, 'dashboard_text', "Gebruik het menu om devi
 
         <?php if ($logged_in && has_permission($pdo, $admin_id, 'admin.settings.edit')): ?>
             <div style="margin-top:12px;">
-                <a class="btn" href="/admin/settings.php">✏️ Bewerk dashboard-tekst</a>
+                <a class="btn" href="/admin/settings.php">✏️ <?php echo __('label.edit_dashboard_text'); ?></a>
             </div>
         <?php endif; ?>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top:20px;">
             <div class="card">
                 <h3>📱 Devices</h3>
-                <p>Beheer je Yealink devices</p>
-                <a href="devices/list.php" class="btn">Naar Devices</a>
+                <p><?php echo __('label.manage_devices'); ?></p>
+                <a href="devices/list.php" class="btn"><?php echo __('label.to_devices'); ?></a>
             </div>
 
             <div class="card">
-                <h3>⚙️ Config Builder</h3>
-                <p>Bouw en beheer configuraties</p>
-                <a href="settings/builder.php" class="btn">Config Builder</a>
+                <h3>⚙️ <?php echo __('label.config_builder'); ?></h3>
+                <p><?php echo __('label.build_manage_configs'); ?></p>
+                <a href="settings/builder.php" class="btn"><?php echo __('label.config_builder'); ?></a>
             </div>
         </div>
     </main>

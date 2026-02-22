@@ -56,7 +56,7 @@ require_once __DIR__ . '/_header.php';
 
 <form method="get" class="card" style="margin-bottom:16px;">
         <div class="form-group">
-            <label>Admin ID</label>
+            <label><?php echo __('label.admin_id'); ?></label>
             <input name="admin_id" value="<?php echo htmlspecialchars($_GET['admin_id'] ?? ''); ?>">
         </div>
         <div class="form-group">
@@ -64,11 +64,11 @@ require_once __DIR__ . '/_header.php';
             <input name="action" value="<?php echo htmlspecialchars($_GET['action'] ?? ''); ?>">
         </div>
         <div class="form-group">
-            <label>Datum van</label>
+            <label><?php echo __('label.date_from'); ?></label>
             <input type="date" name="date_from" value="<?php echo htmlspecialchars($_GET['date_from'] ?? ''); ?>">
         </div>
         <div class="form-group">
-            <label>Datum tot</label>
+            <label><?php echo __('label.date_to'); ?></label>
             <input type="date" name="date_to" value="<?php echo htmlspecialchars($_GET['date_to'] ?? ''); ?>">
         </div>
         <button class="btn" type="submit"><?php echo __('label.filter'); ?></button>
@@ -81,7 +81,7 @@ require_once __DIR__ . '/_header.php';
             <p><?php echo __('label.no_results'); ?></p>
         <?php else: ?>
             <table>
-                <thead><tr><th>Tijd</th><th><?php echo __('table.admin'); ?></th><th><?php echo __('table.event'); ?></th><th>Entiteit</th><th><?php echo __('table.details'); ?></th></tr></thead>
+                <thead><tr><th><?php echo __('table.time'); ?></th><th><?php echo __('table.admin'); ?></th><th><?php echo __('table.event'); ?></th><th><?php echo __('table.entity'); ?></th><th><?php echo __('table.details'); ?></th></tr></thead>
                 <tbody>
                     <?php foreach ($logs as $l): ?>
                         <tr>
