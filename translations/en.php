@@ -573,4 +573,45 @@ return [
     'label.build_manage_configs'  => 'Build and manage configurations',
     'label.config_builder'        => 'Config Builder',
     'label.edit_dashboard_text'   => 'Edit dashboard text',
+
+    // admin/device_types.php
+    'label.new_device_type'              => 'New Device Type',
+    'form.device_type_name_hint'         => 'E.g. T46S, T54W, etc.',
+    'form.device_type_name_placeholder'  => 'Enter device type name',
+    'label.existing_device_types'        => 'Existing Device Types',
+    'label.devices'                      => 'Devices',
+    'table.devices_using'                => 'Devices using this type',
+    'label.no_devices'                   => 'No devices',
+    'label.in_use'                       => 'In use',
+
+    // admin/bulk_find_replace.php
+    'label.rom_file_url'                 => 'ROM file URL',
+    'help.rom_file_example'              => 'E.g. https://yealink-cfg.eu/download/file/rom1.rom',
+
+    // admin/users_edit.php
+    'error.user_fetch_failed'            => 'Failed to fetch user',
+    'form.password_leave_empty'          => 'Leave empty to keep current password',
+    'form.password_requirements'         => 'Minimum 8 characters, contains uppercase, lowercase and numbers',
+    'button.generate_password'           => 'Generate Password',
+    'form.role_help'                     => 'Select the role for this user',
+
+    // login.php
+    'page.admin_login'                   => 'Admin Login',
+
+    // request_account.php
+    'page.account_request'               => 'Account Request',
+    'text.request_admin_account'         => 'Request an administrator account',
+
+    // admin/device_types.php
+    'form.device_type_description_placeholder' => 'Enter a description (optional)',
+
+    // request_account.php - Form fields
+    'form.full_name'                     => 'Full name',
+    'form.full_name_placeholder'         => 'e.g. John Doe',
+    'form.email'                         => 'Email address',
+    'form.email_placeholder'             => 'your@email.com',
+    'form.organization'                  => 'Organization',
+    'form.organization_placeholder'      => 'e.g. Acme Corp',
+    'form.reason'                        => 'Reason',
+    'form.reason_placeholder'            => 'Describe why you need an account...',
 ];

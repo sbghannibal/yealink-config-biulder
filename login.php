@@ -298,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-container">
         <div class="login-header">
             <h1>☎️ Yealink Config</h1>
-            <p>Beheerder Login</p>
+            <p><?php echo __('page.admin_login'); ?></p>
         </div>
 
         <?php if ($error): ?>

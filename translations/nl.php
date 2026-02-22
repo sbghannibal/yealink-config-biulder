@@ -573,4 +573,45 @@ return [
     'label.build_manage_configs'  => 'Bouw en beheer configuraties',
     'label.config_builder'        => 'Config Builder',
     'label.edit_dashboard_text'   => 'Bewerk dashboard-tekst',
+
+    // admin/device_types.php
+    'label.new_device_type'              => 'Nieuw apparaattype',
+    'form.device_type_name_hint'         => 'Bijv. T46S, T54W, etc.',
+    'form.device_type_name_placeholder'  => 'Voer apparaattype naam in',
+    'label.existing_device_types'        => 'Bestaande apparaattypes',
+    'label.devices'                      => 'Apparaten',
+    'table.devices_using'                => 'Apparaten die dit type gebruiken',
+    'label.no_devices'                   => 'Geen apparaten',
+    'label.in_use'                       => 'In gebruik',
+
+    // admin/bulk_find_replace.php
+    'label.rom_file_url'                 => 'ROM bestand URL',
+    'help.rom_file_example'              => 'Bijv. https://yealink-cfg.eu/download/file/rom1.rom',
+
+    // admin/users_edit.php
+    'error.user_fetch_failed'            => 'Gebruiker ophalen mislukt',
+    'form.password_leave_empty'          => 'Laat leeg om huidig wachtwoord te behouden',
+    'form.password_requirements'         => 'Minimaal 8 tekens, bevat hoofdletters, kleine letters en cijfers',
+    'button.generate_password'           => 'Genereer wachtwoord',
+    'form.role_help'                     => 'Selecteer de rol voor deze gebruiker',
+
+    // login.php
+    'page.admin_login'                   => 'Beheerder Login',
+
+    // request_account.php
+    'page.account_request'               => 'Account Verzoek',
+    'text.request_admin_account'         => 'Vraag een beheerdersaccount aan',
+
+    // admin/device_types.php
+    'form.device_type_description_placeholder' => 'Voer een beschrijving in (optioneel)',
+
+    // request_account.php - Form fields
+    'form.full_name'                     => 'Volledige naam',
+    'form.full_name_placeholder'         => 'bijv. John Doe',
+    'form.email'                         => 'E-mailadres',
+    'form.email_placeholder'             => 'jouw@email.nl',
+    'form.organization'                  => 'Organisatie',
+    'form.organization_placeholder'      => 'bijv. Acme Corp',
+    'form.reason'                        => 'Reden',
+    'form.reason_placeholder'            => 'Beschrijf waarom je een account nodig hebt...',
 ];

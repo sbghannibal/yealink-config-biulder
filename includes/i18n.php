@@ -17,11 +17,11 @@ function get_user_language(PDO $pdo, int $admin_id): string {
 
     // Fall back to database preference
     try {
-        $stmt = $pdo->prepare('SELECT language FROM admins WHERE id = ? LIMIT 1');
+        $stmt = $pdo->prepare('SELECT preferred_language FROM admins WHERE id = ? LIMIT 1');
         $stmt->execute([$admin_id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row && !empty($row['language'])) {
-            $lang = $row['language'];
+        if ($row && !empty($row['preferred_language'])) {
+            $lang = $row['preferred_language'];
             if (in_array($lang, array_keys(get_available_languages()), true)) {
                 $_SESSION['language'] = $lang;
                 return $lang;

@@ -573,4 +573,45 @@ return [
     'label.build_manage_configs'  => 'Créez et gérez des configurations',
     'label.config_builder'        => 'Config Builder',
     'label.edit_dashboard_text'   => 'Modifier le texte du tableau de bord',
+
+    // admin/device_types.php
+    'label.new_device_type'              => 'Nouveau type d\'appareil',
+    'form.device_type_name_hint'         => 'Par ex. T46S, T54W, etc.',
+    'form.device_type_name_placeholder'  => 'Entrez le nom du type d\'appareil',
+    'label.existing_device_types'        => 'Types d\'appareils existants',
+    'label.devices'                      => 'Appareils',
+    'table.devices_using'                => 'Appareils utilisant ce type',
+    'label.no_devices'                   => 'Aucun appareil',
+    'label.in_use'                       => 'En cours d\'utilisation',
+
+    // admin/bulk_find_replace.php
+    'label.rom_file_url'                 => 'URL du fichier ROM',
+    'help.rom_file_example'              => 'Par ex. https://yealink-cfg.eu/download/file/rom1.rom',
+
+    // admin/users_edit.php
+    'error.user_fetch_failed'            => 'Échec de la récupération de l\'utilisateur',
+    'form.password_leave_empty'          => 'Laisser vide pour conserver le mot de passe actuel',
+    'form.password_requirements'         => 'Minimum 8 caractères, contient des majuscules, des minuscules et des chiffres',
+    'button.generate_password'           => 'Générer un mot de passe',
+    'form.role_help'                     => 'Sélectionnez le rôle pour cet utilisateur',
+
+    // login.php
+    'page.admin_login'                   => 'Connexion administrateur',
+
+    // request_account.php
+    'page.account_request'               => 'Demande de compte',
+    'text.request_admin_account'         => 'Demander un compte administrateur',
+
+    // admin/device_types.php
+    'form.device_type_description_placeholder' => 'Entrez une description (optionnel)',
+
+    // request_account.php - Form fields
+    'form.full_name'                     => 'Nom complet',
+    'form.full_name_placeholder'         => 'par ex. John Doe',
+    'form.email'                         => 'Adresse e-mail',
+    'form.email_placeholder'             => 'votre@email.fr',
+    'form.organization'                  => 'Organisation',
+    'form.organization_placeholder'      => 'par ex. Acme Corp',
+    'form.reason'                        => 'Raison',
+    'form.reason_placeholder'            => 'Décrivez pourquoi vous avez besoin d\'un compte...',
 ];

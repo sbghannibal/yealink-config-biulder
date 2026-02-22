@@ -316,8 +316,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <div class="header">
-            <h1>📧 Account Verzoek</h1>
-            <p>Vraag een beheerdersaccount aan</p>
+            <h1>📧 <?php echo __('page.account_request'); ?></h1>
+            <p><?php echo __('text.request_admin_account'); ?></p>
         </div>
 
         <?php if ($error): ?>
@@ -337,28 +337,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="full_name">
                     <?php echo __('form.full_name'); ?> <span class="required">*</span>
                 </label>
-                <input id="full_name" name="full_name" type="text" required placeholder="bijv. John Doe" value="<?php echo htmlspecialchars($_POST['full_name'] ?? ''); ?>">
+                <input id="full_name" name="full_name" type="text" required placeholder="<?php echo __('form.full_name_placeholder'); ?>" value="<?php echo htmlspecialchars($_POST['full_name'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
                 <label for="email">
                     <?php echo __('form.email'); ?> <span class="required">*</span>
                 </label>
-                <input id="email" name="email" type="email" required placeholder="jouw@email.nl" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                <input id="email" name="email" type="email" required placeholder="<?php echo __('form.email_placeholder'); ?>" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
                 <label for="organization">
                     <?php echo __('form.organization'); ?> <span class="required">*</span>
                 </label>
-                <input id="organization" name="organization" type="text" required placeholder="bijv. Acme Corp" value="<?php echo htmlspecialchars($_POST['organization'] ?? ''); ?>">
+                <input id="organization" name="organization" type="text" required placeholder="<?php echo __('form.organization_placeholder'); ?>" value="<?php echo htmlspecialchars($_POST['organization'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
                 <label for="reason">
                     <?php echo __('form.reason'); ?> <span class="required">*</span>
                 </label>
-                <textarea id="reason" name="reason" required placeholder="Beschrijf waarom je een account nodig hebt..."><?php echo htmlspecialchars($_POST['reason'] ?? ''); ?></textarea>
+                <textarea id="reason" name="reason" required placeholder="<?php echo __('form.reason_placeholder'); ?>"><?php echo htmlspecialchars($_POST['reason'] ?? ''); ?></textarea>
                 <small style="color: #666; display: block; margin-top: 4px;"><?php echo __('form.reason_hint'); ?></small>
             </div>
 

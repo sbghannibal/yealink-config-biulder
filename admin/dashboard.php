@@ -1,6 +1,6 @@
 <?php
 $page_title = 'Admin Dashboard';
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 require_once __DIR__ . '/../includes/i18n.php';
@@ -48,9 +48,9 @@ function get_setting($pdo, $key, $default = '') {
     }
 }
 
-$dashboard_title = get_setting($pdo, 'dashboard_title', 'Welkom bij Yealink Config Builder');
-$dashboard_text = get_setting($pdo, 'dashboard_text', "Gebruik het menu om devices en configuraties te beheren.\n\nJe kunt deze tekst aanpassen via Admin → Instellingen.");
-
+$current_lang = $_SESSION["language"] ?? "nl";
+$dashboard_title = get_setting($pdo, "dashboard_title_" . $current_lang, get_setting($pdo, "dashboard_title", "Welkom bij Yealink Config Builder"));
+$dashboard_text = get_setting($pdo, "dashboard_text_" . $current_lang, get_setting($pdo, "dashboard_text", "Gebruik het menu om devices en configuraties te beheren."));
 $stats = [
     'admins' => 0,
     'devices' => 0,
