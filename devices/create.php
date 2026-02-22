@@ -53,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mac_raw = trim((string)($_POST['mac_address'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
 
-        if ($name === '' || $device_type_id <= 0) {
-            $error = 'Vul minimaal de naam en het model in.';
+        if ($name === '' || $device_type_id <= 0 || empty($customer_id)) {
+            $error = 'Vul minimaal de naam, het model en de klant in.';
         } else {
             // Normalize MAC if provided
             $mac = null;
@@ -145,15 +145,21 @@ require_once __DIR__ . '/../admin/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Klant (optioneel)</label>
-                <select name="customer_id">
+                <label>Klant *</label>
+                <select name="customer_id" required>
                     <option value="">-- Selecteer klant --</option>
-                    <?php foreach ($customers as $c): ?>
-                        <option value="<?php echo (int)$c['id']; ?>" <?php echo (isset($_POST['customer_id']) && $_POST['customer_id'] == $c['id']) ? 'selected' : ''; ?>>
+                    <?php
+                    $preselect_customer = (int)($_POST['customer_id'] ?? $_GET['customer_id'] ?? 0);
+                    foreach ($customers as $c): ?>
+                        <option value="<?php echo (int)$c['id']; ?>" <?php echo $preselect_customer == $c['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($c['customer_code'] . ' - ' . $c['company_name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
+                <small style="color:#666; display:block; margin-top:4px;">
+                    Klant niet gevonden?
+                    <a href="/admin/customers_add.php?return_to=devices_create" style="color:#007bff; text-decoration:none;">➕ Nieuwe klant aanmaken</a>
+                </small>
             </div>
 
             <div class="form-group">
