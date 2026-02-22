@@ -35,3 +35,23 @@ downloads/headset/*
 !downloads/Handset/.gitkeep
 !downloads/W70/.gitkeep
 !downloads/headset/.gitkeep
+
+# Additional device firmware downloads
+downloads/W75/*
+downloads/W80/*
+downloads/W90/*
+downloads/AX83h/*
+downloads/T58W/*
+downloads/T57W/*
+downloads/T54W/*
+downloads/T53/*
+downloads/T33G/*
+!downloads/W75/.gitkeep
+!downloads/W80/.gitkeep
+!downloads/W90/.gitkeep
+!downloads/AX83h/.gitkeep
+!downloads/T58W/.gitkeep
+!downloads/T57W/.gitkeep
+!downloads/T54W/.gitkeep
+!downloads/T53/.gitkeep
+!downloads/T33G/.gitkeep
