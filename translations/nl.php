@@ -327,7 +327,7 @@ return [
     'success.variable_deleted'       => 'Variabele verwijderd.',
     'error.variable_delete_failed'   => 'Kon variabele niet verwijderen.',
     'error.variables_load_failed'    => 'Kon variabelen niet ophalen.',
-    'label.global_variables_heading' => '🌍 Globale Variables',
+    'label.global_variables_heading' => '🌍 Globale Variabelen',
     'label.global_variables_desc'    => 'Gebruik globale variabelen in je configuraties met de syntax <strong>{{VARNAME}}</strong>.<br>Bijvoorbeeld: <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">{{SERVER_IP}}</code> wordt vervangen door de ingestelde waarde bij het genereren van de config.',
     'label.variables_syntax_hint'    => '(gebruik in config met {{VARNAME}})',
     'label.new_variable'             => 'Nieuwe variabele',

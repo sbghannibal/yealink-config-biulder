@@ -1,9 +1,10 @@
 <?php
-$page_title = __('nav.config_builder');
 session_start();
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 require_once __DIR__ . '/../includes/i18n.php';
+
+$page_title = __('nav.config_builder');
 
 // Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
