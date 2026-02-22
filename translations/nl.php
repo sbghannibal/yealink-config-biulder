@@ -463,6 +463,8 @@ return [
     'label.search_term'           => 'Zoekterm',
     'label.replace_term'          => 'Vervangterm',
     'label.limit_changes'         => 'Limiteer aantal wijzigingen',
+    'placeholder.search_example'   => 'bijv. https://yealink-cfg.eu/download/file/rom1.rom',
+    'placeholder.replace_example'  => 'bijv. https://yealink-cfg.eu/download/file/rom2.rom',
     'label.max_configs'           => 'Max aantal configs',
     'label.test_first_tip'        => 'Test eerst een paar configs voordat je alles aanpast',
     'label.bulk_step2.heading'    => 'Stap 2: Preview resultaten',

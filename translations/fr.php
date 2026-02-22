@@ -463,6 +463,8 @@ return [
     'label.search_term'           => 'Terme de recherche',
     'label.replace_term'          => 'Terme de remplacement',
     'label.limit_changes'         => 'Limiter le nombre de modifications',
+    'placeholder.search_example'   => 'p.ex. https://yealink-cfg.eu/download/file/rom1.rom',
+    'placeholder.replace_example'  => 'p.ex. https://yealink-cfg.eu/download/file/rom2.rom',
     'label.max_configs'           => 'Nombre maximum de configs',
     'label.test_first_tip'        => 'Testez quelques configs avant de tout modifier',
     'label.bulk_step2.heading'    => 'Étape 2 : Aperçu des résultats',

@@ -385,13 +385,13 @@ require_once __DIR__ . '/_header.php';
 
         <div class="form-group">
             <label><?php echo __('label.search_term'); ?> *</label>
-            <input type="text" name="search_term" required placeholder="bijv. https://yealink-cfg.eu/download/file/rom1.rom" style="width:100%;">
+            <input type="text" name="search_term" required placeholder="<?php echo __('placeholder.search_example'); ?>" style="width:100%;">
             <small>Let op: case-sensitive</small>
         </div>
 
         <div class="form-group">
             <label><?php echo __('label.replace_term'); ?></label>
-            <input type="text" name="replace_term" placeholder="bijv. https://yealink-cfg.eu/download/file/rom2.rom" style="width:100%;">
+            <input type="text" name="replace_term" placeholder="<?php echo __('placeholder.replace_example'); ?>" style="width:100%;">
         </div>
 
         <div class="form-group">
