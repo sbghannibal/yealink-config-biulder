@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/_header.php';
 ?>
 
-<h2>✏️ Rol Bewerken</h2>
+<h2>✏️ <?php echo __('page.roles.edit'); ?></h2>
 
 <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -142,7 +142,7 @@ require_once __DIR__ . '/_header.php';
         <input type="hidden" name="id" value="<?php echo (int)$role_id; ?>">
 
         <div class="form-group">
-            <label>Rolnaam</label>
+            <label><?php echo __('form.name'); ?></label>
             <?php if ($is_system): ?>
                 <input type="text" value="<?php echo htmlspecialchars($role['role_name']); ?>" readonly style="background:#f8f9fa; cursor:not-allowed;">
                 <small style="color:#6c757d;">Systeemrollen kunnen niet worden hernoemd.</small>
@@ -152,12 +152,12 @@ require_once __DIR__ . '/_header.php';
         </div>
 
         <div class="form-group">
-            <label>Beschrijving</label>
+            <label><?php echo __('form.description'); ?></label>
             <textarea name="description" rows="3" style="width:100%;"><?php echo htmlspecialchars($role['description'] ?? ''); ?></textarea>
         </div>
 
         <div class="form-group">
-            <label style="display:block; margin-bottom:12px; font-weight:600;">Permissies</label>
+            <label style="display:block; margin-bottom:12px; font-weight:600;"><?php echo __('form.permissions'); ?></label>
             <?php foreach ($all_permissions as $category => $perms): ?>
                 <div style="margin-bottom:16px;">
                     <strong style="text-transform:capitalize; color:#667eea;"><?php echo htmlspecialchars($category); ?></strong>
@@ -175,8 +175,8 @@ require_once __DIR__ . '/_header.php';
         </div>
 
         <div style="display:flex; gap:8px; margin-top:16px;">
-            <button class="btn" type="submit" style="background:#28a745;">Opslaan</button>
-            <a class="btn" href="/admin/roles.php" style="background:#6c757d;">Annuleren</a>
+            <button class="btn" type="submit" style="background:#28a745;"><?php echo __('button.save'); ?></button>
+            <a class="btn" href="/admin/roles.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
         </div>
     </form>
 </section>

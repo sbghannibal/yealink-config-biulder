@@ -52,7 +52,7 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 <style>.monos { font-family: monospace; white-space: pre-wrap; }</style>
-<h2>Audit Logs</h2>
+<h2><?php echo __('page.audit.title'); ?></h2>
 
 <form method="get" class="card" style="margin-bottom:16px;">
         <div class="form-group">
@@ -60,7 +60,7 @@ require_once __DIR__ . '/_header.php';
             <input name="admin_id" value="<?php echo htmlspecialchars($_GET['admin_id'] ?? ''); ?>">
         </div>
         <div class="form-group">
-            <label>Actie (zoek)</label>
+            <label><?php echo __('table.event'); ?></label>
             <input name="action" value="<?php echo htmlspecialchars($_GET['action'] ?? ''); ?>">
         </div>
         <div class="form-group">
@@ -71,17 +71,17 @@ require_once __DIR__ . '/_header.php';
             <label>Datum tot</label>
             <input type="date" name="date_to" value="<?php echo htmlspecialchars($_GET['date_to'] ?? ''); ?>">
         </div>
-        <button class="btn" type="submit">Filter</button>
+        <button class="btn" type="submit"><?php echo __('label.filter'); ?></button>
     </form>
 
     <?php if (!empty($error)): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
     <section class="card">
         <?php if (empty($logs)): ?>
-            <p>Geen audit logs gevonden.</p>
+            <p><?php echo __('label.no_results'); ?></p>
         <?php else: ?>
             <table>
-                <thead><tr><th>Tijd</th><th>Admin</th><th>Actie</th><th>Entiteit</th><th>Details</th></tr></thead>
+                <thead><tr><th>Tijd</th><th><?php echo __('table.admin'); ?></th><th><?php echo __('table.event'); ?></th><th>Entiteit</th><th><?php echo __('table.details'); ?></th></tr></thead>
                 <tbody>
                     <?php foreach ($logs as $l): ?>
                         <tr>

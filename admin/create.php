@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/_header.php';
 ?>
 
-<h2>Nieuw Device</h2>
+<h2><?php echo __('page.create.title'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -69,11 +69,11 @@ require_once __DIR__ . '/_header.php';
         <form method="post">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <div class="form-group">
-                <label>Naam</label>
+                <label><?php echo __('form.name'); ?></label>
                 <input name="device_name" type="text" required>
             </div>
             <div class="form-group">
-                <label>Model</label>
+                <label><?php echo __('form.device_type'); ?></label>
                 <select name="device_type_id" required>
                     <option value="">-- Kies model --</option>
                     <?php foreach ($types as $t): ?>
@@ -82,15 +82,15 @@ require_once __DIR__ . '/_header.php';
                 </select>
             </div>
             <div class="form-group">
-                <label>MAC-adres (optioneel)</label>
+                <label><?php echo __('form.mac_address'); ?> (optioneel)</label>
                 <input name="mac_address" type="text" placeholder="00:11:22:33:44:55">
             </div>
             <div class="form-group">
-                <label>Beschrijving</label>
+                <label><?php echo __('form.description'); ?></label>
                 <textarea name="description"></textarea>
             </div>
-            <button class="btn" type="submit">Aanmaken</button>
-            <a class="btn" href="/devices/list.php" style="background:#6c757d;">Annuleren</a>
+            <button class="btn" type="submit"><?php echo __('button.create'); ?></button>
+            <a class="btn" href="/devices/list.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
         </form>
     </div>
 <?php require_once __DIR__ . '/_footer.php'; ?>

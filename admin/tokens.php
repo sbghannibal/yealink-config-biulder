@@ -186,13 +186,13 @@ require_once __DIR__ . '/_header.php';
     .actions form { display:inline; }
 </style>
 
-<h2>Download Tokens</h2>
+<h2><?php echo __('page.tokens.title'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo nl2br(htmlspecialchars($success)); ?></div><?php endif; ?>
 
     <section class="card" style="margin-bottom:16px;">
-        <h3>Maak nieuw token</h3>
+        <h3><?php echo __('button.create_new'); ?> token</h3>
         <form method="post">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="create">
@@ -215,7 +215,7 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Optioneel MAC-adres (alleen voor overzicht)</label>
+                <label>Optioneel <?php echo __('form.mac_address'); ?></label>
                 <input name="mac_address" type="text" placeholder="00:11:22:33:44:55">
             </div>
 
@@ -225,7 +225,7 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div style="display:flex; gap:8px;">
-                <button class="btn" type="submit">Genereer token</button>
+                <button class="btn" type="submit"><?php echo __('button.create'); ?> token</button>
             </div>
         </form>
     </section>
@@ -233,20 +233,20 @@ require_once __DIR__ . '/_header.php';
     <section class="card">
         <h3>Recente tokens</h3>
         <?php if (empty($tokens)): ?>
-            <p class="small">Geen tokens gevonden.</p>
+            <p class="small"><?php echo __('label.no_results'); ?></p>
         <?php else: ?>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th><?php echo __('table.id'); ?></th>
                         <th>Token</th>
                         <th>Config v</th>
-                        <th>MAC / Model</th>
-                        <th>Geldig tot</th>
-                        <th>Used</th>
+                        <th><?php echo __('table.mac_address'); ?> / Model</th>
+                        <th><?php echo __('table.expires'); ?></th>
+                        <th><?php echo __('table.used_at'); ?></th>
                         <th>Aangemaakt door</th>
-                        <th>Aangemaakt</th>
-                        <th>Acties</th>
+                        <th><?php echo __('table.created_at'); ?></th>
+                        <th><?php echo __('table.actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -261,7 +261,7 @@ require_once __DIR__ . '/_header.php';
                             </td>
                             <td><?php echo htmlspecialchars($t['version_number'] ?? '-'); ?></td>
                             <td><?php echo htmlspecialchars($t['mac_address'] ?? '-') . ' / ' . htmlspecialchars($t['device_model'] ?? '-'); ?></td>
-                            <td><?php echo htmlspecialchars($t['expires_at'] ?? '-'); ?> <?php if ($is_active): ?><span style="color:green;">(actief)</span><?php else: ?><span style="color:#666;">(inactief)</span><?php endif; ?></td>
+                            <td><?php echo htmlspecialchars($t['expires_at'] ?? '-'); ?> <?php if ($is_active): ?><span style="color:green;">(<?php echo __('status.active'); ?>)</span><?php else: ?><span style="color:#666;">(<?php echo __('status.inactive'); ?>)</span><?php endif; ?></td>
                             <td><?php echo htmlspecialchars($t['used_at'] ?? '-'); ?></td>
                             <td><?php echo htmlspecialchars($t['creator'] ?? '-'); ?></td>
                             <td><?php echo htmlspecialchars($t['created_at'] ?? '-'); ?></td>
@@ -275,11 +275,11 @@ require_once __DIR__ . '/_header.php';
                                     </form>
                                 <?php endif; ?>
 
-                                <form method="post" style="display:inline" onsubmit="return confirm('Weet je zeker dat je dit token wilt verwijderen?');">
+                                <form method="post" style="display:inline" onsubmit="return confirm('<?php echo __('confirm.delete'); ?>');">
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?php echo (int)$t['id']; ?>">
-                                    <button class="btn" type="submit" style="background:#dc3545;">Verwijderen</button>
+                                    <button class="btn" type="submit" style="background:#dc3545;"><?php echo __('button.delete'); ?></button>
                                 </form>
                             </td>
                         </tr>

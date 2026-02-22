@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/_header.php';
 ?>
 
-    <h2>Nieuwe gebruiker aanmaken</h2>
+    <h2><?php echo __('page.users.create'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -89,28 +89,28 @@ require_once __DIR__ . '/_header.php';
         <form method="post" novalidate>
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <div class="form-group">
-                <label>Gebruikersnaam</label>
+                <label><?php echo __('form.username'); ?></label>
                 <input name="username" type="text" required>
             </div>
             <div class="form-group">
-                <label>E-mail</label>
+                <label><?php echo __('form.email'); ?></label>
                 <input name="email" type="email" required>
             </div>
             <div class="form-group">
-                <label>Wachtwoord</label>
+                <label><?php echo __('form.password'); ?></label>
                 <input name="password" type="password" required>
             </div>
             <div class="form-group">
-                <label>Wachtwoord bevestigen</label>
+                <label><?php echo __('form.password_confirm'); ?></label>
                 <input name="password_confirm" type="password" required>
             </div>
             <div class="form-group">
-                <label>Rol</label>
+                <label><?php echo __('form.role'); ?></label>
                 <?php if (empty($all_roles)): ?>
                     <p>Geen rollen geconfigureerd.</p>
                 <?php else: ?>
                     <select name="role_id">
-                        <option value="">-- Selecteer een rol --</option>
+                        <option value="">-- <?php echo __('form.select_role'); ?> --</option>
                         <?php foreach ($all_roles as $r): ?>
                             <option value="<?php echo (int)$r['id']; ?>">
                                 <?php echo htmlspecialchars($r['role_name']); ?>
@@ -122,8 +122,8 @@ require_once __DIR__ . '/_header.php';
                     </small>
                 <?php endif; ?>
             </div>
-            <button class="btn" type="submit">Maak gebruiker</button>
-            <a class="btn" href="/admin/users.php" style="background:#6c757d;">Annuleren</a>
+            <button class="btn" type="submit"><?php echo __('button.create'); ?></button>
+            <a class="btn" href="/admin/users.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
         </form>
     </div>
 <?php require_once __DIR__ . '/_footer.php'; ?>

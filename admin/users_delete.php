@@ -71,20 +71,21 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 
-<h2>Gebruiker verwijderen</h2>
+<h2><?php echo __('page.users.delete'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
     <div class="card">
-        <p>Weet je zeker dat je de gebruiker <strong><?php echo htmlspecialchars($user['username']); ?></strong> (<?php echo htmlspecialchars($user['email']); ?>) wilt verwijderen?</p>
+        <p><?php echo __('confirm.delete_user'); ?></p>
+        <p><strong><?php echo htmlspecialchars($user['username']); ?></strong> (<?php echo htmlspecialchars($user['email']); ?>)</p>
 
         <form method="post" style="display:inline">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="id" value="<?php echo (int)$user['id']; ?>">
-            <button class="btn" type="submit" style="background:#dc3545;">Ja, verwijder</button>
+            <button class="btn" type="submit" style="background:#dc3545;"><?php echo __('label.yes'); ?>, <?php echo __('button.delete'); ?></button>
         </form>
 
-        <a class="btn" href="/admin/users.php" style="background:#6c757d; margin-left:8px;">Annuleren</a>
+        <a class="btn" href="/admin/users.php" style="background:#6c757d; margin-left:8px;"><?php echo __('button.cancel'); ?></a>
     </div>
 <?php require_once __DIR__ . '/_footer.php'; ?>

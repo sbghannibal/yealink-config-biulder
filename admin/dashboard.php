@@ -389,10 +389,10 @@ require_once __DIR__ . '/_header.php';
                 <thead>
                     <tr>
                         <th>Tijd</th>
-                        <th>Gebruiker</th>
-                        <th>Actie</th>
+                        <th><?php echo __('table.admin'); ?></th>
+                        <th><?php echo __('table.event'); ?></th>
                         <th>Entiteit</th>
-                        <th>Details</th>
+                        <th><?php echo __('table.details'); ?></th>
                     </tr>
                 </thead>
                 <tbody>

@@ -354,7 +354,7 @@ require_once __DIR__ . '/_header.php';
     }
 </style>
 
-<h2>🔍 Bulk Find &amp; Replace</h2>
+<h2>🔍 <?php echo __('page.bulk_find_replace.title'); ?></h2>
 
 <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -439,8 +439,8 @@ require_once __DIR__ . '/_header.php';
     <table class="preview-table">
         <thead>
             <tr>
-                <th>Device</th>
-                <th>Type</th>
+                <th><?php echo __('table.device'); ?></th>
+                <th><?php echo __('table.type'); ?></th>
                 <th>Versie</th>
                 <th>Matches</th>
             </tr>
@@ -457,7 +457,7 @@ require_once __DIR__ . '/_header.php';
         </tbody>
     </table>
 
-    <form method="post" style="margin-top:20px;" onsubmit="return confirm('Weet je zeker dat je <?php echo count($preview_results); ?> config(s) wilt bijwerken?<?php if ($showing_limited) echo ' (Limiet actief - nog ' . ($total_matches - $limit_count) . ' configs over)'; ?>');">
+    <form method="post" style="margin-top:20px;" onsubmit="return confirm('<?php echo __('confirm.unsaved_changes'); ?>');">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
         <input type="hidden" name="action" value="execute">
         <input type="hidden" name="search_term" value="<?php echo htmlspecialchars($_POST['search_term'] ?? ''); ?>">
@@ -465,8 +465,8 @@ require_once __DIR__ . '/_header.php';
         <input type="hidden" name="enable_limit" value="<?php echo $enable_limit ? '1' : '0'; ?>">
         <input type="hidden" name="limit_count" value="<?php echo $limit_count; ?>">
 
-        <button class="btn" type="submit" style="background:#28a745;">✅ Uitvoeren</button>
-        <a class="btn" href="?step=search" style="background:#6c757d;">Annuleren</a>
+        <button class="btn" type="submit" style="background:#28a745;">✅ <?php echo __('button.apply'); ?></button>
+        <a class="btn" href="?step=search" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
     </form>
 </div>
 <?php endif; ?>
@@ -491,17 +491,17 @@ require_once __DIR__ . '/_header.php';
 <div class="card" style="margin-top:24px;">
     <h3>🔄 Recente operaties &amp; Rollback</h3>
     <?php if (empty($recent_operations)): ?>
-        <p>Geen recente operaties gevonden.</p>
+        <p><?php echo __('label.no_results'); ?></p>
     <?php else: ?>
         <table>
             <thead>
                 <tr>
-                    <th>Datum</th>
+                    <th><?php echo __('table.created_at'); ?></th>
                     <th>Zoekterm &rarr; Vervangterm</th>
                     <th>Configs</th>
                     <th>Uitgevoerd door</th>
-                    <th>Status</th>
-                    <th>Acties</th>
+                    <th><?php echo __('table.status'); ?></th>
+                    <th><?php echo __('table.actions'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -519,12 +519,12 @@ require_once __DIR__ . '/_header.php';
                         <?php if ($op['rollback_at']): ?>
                             <span style="color:#dc3545;">Rolled back door <?php echo htmlspecialchars($op['rollback_by_name']); ?></span>
                         <?php else: ?>
-                            <span style="color:#28a745;">Actief</span>
+                            <span style="color:#28a745;"><?php echo __('status.active'); ?></span>
                         <?php endif; ?>
                     </td>
                     <td>
                         <?php if (!$op['rollback_at']): ?>
-                            <form method="post" style="display:inline;" onsubmit="return confirm('Weet je zeker dat je deze operatie wilt terugdraaien? Alle <?php echo (int)$op['affected_configs']; ?> devices krijgen hun vorige config terug.');">
+                            <form method="post" style="display:inline;" onsubmit="return confirm('<?php echo __('confirm.unsaved_changes'); ?>');">
                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                 <input type="hidden" name="action" value="rollback">
                                 <input type="hidden" name="bulk_op_id" value="<?php echo (int)$op['id']; ?>">

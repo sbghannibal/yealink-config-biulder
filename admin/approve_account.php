@@ -195,7 +195,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
     .empty-state { text-align: center; padding: 40px 20px; color: #999; }
 </style>
 
-<h1>📧 Account Verzoeken</h1>
+<h1>📧 <?php echo __('page.approve_account.title'); ?></h1>
 
 <?php if ($error): ?>
     <div class="alert alert-error">❌ <?php echo htmlspecialchars($error); ?></div>
@@ -207,14 +207,14 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
 
 <div class="card">
     <div class="filters">
-        <a href="?filter=pending" class="filter-btn <?php echo $filter === 'pending' ? 'active' : ''; ?>">⏳ In behandeling <span class="badge badge-pending"><?php echo $status_counts['pending'] ?? 0; ?></span></a>
-        <a href="?filter=approved" class="filter-btn <?php echo $filter === 'approved' ? 'active' : ''; ?>">✅ Goedgekeurd <span class="badge badge-approved"><?php echo $status_counts['approved'] ?? 0; ?></span></a>
-        <a href="?filter=rejected" class="filter-btn <?php echo $filter === 'rejected' ? 'active' : ''; ?>">❌ Afgewezen <span class="badge badge-rejected"><?php echo $status_counts['rejected'] ?? 0; ?></span></a>
-        <a href="?filter=all" class="filter-btn <?php echo $filter === 'all' ? 'active' : ''; ?>">📋 Alle <span class="badge" style="background: #e0e0e0;"><?php echo array_sum($status_counts); ?></span></a>
+        <a href="?filter=pending" class="filter-btn <?php echo $filter === 'pending' ? 'active' : ''; ?>">⏳ <?php echo __('status.pending'); ?> <span class="badge badge-pending"><?php echo $status_counts['pending'] ?? 0; ?></span></a>
+        <a href="?filter=approved" class="filter-btn <?php echo $filter === 'approved' ? 'active' : ''; ?>">✅ <?php echo __('status.approved'); ?> <span class="badge badge-approved"><?php echo $status_counts['approved'] ?? 0; ?></span></a>
+        <a href="?filter=rejected" class="filter-btn <?php echo $filter === 'rejected' ? 'active' : ''; ?>">❌ <?php echo __('status.rejected'); ?> <span class="badge badge-rejected"><?php echo $status_counts['rejected'] ?? 0; ?></span></a>
+        <a href="?filter=all" class="filter-btn <?php echo $filter === 'all' ? 'active' : ''; ?>">📋 <?php echo __('label.all'); ?> <span class="badge" style="background: #e0e0e0;"><?php echo array_sum($status_counts); ?></span></a>
     </div>
 
     <?php if (empty($requests)): ?>
-        <div class="empty-state"><div style="font-size: 48px; margin-bottom: 16px;">📭</div><p>Geen verzoeken gevonden.</p></div>
+        <div class="empty-state"><div style="font-size: 48px; margin-bottom: 16px;">📭</div><p><?php echo __('label.no_results'); ?></p></div>
     <?php else: ?>
         <?php foreach ($requests as $req): ?>
             <div class="request-card">
@@ -229,10 +229,10 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 </div>
                 <div class="request-actions">
                     <?php if ($req['status'] === 'pending'): ?>
-                        <button class="btn-small btn-approve" onclick="showApproveModal(<?php echo (int)$req['id']; ?>, <?php echo json_encode($req['full_name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)">✅ Goedkeuren</button>
-                        <button class="btn-small btn-reject" onclick="showRejectModal(<?php echo (int)$req['id']; ?>)">❌ Afwijzen</button>
+                        <button class="btn-small btn-approve" onclick="showApproveModal(<?php echo (int)$req['id']; ?>, <?php echo json_encode($req['full_name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)">✅ <?php echo __('button.approve'); ?></button>
+                        <button class="btn-small btn-reject" onclick="showRejectModal(<?php echo (int)$req['id']; ?>)">❌ <?php echo __('button.reject'); ?></button>
                     <?php endif; ?>
-                    <button class="btn-small btn-delete" onclick="showDeleteModal(<?php echo (int)$req['id']; ?>)">🗑️ Verwijder</button>
+                    <button class="btn-small btn-delete" onclick="showDeleteModal(<?php echo (int)$req['id']; ?>)">🗑️ <?php echo __('button.delete'); ?></button>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -242,18 +242,18 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
 <div id="approveModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeApproveModal()">&times;</span>
-        <h2>✅ Account Goedkeuren</h2>
+        <h2>✅ <?php echo __('button.approve'); ?></h2>
         <form method="post" style="margin-top: 20px;">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="approve">
             <input type="hidden" name="request_id" id="approveRequestId">
             <div class="form-group">
-                <label for="suggested_username">Gebruikersnaam *</label>
+                <label for="suggested_username"><?php echo __('form.username'); ?> *</label>
                 <input type="text" id="suggested_username" name="suggested_username" required placeholder="bijv. john.doe">
             </div>
             <div style="display: flex; gap: 8px; margin-top: 20px;">
-                <button type="submit" class="btn btn-success">✅ Goedkeuren</button>
-                <button type="button" class="btn btn-secondary" onclick="closeApproveModal()">Annuleren</button>
+                <button type="submit" class="btn btn-success">✅ <?php echo __('button.approve'); ?></button>
+                <button type="button" class="btn btn-secondary" onclick="closeApproveModal()"><?php echo __('button.cancel'); ?></button>
             </div>
         </form>
     </div>
@@ -262,7 +262,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
 <div id="rejectModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeRejectModal()">&times;</span>
-        <h2>❌ Account Afwijzen</h2>
+        <h2>❌ <?php echo __('button.reject'); ?></h2>
         <form method="post" style="margin-top: 20px;">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="reject">
@@ -272,8 +272,8 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 <textarea id="rejection_reason" name="rejection_reason" required placeholder="Waarom wordt dit verzoek afgewezen?" style="min-height: 120px;"></textarea>
             </div>
             <div style="display: flex; gap: 8px; margin-top: 20px;">
-                <button type="submit" class="btn btn-danger">❌ Afwijzen</button>
-                <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Annuleren</button>
+                <button type="submit" class="btn btn-danger">❌ <?php echo __('button.reject'); ?></button>
+                <button type="button" class="btn btn-secondary" onclick="closeRejectModal()"><?php echo __('button.cancel'); ?></button>
             </div>
         </form>
     </div>
@@ -287,10 +287,10 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="delete">
             <input type="hidden" name="request_id" id="deleteRequestId">
-            <p style="color: #666; margin-bottom: 16px;">⚠️ Ben je zeker dat je dit verzoek wil verwijderen?</p>
+            <p style="color: #666; margin-bottom: 16px;">⚠️ <?php echo __('confirm.delete'); ?></p>
             <div style="display: flex; gap: 8px;">
-                <button type="submit" class="btn btn-danger">🗑️ Verwijderen</button>
-                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Annuleren</button>
+                <button type="submit" class="btn btn-danger">🗑️ <?php echo __('button.delete'); ?></button>
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()"><?php echo __('button.cancel'); ?></button>
             </div>
         </form>
     </div>
