@@ -3,6 +3,7 @@ $page_title = 'Device Types';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -27,26 +28,26 @@ $success = '';
 
 // Check for success from redirect
 if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
-    $success = 'Device type successfully deleted.';
+    $success = __('message.device_type_deleted');
 }
 
 // Handle create
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
-        $error = 'Ongeldige aanvraag (CSRF).';
+        $error = __('error.csrf_invalid');
     } else {
         $type_name = trim($_POST['type_name'] ?? '');
         $description = trim($_POST['description'] ?? '');
         if ($type_name === '') {
-            $error = 'Vul een modelnaam in.';
+            $error = __('error.device_type_name_required');
         } else {
             try {
                 $stmt = $pdo->prepare('INSERT INTO device_types (type_name, description) VALUES (?, ?)');
                 $stmt->execute([$type_name, $description ?: null]);
-                $success = 'Model aangemaakt.';
+                $success = __('message.device_type_created');
             } catch (Exception $e) {
                 error_log('device_types create error: ' . $e->getMessage());
-                $error = 'Kon model niet aanmaken (mogelijk bestaat deze al).';
+                $error = __('error.device_type_create_failed');
             }
         }
     }
@@ -70,7 +71,7 @@ try {
 } catch (Exception $e) {
     error_log('device_types fetch error: ' . $e->getMessage());
     $types = [];
-    $error = $error ?: 'Kon device types niet ophalen.';
+    $error = $error ?: __('error.device_types_fetch_failed');
 }
 require_once __DIR__ . '/_header.php';
 ?>
@@ -81,18 +82,18 @@ require_once __DIR__ . '/_header.php';
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
     <div class="card" style="margin-bottom:20px;">
-        <h3><?php echo __('button.add'); ?> New Device Type</h3>
+        <h3><?php echo __('label.new_device_type'); ?></h3>
         <form method="post">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="create">
             <div class="form-group">
                 <label><?php echo __('form.name'); ?> (e.g., T40, W60P, T46S)</label>
-                <input name="type_name" type="text" required placeholder="Enter device type name">
-                <small style="display:block;margin-top:4px;color:#666;">Must be unique. Common examples: T40, T46S, W60P, CP960</small>
+                <input name="type_name" type="text" required placeholder="<?php echo htmlspecialchars(__('form.device_type_name_placeholder')); ?>">
+                <small style="display:block;margin-top:4px;color:#666;"><?php echo __('form.device_type_name_hint'); ?></small>
             </div>
             <div class="form-group">
-                <label><?php echo __('form.description'); ?> (optional)</label>
-                <input name="description" type="text" placeholder="e.g., Entry-level IP Phone, DECT Base Station">
+                <label><?php echo __('form.description'); ?> (<?php echo __('label.optional'); ?>)</label>
+                <input name="description" type="text" placeholder="<?php echo htmlspecialchars(__('form.device_type_description_placeholder')); ?>">
             </div>
             <div style="display:flex;gap:8px;">
                 <button class="btn" type="submit"><?php echo __('button.create'); ?> <?php echo __('page.devices.title'); ?></button>
@@ -102,7 +103,7 @@ require_once __DIR__ . '/_header.php';
     </div>
 
     <div class="card">
-        <h3>Existing Device Types</h3>
+        <h3><?php echo __('label.existing_device_types'); ?></h3>
         <?php if (empty($types)): ?>
             <p><?php echo __('label.no_results'); ?>.</p>
         <?php else: ?>
@@ -111,7 +112,7 @@ require_once __DIR__ . '/_header.php';
                     <tr>
                         <th><?php echo __('form.name'); ?></th>
                         <th><?php echo __('form.description'); ?></th>
-                        <th>Devices Using</th>
+                        <th><?php echo __('table.devices_using'); ?></th>
                         <th><?php echo __('table.created_at'); ?></th>
                         <th><?php echo __('table.actions'); ?></th>
                     </tr>
@@ -122,17 +123,18 @@ require_once __DIR__ . '/_header.php';
                             <td>
                                 <strong><?php echo htmlspecialchars($t['type_name']); ?></strong>
                                 <?php if ((int)$t['device_count'] > 0): ?>
-                                    <span style="display:inline-block;background:#4CAF50;color:white;padding:2px 8px;border-radius:12px;font-size:11px;margin-left:8px;">IN USE</span>
+                                    <span style="display:inline-block;background:#4CAF50;color:white;padding:2px 8px;border-radius:12px;font-size:11px;margin-left:8px;"><?php echo __('label.in_use'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo htmlspecialchars($t['description'] ?: '-'); ?></td>
                             <td>
-                                <?php if ((int)$t['device_count'] > 0): ?>
+                                <?php $dc = (int)$t['device_count']; ?>
+                                <?php if ($dc > 0): ?>
                                     <span style="display:inline-block;background:#667eea;color:white;padding:4px 10px;border-radius:16px;font-weight:600;font-size:12px;">
-                                        <?php echo (int)$t['device_count']; ?> device<?php echo (int)$t['device_count'] !== 1 ? 's' : ''; ?>
+                                        <?php echo $dc; ?> <?php echo __($dc !== 1 ? 'label.devices' : 'label.device'); ?>
                                     </span>
                                 <?php else: ?>
-                                    <span style="color:#999;">0 devices</span>
+                                    <span style="color:#999;"><?php echo __('label.no_devices'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td style="font-size:13px;color:#666;"><?php echo date('M d, Y', strtotime($t['created_at'])); ?></td>

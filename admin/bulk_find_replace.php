@@ -361,48 +361,48 @@ require_once __DIR__ . '/_header.php';
 
 <div class="step-indicator">
     <div class="step <?php echo $step === 'search' ? 'active' : ''; ?>">
-        <strong>1. Zoeken</strong><br>
-        <small>Voer zoek- en vervangterm in</small>
+        <strong><?php echo __('label.step1.name'); ?></strong><br>
+        <small><?php echo __('label.step1.desc'); ?></small>
     </div>
     <div class="step <?php echo $step === 'preview' ? 'active' : ''; ?>">
         <strong>2. Preview</strong><br>
-        <small>Bekijk getroffen configs</small>
+        <small><?php echo __('label.step2.desc'); ?></small>
     </div>
     <div class="step <?php echo $step === 'complete' ? 'active complete' : ''; ?>">
-        <strong>3. Voltooid</strong><br>
-        <small>Wijzigingen toegepast</small>
+        <strong><?php echo __('label.step3.name'); ?></strong><br>
+        <small><?php echo __('label.step3.desc'); ?></small>
     </div>
 </div>
 
 <?php if ($step === 'search'): ?>
 <div class="card">
-    <h3>Stap 1: Zoek &amp; Vervang</h3>
-    <p>Zoek een tekststring in alle actieve configs en vervang deze.</p>
+    <h3><?php echo __('label.bulk_step1.heading'); ?></h3>
+    <p><?php echo __('label.bulk_step1.description'); ?></p>
 
     <form method="post">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
         <input type="hidden" name="action" value="preview">
 
         <div class="form-group">
-            <label>Zoekterm *</label>
+            <label><?php echo __('label.search_term'); ?> *</label>
             <input type="text" name="search_term" required placeholder="bijv. https://yealink-cfg.eu/download/file/rom1.rom" style="width:100%;">
             <small>Let op: case-sensitive</small>
         </div>
 
         <div class="form-group">
-            <label>Vervangterm</label>
+            <label><?php echo __('label.replace_term'); ?></label>
             <input type="text" name="replace_term" placeholder="bijv. https://yealink-cfg.eu/download/file/rom2.rom" style="width:100%;">
         </div>
 
         <div class="form-group">
             <label>
                 <input type="checkbox" name="enable_limit" id="enable_limit" value="1">
-                Limiteer aantal wijzigingen
+                <?php echo __('label.limit_changes'); ?>
             </label>
             <div id="limit_input" style="display:none; margin-top:8px; margin-left:24px;">
-                <label>Max aantal configs</label>
+                <label><?php echo __('label.max_configs'); ?></label>
                 <input type="number" name="limit_count" min="1" max="1000" value="5" style="width:100px;">
-                <small style="color:#666;">Test eerst een paar configs voordat je alles aanpast</small>
+                <small style="color:#666;"><?php echo __('label.test_first_tip'); ?></small>
             </div>
         </div>
 
@@ -419,7 +419,7 @@ require_once __DIR__ . '/_header.php';
 
 <?php if ($step === 'preview' && !empty($preview_results)): ?>
 <div class="card">
-    <h3>Stap 2: Preview resultaten</h3>
+    <h3><?php echo __('label.bulk_step2.heading'); ?></h3>
 
     <?php
     $enable_limit = isset($_POST['enable_limit']) && $_POST['enable_limit'] === '1';
@@ -441,8 +441,8 @@ require_once __DIR__ . '/_header.php';
             <tr>
                 <th><?php echo __('table.device'); ?></th>
                 <th><?php echo __('table.type'); ?></th>
-                <th>Versie</th>
-                <th>Matches</th>
+                <th><?php echo __('table.version'); ?></th>
+                <th><?php echo __('table.matches'); ?></th>
             </tr>
         </thead>
         <tbody>
@@ -473,7 +473,7 @@ require_once __DIR__ . '/_header.php';
 
 <?php if ($step === 'complete'): ?>
 <div class="card">
-    <h3>✅ Voltooid!</h3>
+    <h3>✅ <?php echo __('label.bulk_step3.heading'); ?></h3>
     <p><?php echo htmlspecialchars($success); ?></p>
 
     <?php if (isset($remaining) && $remaining > 0): ?>
@@ -483,13 +483,13 @@ require_once __DIR__ . '/_header.php';
         </div>
     <?php endif; ?>
 
-    <a class="btn" href="?step=search">Nieuwe operatie</a>
-    <a class="btn" href="/settings/device_mapping.php" style="background:#6c757d;">Naar Device Mapping</a>
+    <a class="btn" href="?step=search"><?php echo __('label.new_operation'); ?></a>
+    <a class="btn" href="/settings/device_mapping.php" style="background:#6c757d;"><?php echo __('label.to_device_mapping'); ?></a>
 </div>
 <?php endif; ?>
 
 <div class="card" style="margin-top:24px;">
-    <h3>🔄 Recente operaties &amp; Rollback</h3>
+    <h3>🔄 <?php echo __('label.recent_ops_rollback'); ?></h3>
     <?php if (empty($recent_operations)): ?>
         <p><?php echo __('label.no_results'); ?></p>
     <?php else: ?>
@@ -497,9 +497,9 @@ require_once __DIR__ . '/_header.php';
             <thead>
                 <tr>
                     <th><?php echo __('table.created_at'); ?></th>
-                    <th>Zoekterm &rarr; Vervangterm</th>
-                    <th>Configs</th>
-                    <th>Uitgevoerd door</th>
+                    <th><?php echo __('table.search_replace_terms'); ?></th>
+                    <th><?php echo __('table.configs'); ?></th>
+                    <th><?php echo __('table.executed_by'); ?></th>
                     <th><?php echo __('table.status'); ?></th>
                     <th><?php echo __('table.actions'); ?></th>
                 </tr>
@@ -517,7 +517,7 @@ require_once __DIR__ . '/_header.php';
                     <td><?php echo htmlspecialchars($op['executed_by_name']); ?></td>
                     <td>
                         <?php if ($op['rollback_at']): ?>
-                            <span style="color:#dc3545;">Rolled back door <?php echo htmlspecialchars($op['rollback_by_name']); ?></span>
+                            <span style="color:#dc3545;"><?php echo __('label.rolled_back_by'); ?> <?php echo htmlspecialchars($op['rollback_by_name']); ?></span>
                         <?php else: ?>
                             <span style="color:#28a745;"><?php echo __('status.active'); ?></span>
                         <?php endif; ?>
@@ -528,7 +528,7 @@ require_once __DIR__ . '/_header.php';
                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                 <input type="hidden" name="action" value="rollback">
                                 <input type="hidden" name="bulk_op_id" value="<?php echo (int)$op['id']; ?>">
-                                <button class="btn" type="submit" style="background:#dc3545; font-size:12px; padding:4px 8px;">↩️ Rollback</button>
+                                <button class="btn" type="submit" style="background:#dc3545; font-size:12px; padding:4px 8px;">↩️ <?php echo __('button.rollback'); ?></button>
                             </form>
                         <?php else: ?>
                             <span style="color:#999;">—</span>

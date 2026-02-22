@@ -3,6 +3,7 @@ $page_title = 'Gebruiker bewerken';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -21,19 +22,19 @@ $success = '';
 
 function validate_password($password) {
     if (strlen($password) < 8) {
-        return "Wachtwoord moet minimaal 8 karakters bevatten.";
+        return __('error.password_min_length');
     }
     if (!preg_match('/[A-Z]/', $password)) {
-        return "Wachtwoord moet minimaal 1 hoofdletter bevatten.";
+        return __('error.password_needs_uppercase');
     }
     if (!preg_match('/[a-z]/', $password)) {
-        return "Wachtwoord moet minimaal 1 kleine letter bevatten.";
+        return __('error.password_needs_lowercase');
     }
     if (!preg_match('/[0-9]/', $password)) {
-        return "Wachtwoord moet minimaal 1 cijfer bevatten.";
+        return __('error.password_needs_number');
     }
     if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-        return "Wachtwoord moet minimaal 1 speciaal karakter bevatten.";
+        return __('error.password_needs_special');
     }
     return true;
 }
@@ -63,16 +64,20 @@ try {
 // Handle POST (update)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
-        $error = 'Ongeldige aanvraag (CSRF).';
+        $error = __('error.csrf_invalid');
     } else {
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $is_active = isset($_POST['is_active']) && $_POST['is_active'] == '1' ? 1 : 0;
         $password = $_POST['password'] ?? '';
         $role_id = isset($_POST['role_id']) && $_POST['role_id'] !== '' ? (int)$_POST['role_id'] : null;
+        $allowed_languages = ['nl', 'fr', 'en'];
+        $preferred_language = in_array($_POST['preferred_language'] ?? '', $allowed_languages, true)
+            ? $_POST['preferred_language']
+            : 'nl';
 
         if ($username === '' || $email === '') {
-            $error = 'Vul gebruikersnaam en e-mail in.';
+            $error = __('error.fill_username_email');
         } elseif ($password !== '') {
             $pw_error = validate_password($password);
             if ($pw_error !== true) {
@@ -87,11 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update basic fields
                 if ($password !== '') {
                     $hash = password_hash($password, PASSWORD_BCRYPT);
-                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, password = ?, is_active = ? WHERE id = ?');
-                    $stmt->execute([$username, $email, $hash, $is_active, $user_id]);
+                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, password = ?, is_active = ?, language = ? WHERE id = ?');
+                    $stmt->execute([$username, $email, $hash, $is_active, $preferred_language, $user_id]);
                 } else {
-                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, is_active = ? WHERE id = ?');
-                    $stmt->execute([$username, $email, $is_active, $user_id]);
+                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, is_active = ?, language = ? WHERE id = ?');
+                    $stmt->execute([$username, $email, $is_active, $preferred_language, $user_id]);
                 }
 
                 // Update role: remove existing then insert selected (only one role)
@@ -105,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $pdo->commit();
 
-                $success = 'Gebruiker succesvol bijgewerkt.';
+                $success = __('message.user_updated');
                 // If current admin updated their own username, refresh session username
                 if ($user_id === $current_admin_id) {
                     $_SESSION['username'] = $username;
@@ -115,9 +120,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log('users_edit update error: ' . $e->getMessage());
                 // Handle duplicate username/email gracefully
                 if (strpos($e->getMessage(), 'Duplicate') !== false) {
-                    $error = 'Gebruikersnaam of e-mail bestaat al.';
+                    $error = __('error.duplicate_username_email');
                 } else {
-                    $error = 'Kon gebruiker niet bijwerken.';
+                    $error = __('error.user_update_failed');
                 }
             }
         }
@@ -126,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch user data for form (fresh from DB)
 try {
-    $stmt = $pdo->prepare('SELECT id, username, email, is_active, created_at FROM admins WHERE id = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, username, email, is_active, language, created_at FROM admins WHERE id = ? LIMIT 1');
     $stmt->execute([$user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$user) {
@@ -141,7 +146,7 @@ try {
     $assigned = array_map('intval', $assigned);
 } catch (Exception $e) {
     error_log('users_edit fetch user error: ' . $e->getMessage());
-    $error = 'Kon gebruikersgegevens niet ophalen.';
+    $error = __('error.user_fetch_failed');
     $user = ['id' => $user_id, 'username' => '', 'email' => '', 'is_active' => 0];
     $assigned = [];
 }
@@ -170,14 +175,14 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label><?php echo __('form.password'); ?> (<?php echo __('label.optional'); ?> — leeg laten om ongewijzigd)</label>
+                <label><?php echo __('form.password'); ?> (<?php echo __('label.optional'); ?> — <?php echo __('form.password_leave_empty'); ?>)</label>
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                     <input name="password" id="password-field" type="password" autocomplete="new-password" style="flex:1; min-width:200px;" oninput="checkPasswordStrength(this.value)">
-                    <button type="button" onclick="generatePassword()" style="padding:8px 12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">🔑 Genereer wachtwoord</button>
+                    <button type="button" onclick="generatePassword()" style="padding:8px 12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">🔑 <?php echo __('button.generate_password'); ?></button>
                     <button type="button" onclick="togglePasswordVisibility()" style="padding:8px 12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">👁️</button>
                 </div>
                 <div id="password-strength" style="margin-top:6px; font-size:13px;"></div>
-                <small style="display:block; margin-top:4px; color:#666;">Minimaal 8 karakters, met hoofdletter, kleine letter, cijfer en speciaal karakter.</small>
+                <small style="display:block; margin-top:4px; color:#666;"><?php echo __('form.password_requirements'); ?></small>
             </div>
 
             <div class="form-group">
@@ -191,7 +196,7 @@ require_once __DIR__ . '/_header.php';
             <div class="form-group">
                 <label><?php echo __('form.role'); ?></label>
                 <?php if (empty($all_roles)): ?>
-                    <p>Geen rollen geconfigureerd.</p>
+                    <p><?php echo __('message.no_roles_configured'); ?></p>
                 <?php else: ?>
                     <select name="role_id">
                         <option value="">-- <?php echo __('form.select_role'); ?> --</option>
@@ -203,9 +208,19 @@ require_once __DIR__ . '/_header.php';
                         <?php endforeach; ?>
                     </select>
                     <small style="display: block; margin-top: 4px; color: #666;">
-                        Elke gebruiker heeft één primaire rol. Selecteer de rol die het beste past bij de gebruiker.
+                        <?php echo __('form.role_help'); ?>
                     </small>
                 <?php endif; ?>
+            </div>
+
+            <div class="form-group">
+                <label for="preferred_language"><?php echo __('form.preferred_language'); ?></label>
+                <select name="preferred_language" id="preferred_language">
+                    <option value="nl" <?php echo ($user['language'] ?? 'nl') === 'nl' ? 'selected' : ''; ?>>🇳🇱 Nederlands (NL)</option>
+                    <option value="fr" <?php echo ($user['language'] ?? 'nl') === 'fr' ? 'selected' : ''; ?>>🇫🇷 Français (FR)</option>
+                    <option value="en" <?php echo ($user['language'] ?? 'nl') === 'en' ? 'selected' : ''; ?>>🇺🇸 English (ENG)</option>
+                </select>
+                <small style="display:block; margin-top:4px; color:#666;"><?php echo __('form.preferred_language_help'); ?></small>
             </div>
 
             <button class="btn" type="submit"><?php echo __('button.save'); ?></button>
@@ -266,9 +281,9 @@ function checkPasswordStrength(password) {
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
     let label, color;
-    if (score <= 2) { label = 'Zwak'; color = '#dc3545'; }
-    else if (score <= 3) { label = 'Matig'; color = '#ffc107'; }
-    else { label = 'Sterk'; color = '#28a745'; }
+    if (score <= 2) { label = '<?php echo __('label.password_weak'); ?>'; color = '#dc3545'; }
+    else if (score <= 3) { label = '<?php echo __('label.password_fair'); ?>'; color = '#ffc107'; }
+    else { label = '<?php echo __('label.password_strong'); ?>'; color = '#28a745'; }
 
     indicator.innerHTML = '<span style="color:' + color + '; font-weight:600;">' + label + '</span>';
 }

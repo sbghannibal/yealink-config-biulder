@@ -3,6 +3,7 @@ $page_title = 'Nieuw device';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
 
 // Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
@@ -45,7 +46,7 @@ try {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
-        $error = 'Ongeldige aanvraag (CSRF).';
+        $error = __('error.csrf_invalid');
     } else {
         $name = trim((string)($_POST['device_name'] ?? ''));
         $device_type_id = (int)($_POST['device_type_id'] ?? 0);
@@ -54,14 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = trim((string)($_POST['description'] ?? ''));
 
         if ($name === '' || $device_type_id <= 0 || empty($customer_id)) {
-            $error = 'Vul minimaal de naam, het model en de klant in.';
+            $error = __('error.device_fields_required');
         } else {
             // Normalize MAC if provided
             $mac = null;
             if ($mac_raw !== '') {
                 $normalized = strtoupper(preg_replace('/[^0-9A-F]/i', '', $mac_raw));
                 if (!preg_match('/^[0-9A-F]{12}$/', $normalized)) {
-                    $error = 'Ongeldig MAC-adres.';
+                    $error = __('error.invalid_mac_format');
                 } else {
                     $mac = implode(':', str_split($normalized, 2));
                 }
@@ -74,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $chk = $pdo->prepare('SELECT id FROM devices WHERE mac_address = ? LIMIT 1');
                         $chk->execute([$mac]);
                         if ($chk->fetch()) {
-                            $error = 'Er bestaat al een device met dit MAC-adres.';
+                            $error = __('error.duplicate_mac');
                         }
                     }
                 } catch (Exception $e) {
@@ -119,7 +120,7 @@ require_once __DIR__ . '/../admin/_header.php';
 ?>
 
 <main class="container" style="max-width:900px; margin-top:20px;">
-    <h2>Nieuw device</h2>
+    <h2>📱 <?php echo __('page.device_create.heading'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
@@ -128,14 +129,14 @@ require_once __DIR__ . '/../admin/_header.php';
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
 
             <div class="form-group">
-                <label>Naam</label>
+                <label><?php echo __('form.device_name'); ?></label>
                 <input name="device_name" type="text" required value="<?php echo htmlspecialchars($_POST['device_name'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
-                <label>Model</label>
+                <label><?php echo __('form.model'); ?></label>
                 <select name="device_type_id" required>
-                    <option value="">-- Kies model --</option>
+                    <option value="">-- <?php echo __('form.select_model'); ?> --</option>
                     <?php foreach ($types as $t): ?>
                         <option value="<?php echo (int)$t['id']; ?>" <?php echo (isset($_POST['device_type_id']) && $_POST['device_type_id'] == $t['id']) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($t['type_name']); ?>
@@ -145,9 +146,9 @@ require_once __DIR__ . '/../admin/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Klant *</label>
+                <label><?php echo __('form.customer'); ?> *</label>
                 <select name="customer_id" required>
-                    <option value="">-- Selecteer klant --</option>
+                    <option value="">-- <?php echo __('form.select_customer'); ?> --</option>
                     <?php
                     $preselect_customer = (int)($_POST['customer_id'] ?? $_GET['customer_id'] ?? 0);
                     foreach ($customers as $c): ?>
@@ -157,24 +158,24 @@ require_once __DIR__ . '/../admin/_header.php';
                     <?php endforeach; ?>
                 </select>
                 <small style="color:#666; display:block; margin-top:4px;">
-                    Klant niet gevonden?
-                    <a href="/admin/customers_add.php?return_to=devices_create" style="color:#007bff; text-decoration:none;">➕ Nieuwe klant aanmaken</a>
+                    <?php echo __('form.customer_not_found'); ?>
+                    <a href="/admin/customers_add.php?return_to=devices_create" style="color:#007bff; text-decoration:none;">➕ <?php echo __('button.create_customer'); ?></a>
                 </small>
             </div>
 
             <div class="form-group">
-                <label>MAC-adres (optioneel)</label>
+                <label><?php echo __('form.mac_address_optional'); ?></label>
                 <input name="mac_address" type="text" placeholder="00:11:22:33:44:55" value="<?php echo htmlspecialchars($_POST['mac_address'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
-                <label>Beschrijving</label>
+                <label><?php echo __('form.description'); ?></label>
                 <textarea name="description" rows="4"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
             </div>
 
             <div style="display:flex; gap:8px;">
-                <button class="btn" type="submit">Aanmaken</button>
-                <a class="btn" href="/devices/list.php" style="background:#6c757d; align-self:center;">Annuleren</a>
+                <button class="btn" type="submit"><?php echo __('button.create_device'); ?></button>
+                <a class="btn" href="/devices/list.php" style="background:#6c757d; align-self:center; text-decoration:none;"><?php echo __('button.cancel'); ?></a>
             </div>
         </form>
     </div>

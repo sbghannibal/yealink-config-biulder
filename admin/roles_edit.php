@@ -62,7 +62,8 @@ try {
     }
 } catch (Exception $e) {
     error_log('roles_edit fetch error: ' . $e->getMessage());
-    echo 'Fout bij ophalen rol.';
+    require_once __DIR__ . '/../includes/i18n.php';
+    echo __('error.fetch_role');
     exit;
 }
 

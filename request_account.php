@@ -3,6 +3,15 @@ session_start();
 require_once __DIR__ . '/settings/database.php';
 require_once __DIR__ . '/includes/i18n.php';
 
+// Allow language switching on this page (no auth required)
+$allowed_languages = ['nl', 'fr', 'en'];
+if (isset($_GET['lang']) && in_array($_GET['lang'], $allowed_languages, true)) {
+    $_SESSION['language'] = $_GET['lang'];
+    $redirect = strtok($_SERVER['REQUEST_URI'], '?');
+    header('Location: ' . $redirect);
+    exit;
+}
+
 // Redirect if already logged in
 if (isset($_SESSION['admin_id'])) {
     header('Location: index.php');
@@ -101,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="<?php echo htmlspecialchars($_SESSION['language'] ?? 'nl'); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -121,6 +130,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        
+        .lang-switcher-minimal {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .lang-switcher-minimal a {
+            text-decoration: none;
+            font-size: 20px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        
+        .lang-switcher-minimal a:hover,
+        .lang-switcher-minimal a.active {
+            opacity: 1;
         }
         
         .container {
@@ -272,6 +306,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
+    <!-- Language switcher -->
+    <div class="lang-switcher-minimal">
+        <?php $current_lang = $_SESSION['language'] ?? 'nl'; ?>
+        <a href="?lang=nl" class="<?php echo $current_lang === 'nl' ? 'active' : ''; ?>" title="Nederlands">🇳🇱</a>
+        <a href="?lang=fr" class="<?php echo $current_lang === 'fr' ? 'active' : ''; ?>" title="Français">🇫🇷</a>
+        <a href="?lang=en" class="<?php echo $current_lang === 'en' ? 'active' : ''; ?>" title="English (ENG)">🇺🇸</a>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>📧 Account Verzoek</h1>

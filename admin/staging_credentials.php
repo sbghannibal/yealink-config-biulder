@@ -165,7 +165,7 @@ require_once __DIR__ . '/_header.php';
 <?php endif; ?>
 
 <div class="credential-box">
-    <h3 style="margin-top: 0;">Login Gegevens</h3>
+    <h3 style="margin-top: 0;"><?php echo __('label.login_credentials'); ?></h3>
     
     <div class="credential-row">
         <span class="credential-label">Username:</span>
@@ -179,7 +179,7 @@ require_once __DIR__ . '/_header.php';
             <?php echo $auth_enabled ? str_repeat('•', strlen($current_auth_pass)) : '(not set)'; ?>
         </code>
         <?php if ($auth_enabled): ?>
-        <button class="toggle-btn" onclick="togglePassword()" id="toggle-btn">👁️ Toon</button>
+        <button class="toggle-btn" onclick="togglePassword()" id="toggle-btn">👁️ <?php echo __('button.show'); ?></button>
         <button class="copy-btn" onclick="copyPassword(this)">📋 Copy</button>
         <?php endif; ?>
     </div>
@@ -190,7 +190,7 @@ require_once __DIR__ . '/_header.php';
         <code class="credential-value masked" id="token-value" data-token="<?php echo htmlspecialchars($current_test_token); ?>">
             <?php echo str_repeat('•', strlen($current_test_token)); ?>
         </code>
-        <button class="toggle-btn" onclick="toggleToken()" id="toggle-token-btn">👁️ Toon</button>
+        <button class="toggle-btn" onclick="toggleToken()" id="toggle-token-btn">👁️ <?php echo __('button.show'); ?></button>
         <button class="copy-btn" onclick="copyToken(this)">📋 Copy</button>
     </div>
     <?php endif; ?>
@@ -291,6 +291,9 @@ curl -u <?php echo htmlspecialchars($current_auth_user); ?>:PASSWORD \
 let passwordVisible = false;
 let tokenVisible = false;
 
+const btnShow = <?php echo json_encode('👁️ ' . __('button.show')); ?>;
+const btnHide = <?php echo json_encode('🙈 ' . __('button.hide')); ?>;
+
 function togglePassword() {
     const passwordEl = document.getElementById('password-value');
     const toggleBtn = document.getElementById('toggle-btn');
@@ -299,11 +302,11 @@ function togglePassword() {
     if (passwordVisible) {
         passwordEl.textContent = '•'.repeat(realPassword.length);
         passwordEl.classList.add('masked');
-        toggleBtn.textContent = '👁️ Toon';
+        toggleBtn.textContent = btnShow;
     } else {
         passwordEl.textContent = realPassword;
         passwordEl.classList.remove('masked');
-        toggleBtn.textContent = '🙈 Verberg';
+        toggleBtn.textContent = btnHide;
     }
     
     passwordVisible = !passwordVisible;
@@ -317,11 +320,11 @@ function toggleToken() {
     if (tokenVisible) {
         tokenEl.textContent = '•'.repeat(realToken.length);
         tokenEl.classList.add('masked');
-        toggleBtn.textContent = '👁️ Toon';
+        toggleBtn.textContent = btnShow;
     } else {
         tokenEl.textContent = realToken;
         tokenEl.classList.remove('masked');
-        toggleBtn.textContent = '🙈 Verberg';
+        toggleBtn.textContent = btnHide;
     }
     
     tokenVisible = !tokenVisible;

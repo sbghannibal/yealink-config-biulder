@@ -106,7 +106,7 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Contactpersoon</label>
+                <label><?php echo __('label.contact_person'); ?></label>
                 <input name="contact_person" type="text" value="<?php echo htmlspecialchars($_POST['contact_person'] ?? ''); ?>">
             </div>
 

@@ -1,8 +1,10 @@
 <?php
-$page_title = 'Config Builder';
 session_start();
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
+
+$page_title = __('nav.config_builder');
 
 // Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
@@ -77,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'load_config')
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
-        $error = 'Ongeldige aanvraag (CSRF).';
+        $error = __('error.csrf_invalid');
     } else {
         $action = $_POST['action'] ?? '';
 
@@ -87,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $config_version_id = (int)($_POST['config_version_id'] ?? 0);
 
             if (!$device_id || !$config_version_id) {
-                $error = 'Device ID en Config Version ID zijn vereist.';
+                $error = __('error.device_config_id_required');
             } else {
                 try {
                     $pdo->beginTransaction();
@@ -109,14 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$device_id, $config_version_id]);
 
                     $pdo->commit();
-                    $success = 'Config succesvol geactiveerd.';
+                    $success = __('success.config_activated');
 
                     header('Location: ?device_id=' . $device_id);
                     exit;
                 } catch (Exception $e) {
                     $pdo->rollBack();
                     error_log('Activate config error: ' . $e->getMessage());
-                    $error = 'Failed to activate config: ' . $e->getMessage();
+                    $error = __('error.config_activate_failed');
                 }
             }
         }
@@ -128,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $set_active = isset($_POST['set_active']) && $_POST['set_active'] === '1' ? true : false;
 
             if (!$device_id || empty($config_content)) {
-                $error = 'Device ID en config content zijn vereist.';
+                $error = __('error.device_config_content_required');
             } else {
                 try {
                     $pdo->beginTransaction();
@@ -185,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $pdo->commit();
-                    $success = 'Config v' . $next_version . ' created successfully!' . ($set_active ? ' Config is now active.' : '');
+                    $success = sprintf(__('success.config_created'), $next_version) . ($set_active ? ' ' . __('success.config_now_active') : '');
                     
                     // Redirect to keep selected device
                     header('Location: ?device_id=' . $device_id);
@@ -193,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (Exception $e) {
                     $pdo->rollBack();
                     error_log('Create config error: ' . $e->getMessage());
-                    $error = 'Failed to create config: ' . $e->getMessage();
+                    $error = __('error.config_create_failed');
                 }
             }
         }
@@ -266,7 +268,7 @@ try {
     $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('Device search error: ' . $e->getMessage());
-    $error = 'Error searching devices: ' . $e->getMessage();
+    $error = __('error.devices_search_failed');
     $devices = [];
 }
 
@@ -311,7 +313,7 @@ if ($selected_device_id > 0) {
         }
     } catch (Exception $e) {
         error_log('Selected device error: ' . $e->getMessage());
-        $error = 'Error loading device details: ' . $e->getMessage();
+        $error = __('error.device_load_failed');
     }
 }
 
@@ -322,31 +324,31 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
 ?>
 
 <main class="container">
-    <h2>🛠️ Config Builder</h2>
+    <h2><?php echo __('label.configuration_editor'); ?> — <?php echo __('nav.config_builder'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
     <!-- Search & Filter Section -->
     <div class="card">
-        <h3>🔍 Search & Filter Devices</h3>
+        <h3><?php echo __('label.search_filter_devices'); ?></h3>
         <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0;">
             <div>
-                <label>Device Name:</label>
+                <label><?php echo __('form.device_name'); ?>:</label>
                 <input type="text" name="search_device" placeholder="E.g. Reception Phone" value="<?php echo htmlspecialchars($search_device); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-                <label>Customer Name:</label>
+                <label><?php echo __('form.customer_name'); ?>:</label>
                 <input type="text" name="search_customer" placeholder="E.g. Acme Corp" value="<?php echo htmlspecialchars($search_customer); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-                <label>Customer Code:</label>
+                <label><?php echo __('form.customer_code'); ?>:</label>
                 <input type="text" name="search_customer_code" placeholder="E.g. CUST001" value="<?php echo htmlspecialchars($search_customer_code); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-                <label>Device Type:</label>
+                <label><?php echo __('form.device_type'); ?>:</label>
                 <select name="filter_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                    <option value="">-- All Types --</option>
+                    <option value=""><?php echo __('form.all_types'); ?></option>
                     <?php foreach ($device_types as $type): ?>
                         <option value="<?php echo (int)$type['id']; ?>" <?php echo $filter_type == $type['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($type['type_name']); ?>
@@ -355,8 +357,8 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                 </select>
             </div>
             <div style="display: flex; gap: 8px; align-items: flex-end;">
-                <button type="submit" class="btn" style="flex: 1; background: #007bff;">🔍 Search</button>
-                <a href="/settings/builder.php" class="btn" style="background: #6c757d; text-decoration: none; flex: 1; text-align: center;">Clear</a>
+                <button type="submit" class="btn" style="flex: 1; background: #007bff;"><?php echo __('button.search'); ?></button>
+                <a href="/settings/builder.php" class="btn" style="background: #6c757d; text-decoration: none; flex: 1; text-align: center;"><?php echo __('button.clear'); ?></a>
             </div>
         </form>
     </div>
@@ -366,10 +368,10 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
 
         <!-- Device List -->
         <div class="card">
-            <h3>📱 Devices (<?php echo count($devices); ?> found)</h3>
+            <h3>📱 <?php echo __('nav.devices'); ?> (<?php echo count($devices); ?> <?php echo __('label.found'); ?>)</h3>
 
             <?php if (empty($devices)): ?>
-                <p style="color: #999; padding: 20px; text-align: center;">No devices found. Try adjusting your search.</p>
+                <p style="color: #999; padding: 20px; text-align: center;"><?php echo __('label.no_devices_found_search'); ?></p>
             <?php else: ?>
                 <div style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
                     <?php foreach ($devices as $idx => $device): ?>
@@ -389,19 +391,19 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
                                 <strong><?php echo htmlspecialchars($device['device_name']); ?></strong>
                                 <?php if ($device['has_active_config']): ?>
-                                    <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">✓ ACTIVE</span>
+                                    <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">✓ <?php echo __('label.active_badge'); ?></span>
                                 <?php else: ?>
-                                    <span style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">⚠ NO CONFIG</span>
+                                    <span style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">⚠ <?php echo __('label.no_config_badge'); ?></span>
                                 <?php endif; ?>
                             </div>
 
                             <small style="color: #666; display: block; margin-bottom: 4px;">
-                                Type: <?php echo htmlspecialchars($device['type_name'] ?? '-'); ?>
+                                <?php echo __('label.type_prefix'); ?> <?php echo htmlspecialchars($device['type_name'] ?? '-'); ?>
                             </small>
 
                             <?php if ($device['company_name']): ?>
                                 <small style="color: #666; display: block;">
-                                    Customer: <?php echo htmlspecialchars($device['company_name']); ?>
+                                    <?php echo __('label.customer_prefix'); ?> <?php echo htmlspecialchars($device['company_name']); ?>
                                     <?php if ($device['customer_code']): ?>
                                         (<?php echo htmlspecialchars($device['customer_code']); ?>)
                                     <?php endif; ?>
@@ -412,6 +414,17 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                 <small style="color: #28a745; display: block; margin-top: 4px;">
                                     → Config v<?php echo (int)$device['version_number']; ?>
                                 </small>
+                            <?php else: ?>
+                                <div style="margin-top: 6px;">
+                                    <a class="btn" href="/devices/configure_wizard.php?device_id=<?php echo (int)$device['id']; ?>"
+                                       style="background: #007bff; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-decoration: none; display: inline-block;"
+                                       onclick="event.stopPropagation();">
+                                        🔧 <?php echo __('button.initialize'); ?>
+                                    </a>
+                                    <small style="color: #856404; display: block; margin-top: 4px;">
+                                        ⚠️ <?php echo __('message.device_needs_init'); ?>
+                                    </small>
+                                </div>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
@@ -421,12 +434,12 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
 
         <!-- Config Editor & Preview -->
         <div class="card">
-            <h3>✏️ Configuration Editor</h3>
+            <h3><?php echo __('label.configuration_editor'); ?></h3>
 
             <?php if (!$selected_device): ?>
                 <div style="text-align: center; padding: 60px 20px; color: #999;">
                     <p style="font-size: 40px; margin: 0;">👈</p>
-                    <p>Select a device from the left to edit or create configurations</p>
+                    <p><?php echo __('label.select_device_to_edit'); ?></p>
                 </div>
             <?php else: ?>
                 <!-- Device Info -->
@@ -434,12 +447,12 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                     <strong><?php echo htmlspecialchars($selected_device['device_name']); ?></strong>
                     <br>
                     <small style="color: #666;">
-                        Type: <?php echo htmlspecialchars($selected_device['type_name'] ?? '-'); ?>
+                        <?php echo __('label.type_prefix'); ?> <?php echo htmlspecialchars($selected_device['type_name'] ?? '-'); ?>
                     </small>
                     <?php if ($selected_device['company_name']): ?>
                         <br>
                         <small style="color: #666;">
-                            Customer: <?php echo htmlspecialchars($selected_device['company_name']); ?>
+                            <?php echo __('label.customer_prefix'); ?> <?php echo htmlspecialchars($selected_device['company_name']); ?>
                             <?php if ($selected_device['customer_code']): ?>
                                 (<?php echo htmlspecialchars($selected_device['customer_code']); ?>)
                             <?php endif; ?>
@@ -455,7 +468,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                         style="background: #007bff; margin-right: 8px;"
                         onclick="document.getElementById('configs-list').style.display='block'; document.getElementById('new-config-form').style.display='none';"
                     >
-                        📋 View Existing Configs (<?php echo count($device_configs); ?>)
+                        <?php echo __('label.view_existing_configs'); ?> (<?php echo count($device_configs); ?>)
                     </button>
                     <button 
                         type="button"
@@ -463,7 +476,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                         style="background: #28a745;"
                         onclick="document.getElementById('configs-list').style.display='none'; document.getElementById('new-config-form').style.display='block';"
                     >
-                        ➕ Create New Config
+                        <?php echo __('button.create_new_config'); ?>
                     </button>
                 </div>
 
@@ -471,7 +484,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                 <div id="configs-list" style="display: block;">
                     <?php if (empty($device_configs)): ?>
                         <p style="color: #999; text-align: center; padding: 20px;">
-                            No configurations assigned to this device yet.
+                            <?php echo __('label.no_configs_assigned'); ?>
                         </p>
                     <?php else: ?>
                         <div style="max-height: 800px; overflow-y: auto;">
@@ -485,19 +498,19 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                 ">
                                     <!-- Config Header -->
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <strong>Version <?php echo (int)$config['version_number']; ?></strong>
+                                        <strong><?php echo __('label.version_prefix'); ?> <?php echo (int)$config['version_number']; ?></strong>
                                         <?php if ($config['is_active']): ?>
-                                            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: bold;">✓ Actieve Config</span>
+                                            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: bold;">✓ <?php echo __('label.active_config'); ?></span>
                                         <?php endif; ?>
                                     </div>
 
                                     <!-- Config Details -->
                                     <small style="color: #666; display: block;">
-                                        Created: <?php echo date('Y-m-d H:i', strtotime($config['created_at'])); ?>
+                                        <?php echo __('label.created_prefix'); ?> <?php echo date('Y-m-d H:i', strtotime($config['created_at'])); ?>
                                     </small>
                                     <?php if ($config['activated_at']): ?>
                                         <small style="color: #666; display: block;">
-                                            Activated: <?php echo date('Y-m-d H:i', strtotime($config['activated_at'])); ?>
+                                            <?php echo __('label.activated_prefix'); ?> <?php echo date('Y-m-d H:i', strtotime($config['activated_at'])); ?>
                                         </small>
                                     <?php endif; ?>
 
@@ -512,7 +525,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                                 preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
                                             "
                                         >
-                                            📄 Preview
+                                            <?php echo __('button.preview'); ?>
                                         </button>
                                         <button
                                             type="button"
@@ -520,7 +533,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                             style="background: #17a2b8; font-size: 12px; padding: 6px 12px; flex: 1; min-width: 120px;"
                                             onclick="copyConfigToEditor(<?php echo (int)$config['id']; ?>, 'v<?php echo (int)$config['version_number']; ?>')"
                                         >
-                                            📋 Copy & Edit
+                                            <?php echo __('button.copy_edit'); ?>
                                         </button>
                                         <?php if (!$config['is_active']): ?>
                                         <button
@@ -529,7 +542,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                             style="background: #28a745; font-size: 12px; padding: 6px 12px; flex: 1; min-width: 120px;"
                                             onclick="setConfigActive(<?php echo (int)$selected_device['id']; ?>, <?php echo (int)$config['id']; ?>, <?php echo (int)$config['version_number']; ?>)"
                                         >
-                                            ✓ Set as Active
+                                            <?php echo __('button.set_active'); ?>
                                         </button>
                                         <?php endif; ?>
                                     </div>
@@ -568,16 +581,16 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                         <!-- Source Config Info -->
                         <div id="source-config-info" style="display: none; background: #d1ecf1; border: 1px solid #bee5eb; padding: 12px; border-radius: 4px;">
                             <small style="color: #0c5460; display: block;">
-                                📋 Based on: <strong id="source-config-name"></strong>
+                                <?php echo __('label.based_on'); ?> <strong id="source-config-name"></strong>
                             </small>
                             <small style="color: #0c5460; display: block;">
-                                You can now edit this configuration to create a new version
+                                <?php echo __('label.edit_creates_new_version'); ?>
                             </small>
                         </div>
 
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600;">
-                                Configuration Content:
+                                <?php echo __('form.config_content_label'); ?>
                             </label>
                             <textarea
                                 id="config-content"
@@ -602,16 +615,16 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                         <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 4px;">
                             <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer;">
                                 <input type="checkbox" name="set_active" value="1" id="set_active_checkbox">
-                                <strong>Set as Active Config</strong>
+                                <strong><?php echo __('label.set_active_config'); ?></strong>
                             </label>
                             <small style="color: #666; display: block; margin-top: 6px;">
-                                If checked, this new config will be activated immediately and all existing versions will be deactivated.
+                                <?php echo __('label.set_active_config_help'); ?>
                             </small>
                         </div>
 
                         <div style="display: flex; gap: 8px;">
                             <button type="submit" class="btn" style="flex: 1; background: #28a745; font-weight: 600;">
-                                ✓ Create & Save Config
+                                <?php echo __('button.create_save_config'); ?>
                             </button>
                             <button 
                                 type="button" 
@@ -624,7 +637,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                     document.getElementById('new-config-form').style.display='none';
                                 "
                             >
-                                Cancel
+                                <?php echo __('button.cancel'); ?>
                             </button>
                         </div>
                     </form>
@@ -636,7 +649,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
 
 <script>
 function setConfigActive(deviceId, configVersionId, versionNumber) {
-    if (!confirm('Config v' + versionNumber + ' activeren?\n\nDe huidige actieve config wordt gedeactiveerd.')) {
+    if (!confirm('<?php echo __('confirm.activate_config'); ?>' + ' v' + versionNumber + '?')) {
         return;
     }
 

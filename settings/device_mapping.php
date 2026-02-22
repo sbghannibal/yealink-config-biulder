@@ -3,6 +3,9 @@ $page_title = 'Device Mapping & Config Management';
 session_start();
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
+
+$page_title = __('page.device_mapping.title');
 
 // Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
@@ -30,7 +33,7 @@ $success = '';
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
-        $error = 'Ongeldige aanvraag (CSRF).';
+        $error = __('error.csrf_invalid');
     } else {
         $action = $_POST['action'] ?? '';
         
@@ -67,11 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$device_id, $config_version_id, $admin_id]);
                     
                     $pdo->commit();
-                    $success = 'Config activated successfully!';
+                    $success = __('success.config_activated');
                 } catch (Exception $e) {
                     $pdo->rollBack();
                     error_log('Set active error: ' . $e->getMessage());
-                    $error = 'Failed to activate config: ' . $e->getMessage();
+                    $error = __('error.config_activate_failed');
                 }
             }
         }
@@ -144,7 +147,7 @@ try {
     $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('Device search error: ' . $e->getMessage());
-    $error = 'Error searching devices: ' . $e->getMessage();
+    $error = __('error.devices_search_failed');
     $devices = [];
 }
 
@@ -212,7 +215,7 @@ if ($selected_device_id > 0) {
         }
     } catch (Exception $e) {
         error_log('Selected device error: ' . $e->getMessage());
-        $error = 'Error loading device details: ' . $e->getMessage();
+        $error = __('error.device_load_failed');
     }
 }
 
@@ -223,31 +226,31 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
 ?>
 
 <main class="container">
-    <h2>🔗 Device Config Management</h2>
+    <h2><?php echo __('label.device_config_management'); ?></h2>
     
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
     
     <!-- Search & Filter Section -->
     <div class="card">
-        <h3>🔍 Search & Filter Devices</h3>
+        <h3><?php echo __('label.search_filter_devices'); ?></h3>
         <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0;">
             <div>
-                <label>Device Name:</label>
+                <label><?php echo __('form.device_name'); ?>:</label>
                 <input type="text" name="search_device" placeholder="E.g. Reception Phone" value="<?php echo htmlspecialchars($search_device); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-                <label>Customer Name:</label>
+                <label><?php echo __('form.customer_name'); ?>:</label>
                 <input type="text" name="search_customer" placeholder="E.g. Acme Corp" value="<?php echo htmlspecialchars($search_customer); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-                <label>Customer Code:</label>
+                <label><?php echo __('form.customer_code'); ?>:</label>
                 <input type="text" name="search_customer_code" placeholder="E.g. CUST001" value="<?php echo htmlspecialchars($search_customer_code); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-                <label>Device Type:</label>
+                <label><?php echo __('form.device_type'); ?>:</label>
                 <select name="filter_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                    <option value="">-- All Types --</option>
+                    <option value=""><?php echo __('form.all_types'); ?></option>
                     <?php foreach ($device_types as $type): ?>
                         <option value="<?php echo (int)$type['id']; ?>" <?php echo $filter_type == $type['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($type['type_name']); ?>
@@ -256,8 +259,8 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                 </select>
             </div>
             <div style="display: flex; gap: 8px; align-items: flex-end;">
-                <button type="submit" class="btn" style="flex: 1; background: #007bff;">🔍 Search</button>
-                <a href="/settings/device_mapping.php" class="btn" style="background: #6c757d; text-decoration: none; flex: 1; text-align: center;">Clear</a>
+                <button type="submit" class="btn" style="flex: 1; background: #007bff;"><?php echo __('button.search'); ?></button>
+                <a href="/settings/device_mapping.php" class="btn" style="background: #6c757d; text-decoration: none; flex: 1; text-align: center;"><?php echo __('button.clear'); ?></a>
             </div>
         </form>
     </div>
@@ -267,10 +270,10 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
         
         <!-- Device List -->
         <div class="card">
-            <h3>📱 Devices (<?php echo count($devices); ?> found)</h3>
+            <h3>📱 <?php echo __('nav.devices'); ?> (<?php echo count($devices); ?> <?php echo __('label.found'); ?>)</h3>
             
             <?php if (empty($devices)): ?>
-                <p style="color: #999; padding: 20px; text-align: center;">No devices found. Try adjusting your search.</p>
+                <p style="color: #999; padding: 20px; text-align: center;"><?php echo __('label.no_devices_found_search'); ?></p>
             <?php else: ?>
                 <div style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
                     <?php foreach ($devices as $idx => $device): ?>
@@ -290,19 +293,19 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
                                 <strong><?php echo htmlspecialchars($device['device_name']); ?></strong>
                                 <?php if ($device['has_active_config']): ?>
-                                    <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">✓ ACTIVE</span>
+                                    <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">✓ <?php echo __('label.active_badge'); ?></span>
                                 <?php else: ?>
-                                    <span style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">⚠ NO CONFIG</span>
+                                    <span style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">⚠ <?php echo __('label.no_config_badge'); ?></span>
                                 <?php endif; ?>
                             </div>
                             
                             <small style="color: #666; display: block; margin-bottom: 4px;">
-                                Type: <?php echo htmlspecialchars($device['type_name'] ?? '-'); ?>
+                                <?php echo __('label.type_prefix'); ?> <?php echo htmlspecialchars($device['type_name'] ?? '-'); ?>
                             </small>
                             
                             <?php if ($device['company_name']): ?>
                                 <small style="color: #666; display: block;">
-                                    Customer: <?php echo htmlspecialchars($device['company_name']); ?>
+                                    <?php echo __('label.customer_prefix'); ?> <?php echo htmlspecialchars($device['company_name']); ?>
                                     <?php if ($device['customer_code']): ?>
                                         (<?php echo htmlspecialchars($device['customer_code']); ?>)
                                     <?php endif; ?>
@@ -322,12 +325,12 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
         
         <!-- Config Selection & Preview -->
         <div class="card">
-            <h3>⚙️ Configuration Management</h3>
+            <h3><?php echo __('label.configuration_management'); ?></h3>
             
             <?php if (!$selected_device): ?>
                 <div style="text-align: center; padding: 60px 20px; color: #999;">
                     <p style="font-size: 40px; margin: 0;">👈</p>
-                    <p>Select a device from the left to manage its configurations</p>
+                    <p><?php echo __('label.select_device_to_manage'); ?></p>
                 </div>
             <?php else: ?>
                 <!-- Device Info -->
@@ -335,12 +338,12 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                     <strong><?php echo htmlspecialchars($selected_device['device_name']); ?></strong>
                     <br>
                     <small style="color: #666;">
-                        Type: <?php echo htmlspecialchars($selected_device['type_name'] ?? '-'); ?>
+                        <?php echo __('label.type_prefix'); ?> <?php echo htmlspecialchars($selected_device['type_name'] ?? '-'); ?>
                     </small>
                     <?php if ($selected_device['company_name']): ?>
                         <br>
                         <small style="color: #666;">
-                            Customer: <?php echo htmlspecialchars($selected_device['company_name']); ?>
+                            <?php echo __('label.customer_prefix'); ?> <?php echo htmlspecialchars($selected_device['company_name']); ?>
                             <?php if ($selected_device['customer_code']): ?>
                                 (<?php echo htmlspecialchars($selected_device['customer_code']); ?>)
                             <?php endif; ?>
@@ -349,7 +352,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                     <?php if ($selected_device['mac_address']): ?>
                         <br>
                         <small style="color: #666;">
-                            MAC: <?php echo htmlspecialchars($selected_device['mac_address']); ?>
+                            <?php echo __('label.mac_prefix'); ?> <?php echo htmlspecialchars($selected_device['mac_address']); ?>
                         </small>
                     <?php endif; ?>
                 </div>
@@ -357,7 +360,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                 <!-- Configs List -->
                 <?php if (empty($device_configs)): ?>
                     <p style="color: #999; text-align: center; padding: 20px;">
-                        No configurations assigned to this device.
+                        <?php echo __('label.no_configs_for_device'); ?>
                     </p>
                 <?php else: ?>
                     <div style="max-height: 800px; overflow-y: auto;">
@@ -371,19 +374,19 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                             ">
                                 <!-- Config Header -->
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <strong>Version <?php echo (int)$config['version_number']; ?></strong>
+                                    <strong><?php echo __('label.version_prefix'); ?> <?php echo (int)$config['version_number']; ?></strong>
                                     <?php if ($config['is_active']): ?>
-                                        <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: bold;">✓ ACTIVE</span>
+                                        <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: bold;">✓ <?php echo __('label.active_badge'); ?></span>
                                     <?php endif; ?>
                                 </div>
                                 
                                 <!-- Config Details -->
                                 <small style="color: #666; display: block;">
-                                    Created: <?php echo date('Y-m-d H:i', strtotime($config['created_at'])); ?>
+                                    <?php echo __('label.created_prefix'); ?> <?php echo date('Y-m-d H:i', strtotime($config['created_at'])); ?>
                                 </small>
                                 <?php if ($config['activated_at']): ?>
                                     <small style="color: #666; display: block;">
-                                        Activated: <?php echo date('Y-m-d H:i', strtotime($config['activated_at'])); ?>
+                                        <?php echo __('label.activated_prefix'); ?> <?php echo date('Y-m-d H:i', strtotime($config['activated_at'])); ?>
                                     </small>
                                 <?php endif; ?>
                                 
@@ -397,7 +400,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                         preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
                                     "
                                 >
-                                    📄 Preview Config (<?php echo strlen($config['config_content'] ?? ''); ?> bytes)
+                                    <?php echo __('label.preview_config'); ?> (<?php echo strlen($config['config_content'] ?? ''); ?> <?php echo __('label.bytes'); ?>)
                                 </button>
                                 
                                 <!-- Preview Content - FULL CONFIG -->
@@ -427,7 +430,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                         <input type="hidden" name="device_id" value="<?php echo (int)$selected_device['id']; ?>">
                                         <input type="hidden" name="config_version_id" value="<?php echo (int)$config['id']; ?>">
                                         <button type="submit" class="btn" style="width: 100%; background: #28a745; font-size: 12px; padding: 8px;">
-                                            ✓ Set as Active
+                                            <?php echo __('button.set_active'); ?>
                                         </button>
                                     </form>
                                 <?php endif; ?>
@@ -442,14 +445,14 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
     <!-- Config History -->
     <?php if ($selected_device && !empty($device_history)): ?>
         <div class="card" style="margin-top: 20px;">
-            <h3>📋 Configuration History for <?php echo htmlspecialchars($selected_device['device_name']); ?></h3>
+            <h3><?php echo __('label.config_history_for'); ?> <?php echo htmlspecialchars($selected_device['device_name']); ?></h3>
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                        <th style="padding: 10px; text-align: left;">Version</th>
-                        <th style="padding: 10px; text-align: left;">Activated</th>
-                        <th style="padding: 10px; text-align: left;">Duration</th>
-                        <th style="padding: 10px; text-align: left;">Status</th>
+                        <th style="padding: 10px; text-align: left;"><?php echo __('table.version'); ?></th>
+                        <th style="padding: 10px; text-align: left;"><?php echo __('table.activated_at'); ?></th>
+                        <th style="padding: 10px; text-align: left;"><?php echo __('table.duration'); ?></th>
+                        <th style="padding: 10px; text-align: left;"><?php echo __('table.status'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -459,15 +462,15 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                             <td style="padding: 10px;"><?php echo date('Y-m-d H:i', strtotime($hist['activated_at'])); ?></td>
                             <td style="padding: 10px;">
                                 <?php if ($hist['duration_minutes']): ?>
-                                    <?php echo (int)$hist['duration_minutes']; ?> minutes
+                                    <?php echo (int)$hist['duration_minutes']; ?> <?php echo __('label.minutes'); ?>
                                 <?php elseif ($hist['is_active']): ?>
-                                    Currently active
+                                    <?php echo __('label.currently_active'); ?>
                                 <?php else: ?>
                                     -
                                 <?php endif; ?>
                             </td>
                             <td style="padding: 10px;">
-                                <?php echo $hist['is_active'] ? '🟢 Active' : '⏸️ Inactive'; ?>
+                                <?php echo $hist['is_active'] ? __('label.status_active_icon') : __('label.status_inactive_icon'); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

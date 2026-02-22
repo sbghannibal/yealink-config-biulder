@@ -40,7 +40,8 @@ try {
     }
 } catch (Exception $e) {
     error_log('roles_delete fetch error: ' . $e->getMessage());
-    echo 'Fout bij ophalen rol.';
+    require_once __DIR__ . '/../includes/i18n.php';
+    echo __('error.fetch_role');
     exit;
 }
 
@@ -122,17 +123,17 @@ require_once __DIR__ . '/_header.php';
 <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
 <div class="card">
-    <p><strong>Let op:</strong> Je staat op het punt om de volgende rol te verwijderen:</p>
+    <p><strong><?php echo __('label.warning_attention'); ?>:</strong> <?php echo __('confirm.delete_role'); ?></p>
 
     <div style="background:#f8f9fa; padding:16px; border-radius:4px; margin:16px 0;">
         <p><strong><?php echo __('form.name'); ?>:</strong> <?php echo htmlspecialchars($role['role_name']); ?></p>
         <p><strong><?php echo __('form.description'); ?>:</strong> <?php echo htmlspecialchars($role['description'] ?? '-'); ?></p>
         <?php if ($admin_count > 0): ?>
-            <p style="color:#dc3545;"><strong>⚠️ Let op:</strong> <?php echo $admin_count; ?> gebruiker(s) hebben deze rol. Ze worden automatisch toegewezen aan de 'user' rol.</p>
+            <p style="color:#dc3545;"><strong>⚠️ <?php echo __('label.warning_attention'); ?>:</strong> <?php echo $admin_count; ?> <?php echo __('label.users_will_be_reassigned'); ?></p>
         <?php endif; ?>
     </div>
 
-    <p style="color:#dc3545;"><strong>Deze actie kan niet ongedaan worden gemaakt!</strong></p>
+    <p style="color:#dc3545;"><strong><?php echo __('label.action_cannot_be_undone'); ?></strong></p>
 
     <form method="post" style="margin-top:16px;">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">

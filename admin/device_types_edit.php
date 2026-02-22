@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $count = (int) $chk->fetchColumn();
 
                 if ($count > 0) {
-                    $error = "Cannot delete - $count device(s) are using this type. Please reassign those devices first.";
+                    $error = sprintf(__('error.cannot_delete_type'), $count);
                 } else {
                     $del = $pdo->prepare('DELETE FROM device_types WHERE id = ?');
                     $del->execute([$id]);
@@ -164,11 +164,11 @@ require_once __DIR__ . '/_header.php';
                 $device_count = (int)($type['device_count'] ?? 0);
                 if ($device_count > 0): 
                 ?>
-                    <button class="btn btn-danger" type="button" disabled title="Cannot delete - devices are using this type" style="opacity:0.5;cursor:not-allowed;">
-                        <?php echo __('button.delete'); ?> (<?php echo $device_count; ?> device<?php echo $device_count !== 1 ? 's' : ''; ?> in use)
+                    <button class="btn btn-danger" type="button" disabled title="<?php echo htmlspecialchars(__('label.cannot_delete_type_title') ?? 'Cannot delete - devices are using this type'); ?>" style="opacity:0.5;cursor:not-allowed;">
+                        <?php echo __('button.delete'); ?> (<?php echo $device_count; ?> device<?php echo $device_count !== 1 ? 's' : ''; ?> <?php echo __('label.devices_in_use'); ?>)
                     </button>
                 <?php else: ?>
-                    <button class="btn btn-danger" type="submit" name="do" value="delete" onclick="return confirm('Are you sure you want to delete this device type? This action cannot be undone.');">
+                    <button class="btn btn-danger" type="submit" name="do" value="delete" onclick="return confirm('<?php echo htmlspecialchars(__('confirm.delete_device_type')); ?>');">
                         <?php echo __('button.delete'); ?> <?php echo __('page.devices.title'); ?>
                     </button>
                 <?php endif; ?>
@@ -177,14 +177,14 @@ require_once __DIR__ . '/_header.php';
     </div>
 
     <div class="card" style="margin-top:20px;">
-        <h4>Device Type Information</h4>
+        <h4><?php echo __('label.device_type_info'); ?></h4>
         <table style="width:auto;">
             <tr>
                 <td style="padding:8px;font-weight:600;">ID:</td>
                 <td style="padding:8px;"><?php echo (int)$type['id']; ?></td>
             </tr>
             <tr>
-                <td style="padding:8px;font-weight:600;">Devices Using:</td>
+                <td style="padding:8px;font-weight:600;"><?php echo __('label.devices_using'); ?></td>
                 <td style="padding:8px;">
                     <?php if ($device_count > 0): ?>
                         <span style="display:inline-block;background:#667eea;color:white;padding:4px 10px;border-radius:16px;font-weight:600;">
@@ -196,16 +196,16 @@ require_once __DIR__ . '/_header.php';
                 </td>
             </tr>
             <tr>
-                <td style="padding:8px;font-weight:600;">Created:</td>
+                <td style="padding:8px;font-weight:600;"><?php echo __('table.created'); ?>:</td>
                 <td style="padding:8px;"><?php echo htmlspecialchars($type['created_at']); ?></td>
             </tr>
             <tr>
-                <td style="padding:8px;font-weight:600;">Last Updated:</td>
+                <td style="padding:8px;font-weight:600;"><?php echo __('table.last_updated'); ?>:</td>
                 <td style="padding:8px;"><?php echo htmlspecialchars($type['updated_at']); ?></td>
             </tr>
         </table>
         <p style="margin-top:16px;color:#666;font-size:14px;">
-            <strong>Note:</strong> Device types that are in use cannot be deleted. You must first reassign or delete all devices using this type.
+            <strong>💡</strong> <?php echo __('label.type_in_use_note'); ?>
         </p>
     </div>
 <?php require_once __DIR__ . '/_footer.php'; ?>

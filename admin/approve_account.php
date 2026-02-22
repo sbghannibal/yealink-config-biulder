@@ -225,7 +225,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                         <span>🏢 <?php echo htmlspecialchars($req['organization']); ?></span>
                         <span>📅 <?php echo date('d-m-Y H:i', strtotime($req['created_at'])); ?></span>
                     </div>
-                    <div class="request-reason"><strong>Reden:</strong><br><?php echo htmlspecialchars($req['reason']); ?></div>
+                    <div class="request-reason"><strong><?php echo __('label.reason'); ?>:</strong><br><?php echo htmlspecialchars($req['reason']); ?></div>
                 </div>
                 <div class="request-actions">
                     <?php if ($req['status'] === 'pending'): ?>
@@ -268,8 +268,8 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             <input type="hidden" name="action" value="reject">
             <input type="hidden" name="request_id" id="rejectRequestId">
             <div class="form-group">
-                <label for="rejection_reason">Afwijzingsreden *</label>
-                <textarea id="rejection_reason" name="rejection_reason" required placeholder="Waarom wordt dit verzoek afgewezen?" style="min-height: 120px;"></textarea>
+                <label for="rejection_reason"><?php echo __('form.rejection_reason'); ?> *</label>
+                <textarea id="rejection_reason" name="rejection_reason" required placeholder="<?php echo htmlspecialchars(__('form.rejection_reason')); ?>..." style="min-height: 120px;"></textarea>
             </div>
             <div style="display: flex; gap: 8px; margin-top: 20px;">
                 <button type="submit" class="btn btn-danger">❌ <?php echo __('button.reject'); ?></button>
@@ -282,7 +282,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
 <div id="deleteModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeDeleteModal()">&times;</span>
-        <h2>🗑️ Verzoek Verwijderen</h2>
+        <h2>🗑️ <?php echo __('page.delete_request.heading'); ?></h2>
         <form method="post" style="margin-top: 20px;">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="delete">

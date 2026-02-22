@@ -198,9 +198,9 @@ require_once __DIR__ . '/_header.php';
             <input type="hidden" name="action" value="create">
 
             <div class="form-group">
-                <label>Config versie ID</label>
+                <label><?php echo __('label.config_version_id'); ?></label>
                 <select name="config_version_id" required>
-                    <option value="">-- Kies versie --</option>
+                    <option value=""><?php echo __('form.choose_version'); ?></option>
                     <?php foreach ($config_versions as $cv): ?>
                         <option value="<?php echo (int)$cv['id']; ?>">
                             ID <?php echo (int)$cv['id']; ?> — PABX: <?php echo (int)$cv['pabx_id']; ?> — Type: <?php echo (int)$cv['device_type_id']; ?> — v<?php echo (int)$cv['version_number']; ?>
@@ -210,17 +210,17 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Geldigheid (uur)</label>
+                <label><?php echo __('label.validity_hours'); ?></label>
                 <input name="expires_hours" type="number" min="1" value="24" required>
             </div>
 
             <div class="form-group">
-                <label>Optioneel <?php echo __('form.mac_address'); ?></label>
+                <label><?php echo __('form.mac_address'); ?> (<?php echo __('label.optional'); ?>)</label>
                 <input name="mac_address" type="text" placeholder="00:11:22:33:44:55">
             </div>
 
             <div class="form-group">
-                <label>Optioneel apparaat-model</label>
+                <label><?php echo __('label.optional_device_model'); ?></label>
                 <input name="device_model" type="text" placeholder="T46P">
             </div>
 
@@ -231,7 +231,7 @@ require_once __DIR__ . '/_header.php';
     </section>
 
     <section class="card">
-        <h3>Recente tokens</h3>
+        <h3><?php echo __('label.recent_tokens'); ?></h3>
         <?php if (empty($tokens)): ?>
             <p class="small"><?php echo __('label.no_results'); ?></p>
         <?php else: ?>
@@ -239,12 +239,12 @@ require_once __DIR__ . '/_header.php';
                 <thead>
                     <tr>
                         <th><?php echo __('table.id'); ?></th>
-                        <th>Token</th>
-                        <th>Config v</th>
-                        <th><?php echo __('table.mac_address'); ?> / Model</th>
+                        <th><?php echo __('table.token'); ?></th>
+                        <th><?php echo __('table.config_version'); ?></th>
+                        <th><?php echo __('table.mac_address'); ?> / <?php echo __('table.model'); ?></th>
                         <th><?php echo __('table.expires'); ?></th>
                         <th><?php echo __('table.used_at'); ?></th>
-                        <th>Aangemaakt door</th>
+                        <th><?php echo __('table.created_by'); ?></th>
                         <th><?php echo __('table.created_at'); ?></th>
                         <th><?php echo __('table.actions'); ?></th>
                     </tr>
@@ -271,7 +271,7 @@ require_once __DIR__ . '/_header.php';
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                         <input type="hidden" name="action" value="revoke">
                                         <input type="hidden" name="id" value="<?php echo (int)$t['id']; ?>">
-                                        <button class="btn" type="submit" style="background:#f0ad4e;">Intrekken</button>
+                                        <button class="btn" type="submit" style="background:#f0ad4e;"><?php echo __('button.revoke'); ?></button>
                                     </form>
                                 <?php endif; ?>
 
