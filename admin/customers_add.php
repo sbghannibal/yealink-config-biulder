@@ -86,7 +86,7 @@ require_once __DIR__ . '/_header.php';
 ?>
 
 <main class="container" style="max-width:900px; margin-top:20px;">
-    <h2>Nieuwe Klant</h2>
+    <h2><?php echo __('page.customers.create'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
@@ -95,13 +95,13 @@ require_once __DIR__ . '/_header.php';
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
 
             <div class="form-group">
-                <label>Klantcode *</label>
+                <label><?php echo __('form.customer_code'); ?> *</label>
                 <input name="customer_code" type="text" required value="<?php echo htmlspecialchars($_POST['customer_code'] ?? ''); ?>" placeholder="bijv. CUST001">
                 <small style="color: #6c757d;">Unieke identificatie voor de klant</small>
             </div>
 
             <div class="form-group">
-                <label>Bedrijfsnaam *</label>
+                <label><?php echo __('form.company_name'); ?> *</label>
                 <input name="company_name" type="text" required value="<?php echo htmlspecialchars($_POST['company_name'] ?? ''); ?>">
             </div>
 
@@ -111,36 +111,36 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Email</label>
+                <label><?php echo __('form.email'); ?></label>
                 <input name="email" type="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
-                <label>Telefoon</label>
+                <label><?php echo __('form.phone'); ?></label>
                 <input name="phone" type="text" value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
-                <label>Adres</label>
+                <label><?php echo __('form.address'); ?></label>
                 <textarea name="address" rows="3"><?php echo htmlspecialchars($_POST['address'] ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
-                <label>Notities</label>
+                <label><?php echo __('form.notes'); ?></label>
                 <textarea name="notes" rows="4"><?php echo htmlspecialchars($_POST['notes'] ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
-                <label>Actief</label>
+                <label><?php echo __('form.is_active'); ?></label>
                 <select name="is_active">
-                    <option value="1" <?php echo (!isset($_POST['is_active']) || $_POST['is_active'] == '1') ? 'selected' : ''; ?>>Ja</option>
-                    <option value="0" <?php echo (isset($_POST['is_active']) && $_POST['is_active'] == '0') ? 'selected' : ''; ?>>Nee</option>
+                    <option value="1" <?php echo (!isset($_POST['is_active']) || $_POST['is_active'] == '1') ? 'selected' : ''; ?>><?php echo __('label.yes'); ?></option>
+                    <option value="0" <?php echo (isset($_POST['is_active']) && $_POST['is_active'] == '0') ? 'selected' : ''; ?>><?php echo __('label.no'); ?></option>
                 </select>
             </div>
 
             <div style="display:flex; gap:8px;">
-                <button class="btn" type="submit">Aanmaken</button>
-                <a class="btn" href="/admin/customers.php" style="background:#6c757d;">Annuleren</a>
+                <button class="btn" type="submit"><?php echo __('button.create'); ?></button>
+                <a class="btn" href="/admin/customers.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
             </div>
         </form>
     </div>

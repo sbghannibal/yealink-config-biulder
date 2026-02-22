@@ -268,12 +268,12 @@ function updateTypeFields() {
 document.addEventListener('DOMContentLoaded', updateTypeFields);
 </script>
 
-    <h2>Template Variables: <?php echo htmlspecialchars($template['template_name'] ?? ''); ?></h2>
+    <h2><?php echo __('page.template_variables.title'); ?>: <?php echo htmlspecialchars($template['template_name'] ?? ''); ?></h2>
     
     <p>
-        <a href="/admin/templates.php" class="btn" style="background:#6c757d;">← Terug naar Templates</a>
+        <a href="/admin/templates.php" class="btn" style="background:#6c757d;">← <?php echo __('button.back'); ?></a>
         <?php if ($template): ?>
-            <span style="color:#666;">Device Type: <?php echo htmlspecialchars($template['type_name']); ?></span>
+            <span style="color:#666;"><?php echo __('form.device_type'); ?>: <?php echo htmlspecialchars($template['type_name']); ?></span>
         <?php endif; ?>
     </p>
     
@@ -388,9 +388,9 @@ document.addEventListener('DOMContentLoaded', updateTypeFields);
                     </div>
                     
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn" type="submit"><?php echo $edit_variable ? 'Bijwerken' : 'Aanmaken'; ?></button>
+                        <button class="btn" type="submit"><?php echo $edit_variable ? __('button.edit') : __('button.create'); ?></button>
                         <?php if ($edit_variable): ?>
-                            <a class="btn" href="?template_id=<?php echo $template_id; ?>" style="background: #6c757d;">Annuleren</a>
+                            <a class="btn" href="?template_id=<?php echo $template_id; ?>" style="background: #6c757d;"><?php echo __('button.cancel'); ?></a>
                         <?php endif; ?>
                     </div>
                 </form>
@@ -428,12 +428,12 @@ document.addEventListener('DOMContentLoaded', updateTypeFields);
                                     <?php endif; ?>
                                 </div>
                                 <div style="display: flex; gap: 4px;">
-                                    <a class="btn" href="?template_id=<?php echo $template_id; ?>&edit=<?php echo (int)$v['id']; ?>" style="font-size: 11px; padding: 4px 8px;">Bewerk</a>
-                                    <form method="post" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je deze variabele wilt verwijderen?');">
+                                    <a class="btn" href="?template_id=<?php echo $template_id; ?>&edit=<?php echo (int)$v['id']; ?>" style="font-size: 11px; padding: 4px 8px;"><?php echo __('button.edit'); ?></a>
+                                    <form method="post" style="display: inline;" onsubmit="return confirm('<?php echo __('confirm.delete'); ?>');">
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="var_id" value="<?php echo (int)$v['id']; ?>">
-                                        <button class="btn" type="submit" style="font-size: 11px; padding: 4px 8px; background: #dc3545;">Verwijder</button>
+                                        <button class="btn" type="submit" style="font-size: 11px; padding: 4px 8px; background: #dc3545;"><?php echo __('button.delete'); ?></button>
                                     </form>
                                 </div>
                             </div>

@@ -248,7 +248,7 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 
-<h2>⚙️ Config Cleanup</h2>
+<h2>⚙️ <?php echo __('page.config_cleanup.title'); ?></h2>
 
 <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>

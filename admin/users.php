@@ -30,8 +30,8 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 
-    <h2>Gebruikers</h2>
-    <p><a class="btn" href="/admin/users_create.php">➕ Nieuwe gebruiker</a></p>
+    <h2><?php echo __('page.users.title'); ?></h2>
+    <p><a class="btn" href="/admin/users_create.php">➕ <?php echo __('page.users.create'); ?></a></p>
 
     <?php if ($error): ?>
         <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
@@ -41,28 +41,28 @@ require_once __DIR__ . '/_header.php';
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Gebruikersnaam</th>
-                    <th>E-mail</th>
-                    <th>Actief</th>
-                    <th>Aangemaakt</th>
-                    <th>Acties</th>
+                    <th><?php echo __('table.id'); ?></th>
+                    <th><?php echo __('table.username'); ?></th>
+                    <th><?php echo __('table.email'); ?></th>
+                    <th><?php echo __('form.is_active'); ?></th>
+                    <th><?php echo __('table.created_at'); ?></th>
+                    <th><?php echo __('table.actions'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($users)): ?>
-                    <tr><td colspan="6" style="text-align:center">Geen gebruikers gevonden.</td></tr>
+                    <tr><td colspan="6" style="text-align:center"><?php echo __('label.no_results'); ?></td></tr>
                 <?php else: ?>
                     <?php foreach ($users as $u): ?>
                         <tr>
                             <td><?php echo (int)$u['id']; ?></td>
                             <td><?php echo htmlspecialchars($u['username']); ?></td>
                             <td><?php echo htmlspecialchars($u['email']); ?></td>
-                            <td><?php echo $u['is_active'] ? 'Ja' : 'Nee'; ?></td>
+                            <td><?php echo $u['is_active'] ? __('label.yes') : __('label.no'); ?></td>
                             <td><?php echo htmlspecialchars($u['created_at']); ?></td>
                             <td>
-                                <a class="btn" href="/admin/users_edit.php?id=<?php echo (int)$u['id']; ?>">Bewerken</a>
-                                <a class="btn" href="/admin/users_delete.php?id=<?php echo (int)$u['id']; ?>" style="background:#dc3545;" onclick="return confirm('Weet je het zeker?');">Verwijderen</a>
+                                <a class="btn" href="/admin/users_edit.php?id=<?php echo (int)$u['id']; ?>"><?php echo __('button.edit'); ?></a>
+                                <a class="btn" href="/admin/users_delete.php?id=<?php echo (int)$u['id']; ?>" style="background:#dc3545;" onclick="return confirm('<?php echo __('confirm.delete_user'); ?>');"><?php echo __('button.delete'); ?></a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

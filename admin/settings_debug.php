@@ -75,7 +75,7 @@ $dashboard_text  = get_setting($pdo, 'dashboard_text', "Gebruik het menu om devi
 require_once __DIR__ . '/_header.php';
 ?>
 
-    <h2>Instellingen</h2>
+    <h2><?php echo __('page.settings.debug'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -93,8 +93,8 @@ require_once __DIR__ . '/_header.php';
                 <textarea name="dashboard_text" rows="8"><?php echo htmlspecialchars($dashboard_text); ?></textarea>
             </div>
 
-            <button class="btn" type="submit">Opslaan</button>
-            <a class="btn" href="/admin/dashboard.php" style="background:#6c757d;">Terug naar admin</a>
+            <button class="btn" type="submit"><?php echo __('button.save'); ?></button>
+            <a class="btn" href="/admin/dashboard.php" style="background:#6c757d;"><?php echo __('button.back'); ?></a>
         </form>
     </div>
 <?php require_once __DIR__ . '/_footer.php'; ?>

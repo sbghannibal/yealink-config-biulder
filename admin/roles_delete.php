@@ -117,7 +117,7 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 
-<h2>🗑️ Rol Verwijderen</h2>
+<h2>🗑️ <?php echo __('page.roles.delete'); ?></h2>
 
 <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
@@ -125,8 +125,8 @@ require_once __DIR__ . '/_header.php';
     <p><strong>Let op:</strong> Je staat op het punt om de volgende rol te verwijderen:</p>
 
     <div style="background:#f8f9fa; padding:16px; border-radius:4px; margin:16px 0;">
-        <p><strong>Rolnaam:</strong> <?php echo htmlspecialchars($role['role_name']); ?></p>
-        <p><strong>Beschrijving:</strong> <?php echo htmlspecialchars($role['description'] ?? '-'); ?></p>
+        <p><strong><?php echo __('form.name'); ?>:</strong> <?php echo htmlspecialchars($role['role_name']); ?></p>
+        <p><strong><?php echo __('form.description'); ?>:</strong> <?php echo htmlspecialchars($role['description'] ?? '-'); ?></p>
         <?php if ($admin_count > 0): ?>
             <p style="color:#dc3545;"><strong>⚠️ Let op:</strong> <?php echo $admin_count; ?> gebruiker(s) hebben deze rol. Ze worden automatisch toegewezen aan de 'user' rol.</p>
         <?php endif; ?>
@@ -139,8 +139,8 @@ require_once __DIR__ . '/_header.php';
         <input type="hidden" name="id" value="<?php echo (int)$role_id; ?>">
 
         <div style="display:flex; gap:8px;">
-            <button class="btn" type="submit" style="background:#dc3545; color:white;">Ja, Verwijderen</button>
-            <a class="btn" href="/admin/roles.php" style="background:#6c757d;">Annuleren</a>
+            <button class="btn" type="submit" style="background:#dc3545; color:white;"><?php echo __('label.yes'); ?>, <?php echo __('button.delete'); ?></button>
+            <a class="btn" href="/admin/roles.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
         </div>
     </form>
 </div>

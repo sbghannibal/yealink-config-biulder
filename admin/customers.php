@@ -123,7 +123,7 @@ require_once __DIR__ . '/_header.php';
 </style>
 
 <div style="margin-bottom:20px;">
-    <h2 style="margin:0;">👥 Klanten</h2>
+    <h2 style="margin:0;">👥 <?php echo __('page.customers.title'); ?></h2>
 </div>
 
 <?php if (!empty($error)): ?>
@@ -132,26 +132,26 @@ require_once __DIR__ . '/_header.php';
 
 <?php if (isset($_GET['created'])): ?>
     <div class="alert alert-success">
-        ✅ Klant succesvol aangemaakt!
+        ✅ <?php echo __('message.customer_created'); ?>!
         
         <div style="margin-top:12px; display:flex; gap:8px;">
-            <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white; font-size:13px; padding:8px 12px;">➕ Nog een Klant</a>
+            <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white; font-size:13px; padding:8px 12px;">➕ <?php echo __('page.customers.create'); ?></a>
             <a class="btn" href="/devices/create.php?customer_id=<?php echo (int)$_GET['created']; ?>" style="background: #007bff; color: white; font-size:13px; padding:8px 12px;">📱 Device Toevoegen</a>
         </div>
     </div>
 <?php endif; ?>
 
 <?php if (isset($_GET['updated'])): ?>
-    <div class="alert alert-success">Klant succesvol bijgewerkt!</div>
+    <div class="alert alert-success"><?php echo __('message.customer_updated'); ?>!</div>
 <?php endif; ?>
 
 <?php if (isset($_GET['deleted'])): ?>
-    <div class="alert alert-success">Klant succesvol verwijderd!</div>
+    <div class="alert alert-success"><?php echo __('message.customer_deleted'); ?>!</div>
 <?php endif; ?>
 
 <?php if (!isset($_GET['created'])): ?>
     <div style="margin-bottom:16px;">
-        <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white;">➕ Nieuwe Klant</a>
+        <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white;">➕ <?php echo __('page.customers.create'); ?></a>
     </div>
 <?php endif; ?>
 
@@ -159,23 +159,23 @@ require_once __DIR__ . '/_header.php';
     <?php if (empty($customers)): ?>
         <div style="padding: 40px; text-align: center;">
             <p style="color: #6c757d; font-size: 16px;">
-                Geen klanten gevonden. 
-                <a href="/admin/customers_add.php" style="color: #007bff; text-decoration: none;">Maak er een aan →</a>
+                <?php echo __('label.no_results'); ?>. 
+                <a href="/admin/customers_add.php" style="color: #007bff; text-decoration: none;"><?php echo __('page.customers.create'); ?> →</a>
             </p>
         </div>
     <?php else: ?>
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Klantcode</th>
-                    <th>Bedrijfsnaam</th>
+                    <th><?php echo __('table.id'); ?></th>
+                    <th><?php echo __('form.customer_code'); ?></th>
+                    <th><?php echo __('form.company_name'); ?></th>
                     <th>Contactpersoon</th>
-                    <th>Email</th>
-                    <th>Telefoon</th>
+                    <th><?php echo __('table.email'); ?></th>
+                    <th><?php echo __('form.phone'); ?></th>
                     <th>Devices</th>
-                    <th>Status</th>
-                    <th>Acties</th>
+                    <th><?php echo __('table.status'); ?></th>
+                    <th><?php echo __('table.actions'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -192,15 +192,15 @@ require_once __DIR__ . '/_header.php';
                         </td>
                         <td>
                             <?php if ($c['is_active']): ?>
-                                <span class="badge success">✓ Actief</span>
+                                <span class="badge success">✓ <?php echo __('status.active'); ?></span>
                             <?php else: ?>
-                                <span class="badge" style="background: #dc3545;">✗ Inactief</span>
+                                <span class="badge" style="background: #dc3545;">✗ <?php echo __('status.inactive'); ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <a class="btn" href="/admin/customers_edit.php?id=<?php echo (int)$c['id']; ?>" style="background: #007bff; color: white;">✏️ Bewerken</a>
-                                <a class="btn" href="/admin/customers_delete.php?id=<?php echo (int)$c['id']; ?>" onclick="return confirm('Weet je zeker dat je deze klant wilt verwijderen?');" style="background: #dc3545; color: white;">🗑️ Verwijderen</a>
+                                <a class="btn" href="/admin/customers_edit.php?id=<?php echo (int)$c['id']; ?>" style="background: #007bff; color: white;">✏️ <?php echo __('button.edit'); ?></a>
+                                <a class="btn" href="/admin/customers_delete.php?id=<?php echo (int)$c['id']; ?>" onclick="return confirm('<?php echo __('confirm.delete_customer'); ?>');" style="background: #dc3545; color: white;">🗑️ <?php echo __('button.delete'); ?></a>
                             </div>
                         </td>
                     </tr>

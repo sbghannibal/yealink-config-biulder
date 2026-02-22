@@ -342,7 +342,7 @@ function can_access($permission, $permission_map) {
                 <select onchange="window.location.href='/admin/set_language.php?lang=' + this.value;" title="Taal / Language">
                     <option value="nl" <?php echo ($_SESSION['language'] ?? 'nl') === 'nl' ? 'selected' : ''; ?>>🇳🇱 NL</option>
                     <option value="fr" <?php echo ($_SESSION['language'] ?? 'nl') === 'fr' ? 'selected' : ''; ?>>🇫🇷 FR</option>
-                    <option value="en" <?php echo ($_SESSION['language'] ?? 'nl') === 'en' ? 'selected' : ''; ?>>🇬🇧 EN</option>
+                    <option value="en" <?php echo ($_SESSION['language'] ?? 'nl') === 'en' ? 'selected' : ''; ?>>🇺🇸 ENG</option>
                 </select>
             </div>
             <form method="POST" action="/logout.php" style="display: inline;">
