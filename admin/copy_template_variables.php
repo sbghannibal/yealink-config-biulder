@@ -270,13 +270,13 @@ require_once __DIR__ . '/_header.php';
                            value="<?php echo (int)$tpl['id']; ?>"
                            <?php echo $selected_source === (int)$tpl['id'] ? 'checked' : ''; ?>>
                     <label for="src_<?php echo (int)$tpl['id']; ?>">
-                        <span><?php echo htmlspecialchars($tpl['name']); ?></span>
-                        <?php if ($tpl['device_type_name']): ?>
+                        <span><?php echo htmlspecialchars($tpl['name'] ?? ''); ?></span>
+                        <?php if (!empty($tpl['device_type_name'])): ?>
                             <span class="device-type-label"> — <?php echo htmlspecialchars($tpl['device_type_name']); ?></span>
                         <?php endif; ?>
                     </label>
-                    <span class="var-badge <?php echo $tpl['var_count'] > 0 ? 'has-vars' : ''; ?>">
-                        <?php echo (int)$tpl['var_count']; ?> <?php echo __('page.copy_template_variables.vars'); ?>
+                    <span class="var-badge <?php echo ($tpl['var_count'] ?? 0) > 0 ? 'has-vars' : ''; ?>">
+                        <?php echo (int)($tpl['var_count'] ?? 0); ?> <?php echo __('page.copy_template_variables.vars'); ?>
                     </span>
                 </div>
                 <?php endforeach; ?>
@@ -294,13 +294,13 @@ require_once __DIR__ . '/_header.php';
                            value="<?php echo (int)$tpl['id']; ?>"
                            <?php echo in_array((int)$tpl['id'], $selected_targets, true) ? 'checked' : ''; ?>>
                     <label for="tgt_<?php echo (int)$tpl['id']; ?>">
-                        <span><?php echo htmlspecialchars($tpl['name']); ?></span>
-                        <?php if ($tpl['device_type_name']): ?>
+                        <span><?php echo htmlspecialchars($tpl['name'] ?? ''); ?></span>
+                        <?php if (!empty($tpl['device_type_name'])): ?>
                             <span class="device-type-label"> — <?php echo htmlspecialchars($tpl['device_type_name']); ?></span>
                         <?php endif; ?>
                     </label>
-                    <span class="var-badge <?php echo $tpl['var_count'] > 0 ? 'has-vars' : ''; ?>">
-                        <?php echo (int)$tpl['var_count']; ?> <?php echo __('page.copy_template_variables.vars'); ?>
+                    <span class="var-badge <?php echo ($tpl['var_count'] ?? 0) > 0 ? 'has-vars' : ''; ?>">
+                        <?php echo (int)($tpl['var_count'] ?? 0); ?> <?php echo __('page.copy_template_variables.vars'); ?>
                     </span>
                 </div>
                 <?php endforeach; ?>
@@ -325,7 +325,7 @@ require_once __DIR__ . '/_header.php';
 function confirmCopy() {
     var overwrite = document.getElementById('overwrite').checked;
     if (overwrite) {
-        return confirm('<?php echo addslashes(__('confirm.delete') ?: 'Existing variables will be overwritten. Continue?'); ?>');
+        return confirm('<?php echo addslashes(__('confirm.overwrite_variables')); ?>');
     }
     return true;
 }
