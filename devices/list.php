@@ -19,6 +19,48 @@ if (!has_permission($pdo, $admin_id, 'devices.manage')) {
 $devices = [];
 $device_types = [];
 $error = '';
+$success = $_GET["success"] ?? "";
+
+// Generate CSRF token
+if (empty($_SESSION["csrf_token"])) {
+    $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION["csrf_token"];
+
+// Handle bulk delete
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["bulk_action"]) && $_POST["bulk_action"] === "delete") {
+    if (!hash_equals($csrf, $_POST["csrf_token"] ?? "")) {
+        $error = "Invalid CSRF token";
+    } elseif (!empty($_POST["device_ids"]) && is_array($_POST["device_ids"])) {
+        $device_ids = array_map("intval", $_POST["device_ids"]);
+        $device_ids = array_filter($device_ids, fn($id) => $id > 0);
+        
+        if (!empty($device_ids)) {
+            try {
+                $pdo->beginTransaction();
+                
+                $placeholders = implode(",", array_fill(0, count($device_ids), "?"));
+                
+                // Delete config versions
+                // Delete device config assignments
+                $stmt = $pdo->prepare("DELETE FROM device_config_assignments WHERE device_id IN ($placeholders)");
+                $stmt->execute($device_ids);
+                
+                $stmt = $pdo->prepare("DELETE FROM devices WHERE id IN ($placeholders)");
+                $stmt->execute($device_ids);
+                
+                $pdo->commit();
+                
+                $success = count($device_ids) . " device(s) successfully deleted.";
+                header("Location: /devices/list.php?success=" . urlencode($success));
+                exit;
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                $error = "Error deleting devices: " . $e->getMessage();
+            }
+        }
+    }
+}
 
 // Pagination parameters
 $per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
@@ -30,6 +72,46 @@ $offset = ($page - 1) * $per_page;
 // Search and filters
 $search_customer = $_GET['search_customer'] ?? '';
 $filter_type = isset($_GET['filter_type']) && $_GET['filter_type'] !== '' ? (int)$_GET['filter_type'] : null;
+
+// Sorting parameters
+$sort_by = isset($_GET["sort_by"]) ? $_GET["sort_by"] : "id";
+$sort_order = isset($_GET["sort_order"]) && $_GET["sort_order"] === "asc" ? "asc" : "desc";
+
+// Whitelist allowed sort columns
+$allowed_sort = ["id", "device_name", "customer_name", "type_name", "mac_address", "last_config", "download_count", "is_active"];
+
+// Map sort columns to actual SQL columns
+$sort_column_map = [
+    "id" => "d.id",
+    "device_name" => "d.device_name",
+    "customer_name" => "c.company_name",
+    "type_name" => "dt.type_name",
+    "mac_address" => "d.mac_address",
+    "last_config" => "latest_version",
+    "download_count" => "download_count",
+    "is_active" => "d.is_active"
+];
+$sort_column = $sort_column_map[$sort_by] ?? "d.id";
+
+// Helper function to generate sort URLs
+function getSortUrl($column, $current_sort, $current_order, $search_customer, $filter_type, $page, $per_page) {
+    $new_order = ($current_sort === $column && $current_order === "asc") ? "desc" : "asc";
+    $url = "?sort_by=" . urlencode($column) . "&sort_order=" . $new_order;
+    if ($search_customer) $url .= "&search_customer=" . urlencode($search_customer);
+    if ($filter_type) $url .= "&filter_type=" . urlencode($filter_type);
+    if ($page > 1) $url .= "&page=" . $page;
+    if ($per_page != 25) $url .= "&per_page=" . $per_page;
+    return $url;
+}
+
+// Helper function to get sort indicator
+function getSortIndicator($column, $current_sort, $current_order) {
+    if ($current_sort !== $column) return " ↕";
+    return $current_order === "asc" ? " ↑" : " ↓";
+}
+if (!in_array($sort_by, $allowed_sort)) {
+    $sort_by = "id";
+}
 
 $total_count = 0;
 
@@ -43,6 +125,7 @@ try {
     $count_params = [];
     
     if ($search_customer) {
+        $sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ?)";
         $count_sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ?)";
         $search_param = '%' . $search_customer . '%';
         $count_params[] = $search_param;
@@ -52,6 +135,8 @@ try {
         $count_sql .= " AND d.device_type_id = ?";
         $count_params[] = $filter_type;
     }
+
+    // Add sorting
     
     $count_stmt = $pdo->prepare($count_sql);
     $count_stmt->execute($count_params);
@@ -63,9 +148,9 @@ try {
                c.customer_code, c.company_name,
                (SELECT cv.version_number FROM config_versions cv 
                 JOIN device_config_assignments dca ON dca.config_version_id = cv.id 
-                WHERE dca.device_id = d.id 
+                WHERE dca.device_id = d.id
                 ORDER BY cv.id DESC LIMIT 1) as latest_version,
-               (SELECT dca.config_version_id FROM device_config_assignments dca 
+                (SELECT dca.config_version_id FROM device_config_assignments dca
                 WHERE dca.device_id = d.id 
                 ORDER BY dca.assigned_at DESC LIMIT 1) as config_version_id,
                (SELECT COUNT(*) FROM provision_logs pl 
@@ -87,8 +172,11 @@ try {
         $sql .= " AND d.device_type_id = ?";
         $params[] = $filter_type;
     }
+
+    // Add sorting
+    $sql .= " ORDER BY " . $sort_column . " " . $sort_order;
+    $sql .= " LIMIT ? OFFSET ?";
     
-    $sql .= " ORDER BY d.created_at DESC LIMIT ? OFFSET ?";
     $params[] = (int)$per_page;
     $params[] = (int)$offset;
     
@@ -176,6 +264,22 @@ require_once __DIR__ . '/../admin/_header.php';
         }
 
         .btn-secondary:hover {
+
+        /* Sortable table headers */
+        th a {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            user-select: none;
+        }
+
+        th a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        th a:active {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
             background: #5a6268;
         }
 
@@ -455,9 +559,9 @@ require_once __DIR__ . '/../admin/_header.php';
                    value="<?php echo htmlspecialchars($search_customer); ?>" 
                    aria-label="<?php echo htmlspecialchars(__('devices.search.placeholder')); ?>">
             <select name="filter_type" aria-label="<?php echo htmlspecialchars(__('devices.filter.all_models')); ?>">
-                <option value=""><?php echo __('devices.filter.all_models'); ?></option>
+                <option value="" <?php echo !isset($filter_type) || $filter_type === null ? 'selected' : ''; ?>><?php echo __('devices.filter.all_models'); ?></option>
                 <?php foreach ($device_types as $type): ?>
-                    <option value="<?php echo (int)$type['id']; ?>" <?php echo $filter_type == $type['id'] ? 'selected' : ''; ?>>
+                    <option value="<?php echo (int)$type['id']; ?>" <?php echo (isset($filter_type) && $filter_type == $type['id']) ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($type['type_name']); ?>
                     </option>
                 <?php endforeach; ?>
@@ -487,23 +591,34 @@ require_once __DIR__ . '/../admin/_header.php';
                 </p>
             </div>
         <?php else: ?>
-            <table>
+            <form method="post" id="bulkForm">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                <input type="hidden" name="bulk_action" value="delete">
+                <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+                    <button type="submit" id="bulkDeleteBtn" class="btn btn-danger" style="display: none;" onclick="return confirm('Are you sure you want to delete the selected devices? This action cannot be undone.');">
+                        🗑️ Delete Selected
+                    </button>
+                    <span id="selectedCount" style="color: #6c757d; font-size: 14px; display: none;"></span>
+                </div>
+                <table>
                 <thead>
                     <tr>
-                        <th><?php echo __('table.id'); ?></th>
-                        <th><?php echo __('table.name'); ?></th>
-                        <th><?php echo __('table.customer'); ?></th>
-                        <th><?php echo __('table.model'); ?></th>
-                        <th><?php echo __('table.mac_address'); ?></th>
-                        <th><?php echo __('table.latest_config'); ?></th>
-                        <th><?php echo __('table.downloads'); ?></th>
-                        <th><?php echo __('table.status'); ?></th>
+                        <th style="width: 40px;"><input type="checkbox" id="selectAll" title="Select all"></th>
+                        <th><a href="<?php echo getSortUrl("id", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.id"); ?><?php echo getSortIndicator("id", $sort_by, $sort_order); ?></a></th>
+                        <th><a href="<?php echo getSortUrl("device_name", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.name"); ?><?php echo getSortIndicator("device_name", $sort_by, $sort_order); ?></a></th>
+                        <th><a href="<?php echo getSortUrl("customer_name", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.customer"); ?><?php echo getSortIndicator("customer_name", $sort_by, $sort_order); ?></a></th>
+                        <th><a href="<?php echo getSortUrl("type_name", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.model"); ?><?php echo getSortIndicator("type_name", $sort_by, $sort_order); ?></a></th>
+                        <th><a href="<?php echo getSortUrl("mac_address", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.mac_address"); ?><?php echo getSortIndicator("mac_address", $sort_by, $sort_order); ?></a></th>
+                        <th><a href="<?php echo getSortUrl("last_config", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.latest_config"); ?><?php echo getSortIndicator("last_config", $sort_by, $sort_order); ?></a></th>
+                        <th><a href="<?php echo getSortUrl("download_count", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.downloads"); ?><?php echo getSortIndicator("download_count", $sort_by, $sort_order); ?></a></th>
+                        <th><a href="<?php echo getSortUrl("is_active", $sort_by, $sort_order, $search_customer, $filter_type, $page, $per_page); ?>" style="color: inherit; text-decoration: none;"><?php echo __("table.status"); ?><?php echo getSortIndicator("is_active", $sort_by, $sort_order); ?></a></th>
                         <th><?php echo __('table.actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody id="devicesTableBody">
                     <?php foreach ($devices as $d): ?>
                         <tr>
+                            <td><input type="checkbox" class="device-checkbox" name="device_ids[]" value="<?php echo (int)$d['id']; ?>"></td>
                             <td><strong>#<?php echo (int)$d['id']; ?></strong></td>
                             <td><?php echo htmlspecialchars($d['device_name']); ?></td>
                             <td>
@@ -597,6 +712,7 @@ require_once __DIR__ . '/../admin/_header.php';
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </form>
         <?php endif; ?>
     </div>
 
@@ -643,5 +759,54 @@ require_once __DIR__ . '/../admin/_header.php';
     </div>
     <?php endif; ?>
 
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const selectAllCheckbox = document.getElementById("selectAll");
+    const deviceCheckboxes = document.querySelectorAll(".device-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const selectedCount = document.getElementById("selectedCount");
+
+    if (!selectAllCheckbox || !bulkDeleteBtn) return;
+
+    // Select/Deselect all
+    selectAllCheckbox.addEventListener("change", function() {
+        deviceCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        updateBulkDeleteButton();
+    });
+
+    // Update button when individual checkbox changes
+    deviceCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener("change", function() {
+            updateSelectAllState();
+            updateBulkDeleteButton();
+        });
+    });
+
+    function updateSelectAllState() {
+        const totalCheckboxes = deviceCheckboxes.length;
+        const checkedCheckboxes = document.querySelectorAll(".device-checkbox:checked").length;
+        selectAllCheckbox.checked = totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes;
+        selectAllCheckbox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+    }
+
+    function updateBulkDeleteButton() {
+        const checkedCount = document.querySelectorAll(".device-checkbox:checked").length;
+        if (checkedCount > 0) {
+            bulkDeleteBtn.style.display = "inline-block";
+            selectedCount.style.display = "inline";
+            selectedCount.textContent = checkedCount + " device(s) selected";
+        } else {
+            bulkDeleteBtn.style.display = "none";
+            selectedCount.style.display = "none";
+        }
+    }
+
+    // Initial state
+    updateBulkDeleteButton();
+});
+</script>
 
 <?php require_once __DIR__ . '/../admin/_footer.php'; ?>
