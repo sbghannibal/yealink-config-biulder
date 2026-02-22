@@ -434,7 +434,7 @@ require_once __DIR__ . '/../admin/_header.php';
     </style>
 
     <div style="margin-bottom:20px;">
-        <h2 style="margin:0;">📱 Devices</h2>
+        <h2 style="margin:0;">📱 <?php echo __('nav.devices'); ?></h2>
     </div>
 
     <?php if (!empty($error)): ?>
@@ -443,11 +443,11 @@ require_once __DIR__ . '/../admin/_header.php';
 
     <div class="filter-controls">
         <form method="get" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1;">
-            <input type="text" name="search_customer" placeholder="🔍 Zoek op klant naam of code..." 
+            <input type="text" name="search_customer" placeholder="<?php echo htmlspecialchars(__('devices.search.placeholder')); ?>" 
                    value="<?php echo htmlspecialchars($search_customer); ?>" 
-                   aria-label="Zoek klanten">
-            <select name="filter_type" aria-label="Filter op model">
-                <option value="">Alle modellen</option>
+                   aria-label="<?php echo htmlspecialchars(__('devices.search.placeholder')); ?>">
+            <select name="filter_type" aria-label="<?php echo htmlspecialchars(__('devices.filter.all_models')); ?>">
+                <option value=""><?php echo __('devices.filter.all_models'); ?></option>
                 <?php foreach ($device_types as $type): ?>
                     <option value="<?php echo (int)$type['id']; ?>" <?php echo $filter_type == $type['id'] ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($type['type_name']); ?>
@@ -455,11 +455,11 @@ require_once __DIR__ . '/../admin/_header.php';
                 <?php endforeach; ?>
             </select>
             <input type="hidden" name="per_page" value="<?php echo $per_page; ?>">
-            <button type="submit" class="btn" style="background: #007bff; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;">Zoeken</button>
-            <a class="btn" href="/devices/create.php" style="background: #28a745; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;">➕ Nieuw Device</a>
+            <button type="submit" class="btn" style="background: #007bff; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;"><?php echo __('button.search'); ?></button>
+            <a class="btn" href="/devices/create.php" style="background: #28a745; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;"><?php echo __('devices.new'); ?></a>
             <?php if ($search_customer || $filter_type): ?>
                 <a href="/devices/list.php?per_page=<?php echo $per_page; ?>" class="clear-filters-btn">
-                    ❌ Wis filters
+                    <?php echo __('devices.clear_filters'); ?>
                 </a>
             <?php endif; ?>
         </form>
@@ -470,11 +470,11 @@ require_once __DIR__ . '/../admin/_header.php';
             <div style="padding: 40px; text-align: center;">
                 <p style="color: #6c757d; font-size: 16px;">
                     <?php if ($search_customer || $filter_type): ?>
-                        Geen devices gevonden met de geselecteerde filters.
-                        <a href="/devices/list.php" style="color: #007bff; text-decoration: none;">Wis filters →</a>
+                        <?php echo __('devices.no_results_filtered'); ?>
+                        <a href="/devices/list.php" style="color: #007bff; text-decoration: none;"><?php echo __('devices.no_results_clear'); ?></a>
                     <?php else: ?>
-                        Geen devices gevonden. 
-                        <a href="/devices/create.php" style="color: #007bff; text-decoration: none;">Maak er een aan →</a>
+                        <?php echo __('devices.no_results'); ?>
+                        <a href="/devices/create.php" style="color: #007bff; text-decoration: none;"><?php echo __('devices.create_first'); ?></a>
                     <?php endif; ?>
                 </p>
             </div>
@@ -482,15 +482,15 @@ require_once __DIR__ . '/../admin/_header.php';
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Naam</th>
-                        <th>Klant</th>
-                        <th>Model</th>
-                        <th>MAC Adres</th>
-                        <th>Laatste Config</th>
-                        <th>Downloads</th>
-                        <th>Status</th>
-                        <th>Acties</th>
+                        <th><?php echo __('table.id'); ?></th>
+                        <th><?php echo __('table.name'); ?></th>
+                        <th><?php echo __('table.customer'); ?></th>
+                        <th><?php echo __('table.model'); ?></th>
+                        <th><?php echo __('table.mac_address'); ?></th>
+                        <th><?php echo __('table.latest_config'); ?></th>
+                        <th><?php echo __('table.downloads'); ?></th>
+                        <th><?php echo __('table.status'); ?></th>
+                        <th><?php echo __('table.actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody id="devicesTableBody">
@@ -520,7 +520,7 @@ require_once __DIR__ . '/../admin/_header.php';
                                 <?php if ($d['latest_version']): ?>
                                     <span class="badge success">v<?php echo (int)$d['latest_version']; ?></span>
                                 <?php else: ?>
-                                    <span class="badge warning">⚠️ Geen config</span>
+                                    <span class="badge warning"><?php echo __('devices.status.no_config'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -530,9 +530,9 @@ require_once __DIR__ . '/../admin/_header.php';
                             </td>
                             <td>
                                 <?php if ($d['is_active']): ?>
-                                    <span class="badge success">✓ Actief</span>
+                                    <span class="badge success">✓ <?php echo __('status.active'); ?></span>
                                 <?php else: ?>
-                                    <span class="badge" style="background: #dc3545;">✗ Inactief</span>
+                                    <span class="badge" style="background: #dc3545;">✗ <?php echo __('status.inactive'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -540,37 +540,37 @@ require_once __DIR__ . '/../admin/_header.php';
                                     <!-- Primary action: Always visible -->
                                     <a class="btn btn-primary" 
                                        href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>">
-                                        🔧 Initialiseren
+                                        <?php echo __('devices.action.initialize'); ?>
                                     </a>
 
                                     <!-- Dropdown for secondary actions -->
                                     <div class="dropdown-wrapper">
                                         <button class="btn btn-secondary dropdown-toggle" type="button">
-                                            Meer acties ▼
+                                            <?php echo __('devices.action.more'); ?>
                                         </button>
                                         <div class="dropdown-menu">
                                             <?php if ($d['config_version_id']): ?>
                                                 <a class="dropdown-item" 
                                                    href="/settings/builder.php?device_id=<?php echo (int)$d['id']; ?>">
-                                                    ⚙️ Config Bewerken
+                                                    <?php echo __('devices.action.edit_config'); ?>
                                                 </a>
                                             <?php else: ?>
                                                 <span class="dropdown-item disabled" 
-                                                      title="Initialiseer eerst een config">
-                                                    ⚙️ Config Bewerken
+                                                      title="<?php echo htmlspecialchars(__('devices.tooltip.edit_config_disabled')); ?>">
+                                                    <?php echo __('devices.action.edit_config'); ?>
                                                 </span>
                                             <?php endif; ?>
 
                                             <a class="dropdown-item" 
                                                href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>">
-                                                ✏️ Telefoon Bewerken
+                                                <?php echo __('devices.action.edit_phone'); ?>
                                             </a>
 
                                             <?php if ($d['config_version_id']): ?>
                                                 <a class="dropdown-item" 
                                                    href="/download_device_config.php?device_id=<?php echo (int)$d['id']; ?>&mac=<?php echo urlencode($d['mac_address']); ?>"
-                                                   title="Download config voor <?php echo htmlspecialchars($d['device_name']); ?>">
-                                                    📥 Download
+                                                   title="<?php echo htmlspecialchars(str_replace('{device_name}', $d['device_name'], __('devices.tooltip.download'))); ?>">
+                                                    <?php echo __('devices.action.download'); ?>
                                                 </a>
                                             <?php endif; ?>
 
@@ -578,8 +578,8 @@ require_once __DIR__ . '/../admin/_header.php';
 
                                             <a class="dropdown-item dropdown-item-danger" 
                                                href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>"
-                                               onclick="return confirm('Weet je zeker dat je dit device wilt verwijderen?');">
-                                                🗑️ Verwijderen
+                                               onclick="return confirm('<?php echo htmlspecialchars(__('devices.confirm.delete')); ?>');">
+                                                <?php echo __('devices.action.delete'); ?>
                                             </a>
                                         </div>
                                     </div>
@@ -595,12 +595,16 @@ require_once __DIR__ . '/../admin/_header.php';
     <?php if ($total_count > 0): ?>
     <div class="pagination">
         <div class="pagination-info">
-            Toont <?php echo (($page - 1) * $per_page) + 1; ?> tot <?php echo min($page * $per_page, $total_count); ?> van <?php echo $total_count; ?> devices
+            <?php echo __('pagination.showing', [
+                'from' => (($page - 1) * $per_page) + 1,
+                'to' => min($page * $per_page, $total_count),
+                'total' => $total_count
+            ]); ?>
         </div>
         
         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div class="per-page-selector">
-                <span>Per pagina:</span>
+                <span><?php echo __('pagination.per_page'); ?></span>
                 <select onchange="window.location.href='?page=1&per_page=' + this.value + '<?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>'">
                     <?php foreach ([10, 25, 50, 100] as $pp): ?>
                         <option value="<?php echo $pp; ?>" <?php echo $pp == $per_page ? 'selected' : ''; ?>><?php echo $pp; ?></option>
@@ -610,21 +614,21 @@ require_once __DIR__ . '/../admin/_header.php';
             
             <div class="pagination-controls">
                 <?php if ($page > 1): ?>
-                    <a href="?page=1&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">« Eerste</a>
-                    <a href="?page=<?php echo $page - 1; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">‹ Vorige</a>
+                    <a href="?page=1&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>"><?php echo __('pagination.first'); ?></a>
+                    <a href="?page=<?php echo $page - 1; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>"><?php echo __('pagination.prev'); ?></a>
                 <?php else: ?>
-                    <a class="disabled">« Eerste</a>
-                    <a class="disabled">‹ Vorige</a>
+                    <a class="disabled"><?php echo __('pagination.first'); ?></a>
+                    <a class="disabled"><?php echo __('pagination.prev'); ?></a>
                 <?php endif; ?>
                 
-                <span>Pagina <?php echo $page; ?> van <?php echo $total_pages; ?></span>
+                <span><?php echo __('pagination.page_of', ['page' => $page, 'total' => $total_pages]); ?></span>
                 
                 <?php if ($page < $total_pages): ?>
-                    <a href="?page=<?php echo $page + 1; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">Volgende ›</a>
-                    <a href="?page=<?php echo $total_pages; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>">Laatste »</a>
+                    <a href="?page=<?php echo $page + 1; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>"><?php echo __('pagination.next'); ?></a>
+                    <a href="?page=<?php echo $total_pages; ?>&per_page=<?php echo $per_page; ?><?php echo $search_customer ? '&search_customer=' . urlencode($search_customer) : ''; ?><?php echo $filter_type ? '&filter_type=' . $filter_type : ''; ?>"><?php echo __('pagination.last'); ?></a>
                 <?php else: ?>
-                    <a class="disabled">Volgende ›</a>
-                    <a class="disabled">Laatste »</a>
+                    <a class="disabled"><?php echo __('pagination.next'); ?></a>
+                    <a class="disabled"><?php echo __('pagination.last'); ?></a>
                 <?php endif; ?>
             </div>
         </div>

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/settings/database.php';
+require_once __DIR__ . '/includes/i18n.php';
 
 // Redirect if already logged in
 if (isset($_SESSION['admin_id'])) {
@@ -35,7 +36,7 @@ if (!isset($_SESSION[$rate_limit_key])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Rate limit check
     if ($_SESSION[$rate_limit_key] >= 3) {
-        $error = 'Je hebt te veel verzoeken ingediend. Probeer het later opnieuw.';
+        $error = __('error.too_many_requests');
     } else {
         $full_name = trim($_POST['full_name'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -44,11 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Validation
         if (!$full_name || !$email || !$organization) {
-            $error = 'Vul alstublieft alle verplichte velden in.';
+            $error = __('error.fill_required_fields');
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Voer een geldig e-mailadres in.';
+            $error = __('error.invalid_email');
         } elseif (strlen($reason) < 10) {
-            $error = 'Geef alstublieft meer informatie over je verzoek (minimaal 10 tekens).';
+            $error = __('error.reason_too_short');
         } else {
             try {
                 // Save request to database
@@ -67,23 +68,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 
                 // Send email to admin
-                $subject = 'Nieuw Account Verzoek - Yealink Config Builder';
-                $message = "
-Er is een nieuw verzoek ingediend voor een beheerdersaccount:
-
-👤 Naam: $full_name
-📧 E-mailadres: $email
-🏢 Organisatie: $organization
-
-📝 Reden voor verzoek:
-$reason
-
-🔗 Link om account goed te keuren:
-https://{$_SERVER['HTTP_HOST']}/admin/approve_account.php
-
----
-Dit verzoek is verzonden via het accountaanvraagformulier.
-";
+                $subject = __('email.account_request_subject');
+                $host = preg_replace('/[^a-zA-Z0-9.\-:]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
+                $message = __('email.account_request_body', [
+                    'name'        => $full_name,
+                    'email'       => $email,
+                    'organization' => $organization,
+                    'reason'      => $reason,
+                    'approve_url' => 'https://' . $host . '/admin/approve_account.php',
+                ]);
                 
                 $headers = "From: noreply@{$_SERVER['HTTP_HOST']}\r\n";
                 $headers .= "Reply-To: $email\r\n";
@@ -94,14 +87,14 @@ Dit verzoek is verzonden via het accountaanvraagformulier.
                 // Increment rate limit
                 $_SESSION[$rate_limit_key]++;
                 
-                $success = 'Dank je wel! Je verzoek is verzonden naar de beheerder. Je ontvangt binnenkort een e-mail.';
+                $success = __('page.request_account.success');
                 
                 // Clear form
                 $_POST = [];
                 
             } catch (Exception $e) {
                 error_log('Account request error: ' . $e->getMessage());
-                $error = 'Er is een fout opgetreden. Probeer het later opnieuw.';
+                $error = __('error.server_error');
             }
         }
     }
@@ -112,7 +105,7 @@ Dit verzoek is verzonden via het accountaanvraagformulier.
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Account Verzoek - Yealink Config Builder</title>
+    <title><?php echo __('page.request_account.title'); ?></title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         * {
@@ -294,55 +287,49 @@ Dit verzoek is verzonden via het accountaanvraagformulier.
         <?php endif; ?>
 
         <div class="info-box">
-            💡 Vul het formulier in en je verzoek wordt verzonden naar de beheerder. Je ontvangt binnenkort een e-mail met verder instructies.
+            💡 <?php echo __('page.request_account.info_text'); ?>
         </div>
 
         <form method="post" novalidate>
             <div class="form-group">
                 <label for="full_name">
-                    Volledige Naam <span class="required">*</span>
+                    <?php echo __('form.full_name'); ?> <span class="required">*</span>
                 </label>
                 <input id="full_name" name="full_name" type="text" required placeholder="bijv. John Doe" value="<?php echo htmlspecialchars($_POST['full_name'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
                 <label for="email">
-                    E-mailadres <span class="required">*</span>
+                    <?php echo __('form.email'); ?> <span class="required">*</span>
                 </label>
                 <input id="email" name="email" type="email" required placeholder="jouw@email.nl" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
                 <label for="organization">
-                    Organisatie/Bedrijf <span class="required">*</span>
+                    <?php echo __('form.organization'); ?> <span class="required">*</span>
                 </label>
                 <input id="organization" name="organization" type="text" required placeholder="bijv. Acme Corp" value="<?php echo htmlspecialchars($_POST['organization'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
                 <label for="reason">
-                    Reden voor Verzoek <span class="required">*</span>
+                    <?php echo __('form.reason'); ?> <span class="required">*</span>
                 </label>
                 <textarea id="reason" name="reason" required placeholder="Beschrijf waarom je een account nodig hebt..."><?php echo htmlspecialchars($_POST['reason'] ?? ''); ?></textarea>
-                <small style="color: #666; display: block; margin-top: 4px;">Minimaal 10 tekens</small>
+                <small style="color: #666; display: block; margin-top: 4px;"><?php echo __('form.reason_hint'); ?></small>
             </div>
 
-            <button type="submit" class="btn">📤 Verzend Verzoek</button>
-            <a href="login.php" class="btn btn-secondary" style="display: block; text-decoration: none; text-align: center;">← Terug naar Login</a>
+            <button type="submit" class="btn"><?php echo __('button.submit_request'); ?></button>
+            <a href="login.php" class="btn btn-secondary" style="display: block; text-decoration: none; text-align: center;"><?php echo __('button.back_to_login'); ?></a>
         </form>
 
         <div class="footer">
             <p>
-                Heb je al een account? 
-                <a href="login.php">Log hier in →</a>
+                <?php echo __('page.request_account.have_account'); ?>
+                <a href="login.php"><?php echo __('page.request_account.login_link'); ?></a>
             </p>
         </div>
     </div>
-<footer style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: rgba(255,255,255,0.85); padding: 14px 24px; font-size: 13px; margin-top: 40px;">
-    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <span>&#9742;&#65039; Yealink Config Builder</span>
-        <span>&copy; <?php echo date('Y') > 2026 ? '2026 &ndash; ' . date('Y') : '2026'; ?> &mdash; Alle rechten voorbehouden</span>
-    </div>
-</footer>
 </body>
 </html>

@@ -6,6 +6,7 @@ session_start();
 
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
 
 // Redirect to login if not authenticated
 if (!isset($_SESSION['admin_id'])) {
