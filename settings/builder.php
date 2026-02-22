@@ -713,4 +713,14 @@ function copyConfigToEditor(configId, versionName) {
         font-size: 28px;
     }
 </style>
+<?php if ($selected_device_id > 0): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var deviceElement = document.querySelector('[onclick*="device_id=<?php echo (int)$selected_device_id; ?>"]');
+    if (deviceElement) {
+        deviceElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
+<?php endif; ?>
 <?php require_once __DIR__ . '/../admin/_footer.php'; ?>

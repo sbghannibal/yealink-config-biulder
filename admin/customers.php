@@ -121,9 +121,8 @@ require_once __DIR__ . '/_header.php';
     }
 </style>
 
-<div class="topbar">
-    <h2>👥 Klanten</h2>
-    <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white;">➕ Nieuwe Klant</a>
+<div style="margin-bottom:20px;">
+    <h2 style="margin:0;">👥 Klanten</h2>
 </div>
 
 <?php if (!empty($error)): ?>
@@ -131,7 +130,14 @@ require_once __DIR__ . '/_header.php';
 <?php endif; ?>
 
 <?php if (isset($_GET['created'])): ?>
-    <div class="alert alert-success">Klant succesvol aangemaakt!</div>
+    <div class="alert alert-success">
+        ✅ Klant succesvol aangemaakt!
+        
+        <div style="margin-top:12px; display:flex; gap:8px;">
+            <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white; font-size:13px; padding:8px 12px;">➕ Nog een Klant</a>
+            <a class="btn" href="/devices/create.php?customer_id=<?php echo (int)$_GET['created']; ?>" style="background: #007bff; color: white; font-size:13px; padding:8px 12px;">📱 Device Toevoegen</a>
+        </div>
+    </div>
 <?php endif; ?>
 
 <?php if (isset($_GET['updated'])): ?>
@@ -140,6 +146,12 @@ require_once __DIR__ . '/_header.php';
 
 <?php if (isset($_GET['deleted'])): ?>
     <div class="alert alert-success">Klant succesvol verwijderd!</div>
+<?php endif; ?>
+
+<?php if (!isset($_GET['created'])): ?>
+    <div style="margin-bottom:16px;">
+        <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white;">➕ Nieuwe Klant</a>
+    </div>
 <?php endif; ?>
 
 <div class="card">

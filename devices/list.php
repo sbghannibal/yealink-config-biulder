@@ -171,11 +171,12 @@ require_once __DIR__ . '/../admin/_header.php';
         }
         
         table th {
-            background: #f1f3f5;
+            background: #6C2483; /* Proximus purple */
+            color: white;
             padding: 12px;
             text-align: left;
             font-weight: 600;
-            border-bottom: 2px solid #dee2e6;
+            border-bottom: 2px solid #5a1d6e;
         }
         
         table td {
@@ -337,9 +338,8 @@ require_once __DIR__ . '/../admin/_header.php';
         }
     </style>
 
-    <div class="topbar">
-        <h2>📱 Devices</h2>
-        <a class="btn" href="/devices/create.php" style="background: #28a745; color: white;">➕ Nieuw Device</a>
+    <div style="margin-bottom:20px;">
+        <h2 style="margin:0;">📱 Devices</h2>
     </div>
 
     <?php if (!empty($error)): ?>
@@ -361,6 +361,7 @@ require_once __DIR__ . '/../admin/_header.php';
             </select>
             <input type="hidden" name="per_page" value="<?php echo $per_page; ?>">
             <button type="submit" class="btn" style="background: #007bff; color: white;">Zoeken</button>
+            <a class="btn" href="/devices/create.php" style="background: #28a745; color: white;">➕ Nieuw Device</a>
             <?php if ($search_customer || $filter_type): ?>
                 <a href="/devices/list.php?per_page=<?php echo $per_page; ?>" class="clear-filters-btn">
                     ❌ Wis filters
@@ -441,21 +442,25 @@ require_once __DIR__ . '/../admin/_header.php';
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a class="btn" href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>" style="background: #28a745; color: white;">⚙️ Config</a>
-                                    <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>" style="background: #007bff; color: white;">✏️ Bewerken</a>
-                                    <!-- NEW Download button -->
+                                    <a class="btn" href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>" style="background: #28a745; color: white;">🔧 Initialiseren</a>
+                                    
+                                    <?php if ($d['config_version_id']): ?>
+                                        <a class="btn" href="/settings/builder.php?device_id=<?php echo (int)$d['id']; ?>" style="background: #17a2b8; color: white;">⚙️ Config Bewerken</a>
+                                    <?php else: ?>
+                                        <button class="btn" disabled title="Initialiseer eerst een config" style="background: #6c757d; color: white; cursor: not-allowed; opacity: 0.6;">⚙️ Config Bewerken</button>
+                                    <?php endif; ?>
+                                    
+                                    <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>" style="background: #007bff; color: white;">✏️ Telefoon Bewerken</a>
+                                    
                                     <?php if ($d['config_version_id']): ?>
                                         <a href="/download_device_config.php?device_id=<?php echo (int)$d['id']; ?>&mac=<?php echo urlencode($d['mac_address']); ?>" 
                                            class="btn" 
                                            title="Download config voor <?php echo htmlspecialchars($d['device_name']); ?>"
-                                           style="background: #17a2b8; color: white;">
+                                           style="background: #6c757d; color: white;">
                                             📥 Download
                                         </a>
-                                    <?php else: ?>
-                                        <button class="btn" disabled title="Geen config toegewezen aan dit device" style="background: #6c757d; color: white; cursor: not-allowed; opacity: 0.6;">
-                                            📥 Download
-                                        </button>
                                     <?php endif; ?>
+                                    
                                     <a class="btn" href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>" onclick="return confirm('Weet je zeker dat je dit device wilt verwijderen?');" style="background: #dc3545; color: white;">🗑️ Verwijderen</a>
                                 </div>
                             </td>

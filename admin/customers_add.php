@@ -67,7 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         error_log('admin/customers_add audit insert error: ' . $e->getMessage());
                     }
 
-                    header('Location: /admin/customers.php?created=' . (int)$newId);
+                    if (isset($_GET['return_to']) && $_GET['return_to'] === 'devices_create') {
+                        header('Location: /devices/create.php?customer_id=' . (int)$newId);
+                    } else {
+                        header('Location: /admin/customers.php?created=' . (int)$newId);
+                    }
                     exit;
                 }
             } catch (Exception $e) {

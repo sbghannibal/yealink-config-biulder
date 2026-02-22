@@ -103,6 +103,10 @@ if ($device_id) {
 
         if ($device) {
             $wizard_data['device_type_id'] = $device['device_type_id'];
+            // Pre-select customer if device has one and customer not yet selected
+            if (!empty($device['customer_id']) && empty($wizard_data['customer_id'])) {
+                $wizard_data['customer_id'] = $device['customer_id'];
+            }
         }
     } catch (Exception $e) {
         error_log('Failed to load device: ' . $e->getMessage());
@@ -476,15 +480,20 @@ require_once __DIR__ . '/../admin/_header.php';
 
                 <div class="form-group">
                     <label>Selecteer Klant <?php if ($device_id): ?>*<?php endif; ?></label>
-                    <select name="customer_id" <?php if ($device_id): ?>required<?php endif; ?>>
+                    <select name="customer_id" <?php if ($device_id): ?>required<?php endif; ?> id="customer_select">
                         <option value="">-- Selecteer klant --</option>
                         <?php foreach ($customer_list as $c): ?>
-                            <option value="<?php echo (int)$c['id']; ?>" <?php echo (isset($wizard_data['customer_id']) && $wizard_data['customer_id'] == $c['id']) ? 'selected' : ''; ?>>
+                            <option value="<?php echo (int)$c['id']; ?>"
+                                <?php echo ((isset($wizard_data['customer_id']) && $wizard_data['customer_id'] == $c['id']) || (isset($device['customer_id']) && $device['customer_id'] == $c['id'])) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($c['customer_code'] . ' - ' . $c['company_name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if (!$device_id): ?>
+                    <?php if (!empty($wizard_data['customer_id']) && $device_id): ?>
+                        <small style="color:#28a745; display:block; margin-top:4px;">
+                            ✓ Automatisch geselecteerd van device
+                        </small>
+                    <?php elseif (!$device_id): ?>
                         <small style="color:#6c757d;">Optioneel wanneer geen device is geselecteerd</small>
                     <?php endif; ?>
                 </div>
