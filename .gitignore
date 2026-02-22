@@ -4,6 +4,7 @@ config/.env
 config/.env
 *.backup
 
-# Downloads folder — keep the folder but ignore its contents
+# Downloads folder — keep the folder and its security files, ignore actual downloads
 downloads/*
 !downloads/.gitkeep
+!downloads/.htaccess

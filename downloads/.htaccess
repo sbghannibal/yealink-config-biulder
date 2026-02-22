@@ -1,0 +1,8 @@
+# Disable directory listing — nobody can browse the folder contents
+Options -Indexes
+
+# Block direct requests to this directory's index
+DirectoryIndex disabled
+
+# Deny access when the request maps exactly to this directory (no filename)
+RedirectMatch 403 ^/downloads/?$
