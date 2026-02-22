@@ -367,7 +367,7 @@ function can_access($permission, $permission_map) {
         <!-- CONFIG DROPDOWN -->
         <?php if (can_access('admin.device_types.manage', $permission_map) || can_access('config.manage', $permission_map) || can_access('admin.templates.manage', $permission_map) || can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map)): ?>
         <div class="nav-dropdown">
-            <a class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php', 'builder.php', 'device_mapping.php', 'templates.php', 'template_variables.php', 'config_cleanup.php', 'bulk_find_replace.php', 'variables.php']) ? 'active' : ''; ?>">
+            <a class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php', 'builder.php', 'device_mapping.php', 'templates.php', 'template_variables.php', 'config_cleanup.php', 'bulk_find_replace.php', 'variables.php', 'copy_template_variables.php']) ? 'active' : ''; ?>">
                 ⚙️ <?php echo __('nav.config'); ?> <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
@@ -389,6 +389,9 @@ function can_access($permission, $permission_map) {
                 <?php if (can_access('admin.templates.manage', $permission_map)): ?>
                 <a href="/admin/templates.php" class="<?php echo $current_page === 'templates.php' ? 'active' : ''; ?>">
                     📋 <?php echo __('nav.templates'); ?>
+                </a>
+                <a href="/admin/copy_template_variables.php" class="<?php echo $current_page === 'copy_template_variables.php' ? 'active' : ''; ?>">
+                    📋 <?php echo __('nav.copy_variables'); ?>
                 </a>
                 <?php endif; ?>
 

@@ -26,6 +26,7 @@ return [
     'nav.api_tokens'          => 'Jetons API',
     'nav.staging_certs'       => 'Certs de staging',
     'nav.staging_credentials' => 'Identifiants',
+    'nav.copy_variables'      => 'Copier les variables',
 
     // Buttons
     'button.save'    => 'Enregistrer',
@@ -619,5 +620,21 @@ return [
     // Widget: Clients
     'widget.total_customers.title'       => 'Clients Actifs',
     'widget.customers.view'              => 'Voir les Clients',
+
+    // admin/copy_template_variables.php
+    'page.copy_template_variables.title'          => 'Copier les variables de modèle',
+    'page.copy_template_variables.source'         => 'Modèle source',
+    'page.copy_template_variables.target'         => 'Modèle(s) cible(s)',
+    'page.copy_template_variables.overwrite'      => 'Écraser les variables existantes',
+    'page.copy_template_variables.copy_btn'       => 'Copier les variables',
+    'page.copy_template_variables.select_source'  => 'Sélectionner le modèle source',
+    'page.copy_template_variables.select_targets' => 'Sélectionner un ou plusieurs modèles cibles',
+    'page.copy_template_variables.no_templates'   => 'Aucun modèle disponible',
+    'page.copy_template_variables.vars'           => 'variables',
+    'page.copy_template_variables.no_source_vars' => 'Le modèle source n\'a pas de variables à copier.',
+    'page.copy_template_variables.err_no_source'  => 'Veuillez sélectionner un modèle source.',
+    'page.copy_template_variables.err_no_target'  => 'Veuillez sélectionner au moins un modèle cible.',
+    'page.copy_template_variables.err_same'       => 'La source et la cible ne peuvent pas être le même modèle.',
+    'page.copy_template_variables.success'        => 'Variables copiées avec succès vers %d modèle(s). %d variable(s) ajoutée(s), %d ignorée(s).',
 
 ];
