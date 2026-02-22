@@ -169,7 +169,7 @@ require_once __DIR__ . '/_header.php';
                     </button>
                 <?php else: ?>
                     <button class="btn btn-danger" type="submit" name="do" value="delete" onclick="return confirm('Are you sure you want to delete this device type? This action cannot be undone.');">
-                        <?php echo __('button.delete'); ?> Device Type
+                        <?php echo __('button.delete'); ?> <?php echo __('page.devices.title'); ?>
                     </button>
                 <?php endif; ?>
             </div>

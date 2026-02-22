@@ -161,7 +161,8 @@ return [
     'status.rejected' => 'Afgewezen',
 
     // Labels
-    'label.search'         => 'Zoeken',
+    'form.select_device_type' => 'Selecteer apparaattype',
+    'label.optional'         => 'optioneel',
     'label.filter'         => 'Filter',
     'label.showing'        => 'Tonen',
     'label.of'             => 'van',

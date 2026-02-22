@@ -127,7 +127,7 @@ require_once __DIR__ . '/_header.php';
                 <input name="var_value" type="text" required>
             </div>
             <div class="form-group">
-                <label><?php echo __('form.description'); ?> (optioneel)</label>
+                <label><?php echo __('form.description'); ?> (<?php echo __('label.optional'); ?>)</label>
                 <input name="description" type="text">
             </div>
             <button class="btn" type="submit"><?php echo __('button.create'); ?></button>

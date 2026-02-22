@@ -457,7 +457,7 @@ require_once __DIR__ . '/_header.php';
         </tbody>
     </table>
 
-    <form method="post" style="margin-top:20px;" onsubmit="return confirm('<?php echo __('confirm.delete'); ?> <?php echo count($preview_results); ?> config(s)?');">
+    <form method="post" style="margin-top:20px;" onsubmit="return confirm('<?php echo __('confirm.unsaved_changes'); ?>');">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
         <input type="hidden" name="action" value="execute">
         <input type="hidden" name="search_term" value="<?php echo htmlspecialchars($_POST['search_term'] ?? ''); ?>">

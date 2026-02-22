@@ -218,7 +218,7 @@ require_once __DIR__ . '/_header.php';
                     <div class="form-group">
                         <label><?php echo __('form.device_type'); ?> *</label>
                         <select name="device_type_id" required>
-                            <option value="">-- <?php echo __('form.select_customer'); ?> --</option>
+                            <option value="">-- <?php echo __('form.select_device_type'); ?> --</option>
                             <?php foreach ($device_types as $dt): ?>
                                 <option value="<?php echo (int)$dt['id']; ?>" <?php echo ($edit_template && $edit_template['device_type_id'] == $dt['id']) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($dt['type_name']); ?>

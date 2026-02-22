@@ -77,7 +77,8 @@ require_once __DIR__ . '/_header.php';
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
     <div class="card">
-        <p><?php echo __('confirm.delete_user'); ?> <strong><?php echo htmlspecialchars($user['username']); ?></strong> (<?php echo htmlspecialchars($user['email']); ?>)</p>
+        <p><?php echo __('confirm.delete_user'); ?></p>
+        <p><strong><?php echo htmlspecialchars($user['username']); ?></strong> (<?php echo htmlspecialchars($user['email']); ?>)</p>
 
         <form method="post" style="display:inline">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">

@@ -95,7 +95,7 @@ require_once __DIR__ . '/_header.php';
                 <input name="description" type="text" placeholder="e.g., Entry-level IP Phone, DECT Base Station">
             </div>
             <div style="display:flex;gap:8px;">
-                <button class="btn" type="submit"><?php echo __('button.create'); ?> Device Type</button>
+                <button class="btn" type="submit"><?php echo __('button.create'); ?> <?php echo __('page.devices.title'); ?></button>
                 <a class="btn btn-secondary" href="/admin/dashboard.php"><?php echo __('button.back'); ?></a>
             </div>
         </form>
@@ -104,7 +104,7 @@ require_once __DIR__ . '/_header.php';
     <div class="card">
         <h3>Existing Device Types</h3>
         <?php if (empty($types)): ?>
-            <p><?php echo __('label.no_results'); ?>. Create one above to get started.</p>
+            <p><?php echo __('label.no_results'); ?>.</p>
         <?php else: ?>
             <table>
                 <thead>

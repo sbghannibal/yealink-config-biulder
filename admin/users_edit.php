@@ -170,7 +170,7 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label><?php echo __('form.password'); ?></label>
+                <label><?php echo __('form.password'); ?> (<?php echo __('label.optional'); ?> — leeg laten om ongewijzigd)</label>
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                     <input name="password" id="password-field" type="password" autocomplete="new-password" style="flex:1; min-width:200px;" oninput="checkPasswordStrength(this.value)">
                     <button type="button" onclick="generatePassword()" style="padding:8px 12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">🔑 Genereer wachtwoord</button>

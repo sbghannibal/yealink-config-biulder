@@ -161,7 +161,8 @@ return [
     'status.rejected' => 'Rejected',
 
     // Labels
-    'label.search'         => 'Search',
+    'form.select_device_type' => 'Select Device Type',
+    'label.optional'         => 'optional',
     'label.filter'         => 'Filter',
     'label.showing'        => 'Showing',
     'label.of'             => 'of',
