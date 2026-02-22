@@ -616,4 +616,8 @@ return [
     'form.organization_placeholder'      => 'bijv. Acme Corp',
     'form.reason'                        => 'Reden',
     'form.reason_placeholder'            => 'Beschrijf waarom je een account nodig hebt...',
+    // Widget: Klanten
+    'widget.total_customers.title'       => 'Actieve Klanten',
+    'widget.customers.view'              => 'Bekijk Klanten',
+
 ];

@@ -76,7 +76,7 @@ $pabx_vars = [
         }
         
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             color: white;
             padding: 20px 24px;
             border-bottom: 3px solid #5568d3;
@@ -117,13 +117,13 @@ $pabx_vars = [
         }
         
         .tab:hover {
-            color: #667eea;
+            color: #5d00b8;
             background: #f5f5f5;
         }
         
         .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: #5d00b8;
+            border-bottom-color: #5d00b8;
         }
         
         .tab-content {
@@ -259,8 +259,8 @@ $pabx_vars = [
             top: 20px;
             right: 20px;
             background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            color: #5d00b8;
+            border: 2px solid #5d00b8;
             padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
@@ -271,7 +271,7 @@ $pabx_vars = [
         }
         
         .close-btn:hover {
-            background: #667eea;
+            background: #5d00b8;
             color: white;
         }
     </style>

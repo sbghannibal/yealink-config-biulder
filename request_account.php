@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .header h1 {
-            color: #667eea;
+            color: #5d00b8;
             margin-bottom: 8px;
             font-size: 24px;
         }
@@ -213,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #5d00b8;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
@@ -225,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 6px;
@@ -276,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .footer a {
-            color: #667eea;
+            color: #5d00b8;
             text-decoration: none;
         }
         
@@ -286,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .info-box {
             background: #f0f7ff;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #5d00b8;
             padding: 12px;
             margin-bottom: 20px;
             border-radius: 4px;

@@ -92,10 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update basic fields
                 if ($password !== '') {
                     $hash = password_hash($password, PASSWORD_BCRYPT);
-                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, password = ?, is_active = ?, language = ? WHERE id = ?');
+                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, password = ?, is_active = ?, preferred_language = ? WHERE id = ?');
                     $stmt->execute([$username, $email, $hash, $is_active, $preferred_language, $user_id]);
                 } else {
-                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, is_active = ?, language = ? WHERE id = ?');
+                    $stmt = $pdo->prepare('UPDATE admins SET username = ?, email = ?, is_active = ?, preferred_language = ? WHERE id = ?');
                     $stmt->execute([$username, $email, $is_active, $preferred_language, $user_id]);
                 }
 
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch user data for form (fresh from DB)
 try {
-    $stmt = $pdo->prepare('SELECT id, username, email, is_active, language, created_at FROM admins WHERE id = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, username, email, is_active, preferred_language, created_at FROM admins WHERE id = ? LIMIT 1');
     $stmt->execute([$user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$user) {

@@ -14,7 +14,7 @@ body {
 }
 
 header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
   color: white;
   padding: 20px 0;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -61,11 +61,11 @@ main {
 
 .card h2 {
   margin-bottom: 15px;
-  color: #667eea;
+  color: #5d00b8;
 }
 
 button, .btn {
-  background: #667eea;
+  background: #5d00b8;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -84,7 +84,7 @@ table {
 }
 
 table th {
-  background: #667eea;
+  background: #5d00b8;
   color: white;
   padding: 12px;
   text-align: left;

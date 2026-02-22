@@ -254,7 +254,7 @@ require_once __DIR__ . '/_header.php';
 <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
 <!-- Last Cleanup Dashboard -->
-<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px;">
+<div class="card" style="background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%); color: white; margin-bottom: 20px;">
     <h3 style="color: white; margin-top: 0;">📊 <?php echo __('label.last_cleanup_summary'); ?></h3>
     
     <?php if ($last_cleanup): ?>

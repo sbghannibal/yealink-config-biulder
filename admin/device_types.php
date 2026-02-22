@@ -130,7 +130,7 @@ require_once __DIR__ . '/_header.php';
                             <td>
                                 <?php $dc = (int)$t['device_count']; ?>
                                 <?php if ($dc > 0): ?>
-                                    <span style="display:inline-block;background:#667eea;color:white;padding:4px 10px;border-radius:16px;font-weight:600;font-size:12px;">
+                                    <span style="display:inline-block;background:#5d00b8;color:white;padding:4px 10px;border-radius:16px;font-weight:600;font-size:12px;">
                                         <?php echo $dc; ?> <?php echo __($dc !== 1 ? 'label.devices' : 'label.device'); ?>
                                     </span>
                                 <?php else: ?>

@@ -103,7 +103,7 @@ require_once __DIR__ . '/_header.php';
 <div class="container">
 <style>.mono { font-family: monospace; }</style>
 
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 24px; border-radius: 8px; margin-top: 80px; margin-bottom: 24px;">
+<div style="background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%); color: white; padding: 20px 24px; border-radius: 8px; margin-top: 80px; margin-bottom: 24px;">
     <h3 style="margin: 0 0 8px 0; font-size: 18px;"><?php echo __('label.global_variables_heading'); ?></h3>
     <p style="margin: 0; opacity: 0.9; font-size: 14px;">
         <?php echo __('label.global_variables_desc'); ?>

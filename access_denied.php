@@ -27,7 +27,7 @@ $redirect_delay = 10; // seconds
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -80,7 +80,7 @@ $redirect_delay = 10; // seconds
         .btn {
             display: inline-block;
             padding: 12px 32px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -105,7 +105,7 @@ $redirect_delay = 10; // seconds
         
         .countdown {
             font-weight: 600;
-            color: #667eea;
+            color: #5d00b8;
         }
         
         @media (max-width: 768px) {
@@ -163,7 +163,7 @@ $redirect_delay = 10; // seconds
             ⏱️ Je wordt automatisch doorgestuurd over <span class="countdown" id="countdown"><?php echo $redirect_delay; ?></span> seconden...
         </div>
     </div>
-<footer style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: rgba(255,255,255,0.85); padding: 14px 24px; font-size: 13px; margin-top: 40px; position: fixed; bottom: 0; width: 100%;">
+<footer style="background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%); color: rgba(255,255,255,0.85); padding: 14px 24px; font-size: 13px; margin-top: 40px; position: fixed; bottom: 0; width: 100%;">
     <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
         <span>&#9742;&#65039; Yealink Config Builder</span>
         <span>&copy; <?php echo date('Y') > 2026 ? '2026 &ndash; ' . date('Y') : '2026'; ?> &mdash; Alle rechten voorbehouden</span>

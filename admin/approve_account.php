@@ -170,7 +170,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
     .filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .filter-btn { padding: 8px 16px; background: #f5f5f5; border: 2px solid transparent; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
     .filter-btn:hover { background: #e9e9e9; }
-    .filter-btn.active { background: #667eea; color: white; border-color: #667eea; }
+    .filter-btn.active { background: #5d00b8; color: white; border-color: #5d00b8; }
     .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 4px; }
     .badge-pending { background: #fff3cd; color: #856404; }
     .badge-approved { background: #d4edda; color: #155724; }
@@ -178,7 +178,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
     .request-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
     .request-info h3 { margin-bottom: 8px; color: #333; }
     .request-meta { font-size: 13px; color: #666; margin-bottom: 12px; display: flex; gap: 16px; flex-wrap: wrap; }
-    .request-reason { font-size: 14px; color: #555; padding: 12px; background: #f9f9f9; border-radius: 4px; margin-top: 8px; border-left: 3px solid #667eea; }
+    .request-reason { font-size: 14px; color: #555; padding: 12px; background: #f9f9f9; border-radius: 4px; margin-top: 8px; border-left: 3px solid #5d00b8; }
     .request-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
     .btn-small { padding: 8px 12px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
     .btn-approve { background: #28a745; color: white; }
@@ -229,10 +229,10 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 </div>
                 <div class="request-actions">
                     <?php if ($req['status'] === 'pending'): ?>
-                        <button class="btn-small btn-approve" onclick="showApproveModal(<?php echo (int)$req['id']; ?>, <?php echo json_encode($req['full_name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)">✅ <?php echo __('button.approve'); ?></button>
-                        <button class="btn-small btn-reject" onclick="showRejectModal(<?php echo (int)$req['id']; ?>)">❌ <?php echo __('button.reject'); ?></button>
+                        <button class="btn-small btn-approve" data-request-id="<?php echo (int)$req['id']; ?>" data-full-name="<?php echo htmlspecialchars($req['full_name'], ENT_QUOTES); ?>" onclick="showApproveModal(this.dataset.requestId, this.dataset.fullName)">✅ <?php echo __("button.approve"); ?></button>
+                        <button class="btn-small btn-reject" data-request-id="<?php echo (int)$req['id']; ?>" onclick="showRejectModal(this.dataset.requestId)">❌ <?php echo __("button.reject"); ?></button>
                     <?php endif; ?>
-                    <button class="btn-small btn-delete" onclick="showDeleteModal(<?php echo (int)$req['id']; ?>)">🗑️ <?php echo __('button.delete'); ?></button>
+                    <button class="btn-small btn-delete" data-request-id="<?php echo (int)$req['id']; ?>" onclick="showDeleteModal(this.dataset.requestId)">🗑️ <?php echo __("button.delete"); ?></button>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -298,6 +298,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
 
 <script>
 function showApproveModal(requestId, fullName) {
+    console.log("showApproveModal called with:", requestId, fullName);
     document.getElementById('approveRequestId').value = requestId;
     const parts = fullName.toLowerCase().split(' ');
     const username = parts.length > 1 ? parts[0] + '.' + parts[parts.length - 1] : parts[0];

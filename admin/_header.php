@@ -76,7 +76,7 @@ function can_access($permission, $permission_map) {
         }
 
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             color: white;
             padding: 0;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);

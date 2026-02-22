@@ -187,7 +187,7 @@ require_once __DIR__ . '/_header.php';
                 <td style="padding:8px;font-weight:600;"><?php echo __('label.devices_using'); ?></td>
                 <td style="padding:8px;">
                     <?php if ($device_count > 0): ?>
-                        <span style="display:inline-block;background:#667eea;color:white;padding:4px 10px;border-radius:16px;font-weight:600;">
+                        <span style="display:inline-block;background:#5d00b8;color:white;padding:4px 10px;border-radius:16px;font-weight:600;">
                             <?php echo $device_count; ?> device<?php echo $device_count !== 1 ? 's' : ''; ?>
                         </span>
                     <?php else: ?>

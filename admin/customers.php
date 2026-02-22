@@ -91,7 +91,7 @@ require_once __DIR__ . '/_header.php';
     }
     
     table th {
-        background: #f1f3f5;
+        background: #5d00b8; color: white;
         padding: 12px;
         text-align: left;
         font-weight: 600;
@@ -182,7 +182,7 @@ require_once __DIR__ . '/_header.php';
                 <?php foreach ($customers as $c): ?>
                     <tr>
                         <td><strong>#<?php echo (int)$c['id']; ?></strong></td>
-                        <td><code style="background: #f1f3f5; padding: 2px 6px; border-radius: 3px; font-size: 12px;"><?php echo htmlspecialchars($c['customer_code']); ?></code></td>
+                        <td><code style="background: #5d00b8; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;"><?php echo htmlspecialchars($c['customer_code']); ?></code></td>
                         <td><?php echo htmlspecialchars($c['company_name']); ?></td>
                         <td><?php echo htmlspecialchars($c['contact_person'] ?? '-'); ?></td>
                         <td><?php echo htmlspecialchars($c['email'] ?? '-'); ?></td>

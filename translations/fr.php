@@ -616,4 +616,8 @@ return [
     'form.organization_placeholder'      => 'par ex. Acme Corp',
     'form.reason'                        => 'Raison',
     'form.reason_placeholder'            => 'Décrivez pourquoi vous avez besoin d\'un compte...',
+    // Widget: Clients
+    'widget.total_customers.title'       => 'Clients Actifs',
+    'widget.customers.view'              => 'Voir les Clients',
+
 ];

@@ -338,7 +338,7 @@ require_once __DIR__ . '/_header.php';
         border: 2px solid #dee2e6;
     }
     .step.active {
-        border-color: #667eea;
+        border-color: #5d00b8;
         background: #e7f3ff;
     }
     .step.complete {

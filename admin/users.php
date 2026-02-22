@@ -18,20 +18,59 @@ if (!has_permission($pdo, $admin_id, 'admin.users.view')) {
     exit;
 }
 
+// Sorteer parameters
+$allowed_sort = ['id', 'username', 'email', 'is_active', 'created_at'];
+$sort = isset($_GET['sort']) && in_array($_GET['sort'], $allowed_sort) ? $_GET['sort'] : 'username';
+$order = isset($_GET['order']) && $_GET['order'] === 'desc' ? 'DESC' : 'ASC';
+
 $error = '';
 try {
-    $stmt = $pdo->query('SELECT id, username, email, is_active, created_at FROM admins ORDER BY username ASC');
+    $stmt = $pdo->prepare("SELECT id, username, email, is_active, created_at FROM admins ORDER BY {$sort} {$order}");
+    $stmt->execute();
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $error = 'Kon gebruikers niet ophalen.';
     error_log('users.php error: ' . $e->getMessage());
 }
 
+// Helper functie voor sort links
+function sort_link($column, $current_sort, $current_order) {
+    $new_order = ($current_sort === $column && $current_order === 'asc') ? 'desc' : 'asc';
+    $arrow = '';
+    if ($current_sort === $column) {
+        $arrow = $current_order === 'asc' ? ' ▲' : ' ▼';
+    }
+    return "?sort={$column}&order={$new_order}\" style=\"color: inherit; text-decoration: none; cursor: pointer;\">{$arrow}";
+}
+
 require_once __DIR__ . '/_header.php';
 ?>
 
+<style>
+.btn-no-underline {
+    text-decoration: none !important;
+}
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+}
+.sortable-header:hover {
+    background-color: #5599FF !important;
+    color: white !important;
+}
+.sortable-header:hover a {
+    color: white !important;
+}
+.sortable-header a {
+    display: block;
+    width: 100%;
+    color: inherit;
+    text-decoration: none;
+}
+</style>
+
     <h2><?php echo __('page.users.title'); ?></h2>
-    <p><a class="btn" href="/admin/users_create.php">➕ <?php echo __('page.users.create'); ?></a></p>
+    <p><a class="btn btn-no-underline" href="/admin/users_create.php">➕ <?php echo __('page.users.create'); ?></a></p>
 
     <?php if ($error): ?>
         <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
@@ -41,11 +80,11 @@ require_once __DIR__ . '/_header.php';
         <table>
             <thead>
                 <tr>
-                    <th><?php echo __('table.id'); ?></th>
-                    <th><?php echo __('table.username'); ?></th>
-                    <th><?php echo __('table.email'); ?></th>
-                    <th><?php echo __('form.is_active'); ?></th>
-                    <th><?php echo __('table.created_at'); ?></th>
+                    <th class="sortable-header"><a href="<?php echo sort_link('id', $sort, $order); ?><?php echo __('table.id'); ?></a></th>
+                    <th class="sortable-header"><a href="<?php echo sort_link('username', $sort, $order); ?><?php echo __('table.username'); ?></a></th>
+                    <th class="sortable-header"><a href="<?php echo sort_link('email', $sort, $order); ?><?php echo __('table.email'); ?></a></th>
+                    <th class="sortable-header"><a href="<?php echo sort_link('is_active', $sort, $order); ?><?php echo __('form.is_active'); ?></a></th>
+                    <th class="sortable-header"><a href="<?php echo sort_link('created_at', $sort, $order); ?><?php echo __('table.created_at'); ?></a></th>
                     <th><?php echo __('table.actions'); ?></th>
                 </tr>
             </thead>
@@ -61,8 +100,8 @@ require_once __DIR__ . '/_header.php';
                             <td><?php echo $u['is_active'] ? __('label.yes') : __('label.no'); ?></td>
                             <td><?php echo htmlspecialchars($u['created_at']); ?></td>
                             <td>
-                                <a class="btn" href="/admin/users_edit.php?id=<?php echo (int)$u['id']; ?>"><?php echo __('button.edit'); ?></a>
-                                <a class="btn" href="/admin/users_delete.php?id=<?php echo (int)$u['id']; ?>" style="background:#dc3545;" onclick="return confirm('<?php echo __('confirm.delete_user'); ?>');"><?php echo __('button.delete'); ?></a>
+                                <a class="btn btn-no-underline" href="/admin/users_edit.php?id=<?php echo (int)$u['id']; ?>"><?php echo __('button.edit'); ?></a>
+                                <a class="btn btn-no-underline" href="/admin/users_delete.php?id=<?php echo (int)$u['id']; ?>" style="background:#dc3545;" onclick="return confirm('<?php echo __('confirm.delete_user'); ?>');"><?php echo __('button.delete'); ?></a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

@@ -80,7 +80,7 @@ require_once __DIR__ . '/_header.php';
     }
     
     .copy-btn {
-        background: #667eea;
+        background: #5d00b8;
         color: white;
         border: none;
         padding: 8px 16px;

@@ -55,7 +55,7 @@ $stats = [
     'admins' => 0,
     'devices' => 0,
     'config_versions' => 0,
-    'active_tokens' => 0,
+    'total_customers' => 0,
     'pending_requests' => 0,
     'account_requests' => [],
     'recent_audit' => [],
@@ -77,10 +77,10 @@ try {
     $stmt = $pdo->query('SELECT COUNT(*) FROM config_versions');
     $stats['config_versions'] = (int) $stmt->fetchColumn();
 
-    // Actieve download tokens (niet gebruikt en nog niet verlopen)
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM download_tokens WHERE expires_at > NOW() AND used_at IS NULL');
+    // Totaal aantal actieve klanten
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM customers WHERE is_active = 1 AND deleted_at IS NULL');
     $stmt->execute();
-    $stats['active_tokens'] = (int) $stmt->fetchColumn();
+    $stats['total_customers'] = (int) $stmt->fetchColumn();
 
     // Pending account requests
     try {
@@ -152,7 +152,7 @@ require_once __DIR__ . '/admin/_header.php';
             padding: 20px; 
             border-radius: 8px; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #5d00b8;
         }
         
         .stat h3 { 
@@ -167,7 +167,7 @@ require_once __DIR__ . '/admin/_header.php';
         .stat .number {
             font-size: 32px; 
             font-weight: 700;
-            color: #667eea;
+            color: #5d00b8;
             margin: 8px 0;
         }
         
@@ -177,7 +177,7 @@ require_once __DIR__ . '/admin/_header.php';
         }
         
         .stat a {
-            color: #667eea;
+            color: #5d00b8;
             text-decoration: none;
         }
         
@@ -305,6 +305,60 @@ require_once __DIR__ . '/admin/_header.php';
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        .collapsible-section {
+            margin-top: 20px;
+        }
+
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0;
+            margin-bottom: 16px;
+        }
+
+        .collapsible-header:hover h2 {
+            color: #0066cc;
+        }
+
+        .collapsible-header h2 {
+            margin: 0;
+            transition: color 0.2s;
+        }
+
+        .toggle-icon {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+            color: #666;
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            display: none;
+        }
+
+        .collapsible-content.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
     </style>
 
     <div class="topbar">
@@ -390,10 +444,10 @@ require_once __DIR__ . '/admin/_header.php';
         </div>
 
         <div class="stat">
-            <h3><?php echo __('widget.active_tokens.title'); ?></h3>
-            <p class="number"><?php echo $stats['active_tokens']; ?></p>
-            <?php if (has_permission($pdo, $admin_id, 'admin.tokens.manage')): ?>
-            <p><a href="/admin/tokens.php"><?php echo __('widget.tokens.view'); ?></a></p>
+            <h3><?php echo __('widget.total_customers.title'); ?></h3>
+            <p class="number"><?php echo $stats['total_customers']; ?></p>
+            <?php if (has_permission($pdo, $admin_id, 'customers.view')): ?>
+            <p><a href="/admin/customers.php"><?php echo __('widget.customers.view'); ?></a></p>
             <?php endif; ?>
         </div>
 
@@ -405,43 +459,6 @@ require_once __DIR__ . '/admin/_header.php';
             </div>
         <?php endif; ?>
     </section>
-
-    <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
-    <section class="card">
-        <h2><?php echo __('widget.recent_activity.title'); ?></h2>
-        <?php if (empty($stats['recent_audit'])): ?>
-            <p><?php echo __('widget.recent_activity.no_logs'); ?></p>
-        <?php else: ?>
-            <table>
-                <thead>
-                    <tr>
-                        <th><?php echo __('table.time'); ?></th>
-                        <th><?php echo __('table.user'); ?></th>
-                        <th><?php echo __('table.action'); ?></th>
-                        <th><?php echo __('table.entity'); ?></th>
-                        <th><?php echo __('table.details'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($stats['recent_audit'] as $log): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($log['created_at']); ?></td>
-                            <td><?php echo htmlspecialchars($log['username'] ?? 'Systeem'); ?></td>
-                            <td><?php echo htmlspecialchars($log['action']); ?></td>
-                            <td><?php echo htmlspecialchars($log['entity_type'] ?? '-'); ?></td>
-                            <td class="recent-log"><?php
-                                $parts = [];
-                                if (!empty($log['old_value'])) $parts[] = 'OLD: ' . htmlspecialchars($log['old_value']);
-                                if (!empty($log['new_value'])) $parts[] = 'NEW: ' . htmlspecialchars($log['new_value']);
-                                echo implode("\n", $parts) ?: '-';
-                            ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
-    </section>
-    <?php endif; ?>
 
     <?php if (has_permission($pdo, $admin_id, 'devices.view')): ?>
     <section class="card">
@@ -488,5 +505,64 @@ require_once __DIR__ . '/admin/_header.php';
         <?php endif; ?>
     </section>
     <?php endif; ?>
+
+
+    <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
+    <section class="card collapsible-section">
+        <div class="collapsible-header" onclick="toggleSection(this)">
+        <h2><?php echo __('widget.recent_activity.title'); ?></h2>
+            <span class="toggle-icon collapsed">▼</span>
+        </div>
+        <div class="collapsible-content">
+        <?php if (empty($stats['recent_audit'])): ?>
+            <p><?php echo __('widget.recent_activity.no_logs'); ?></p>
+        <?php else: ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th><?php echo __('table.time'); ?></th>
+                        <th><?php echo __('table.user'); ?></th>
+                        <th><?php echo __('table.action'); ?></th>
+                        <th><?php echo __('table.entity'); ?></th>
+                        <th><?php echo __('table.details'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($stats['recent_audit'] as $log): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($log['created_at']); ?></td>
+                            <td><?php echo htmlspecialchars($log['username'] ?? 'Systeem'); ?></td>
+                            <td><?php echo htmlspecialchars($log['action']); ?></td>
+                            <td><?php echo htmlspecialchars($log['entity_type'] ?? '-'); ?></td>
+                            <td class="recent-log"><?php
+                                $parts = [];
+                                if (!empty($log['old_value'])) $parts[] = 'OLD: ' . htmlspecialchars($log['old_value']);
+                                if (!empty($log['new_value'])) $parts[] = 'NEW: ' . htmlspecialchars($log['new_value']);
+                                echo implode("\n", $parts) ?: '-';
+                            ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+
+<script>
+function toggleSection(header) {
+    const content = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    
+    if (content.classList.contains('show')) {
+        content.classList.remove('show');
+        icon.classList.add('collapsed');
+    } else {
+        content.classList.add('show');
+        icon.classList.remove('collapsed');
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/admin/_footer.php'; ?>

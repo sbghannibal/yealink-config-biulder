@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['username'] = $admin['username'];
                     // Load user's preferred language
                     try {
-                        $lang_stmt = $pdo->prepare('SELECT language FROM admins WHERE id = ? LIMIT 1');
+                        $lang_stmt = $pdo->prepare('SELECT preferred_language FROM admins WHERE id = ? LIMIT 1');
                         $lang_stmt->execute([$admin['id']]);
                         $user_lang = $lang_stmt->fetchColumn();
                         if ($user_lang && in_array($user_lang, $allowed_languages, true)) {
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .login-header h1 {
-            color: #667eea;
+            color: #5d00b8;
             margin-bottom: 8px;
             font-size: 28px;
         }
@@ -202,14 +202,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #5d00b8;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         .btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5d00b8 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 6px;

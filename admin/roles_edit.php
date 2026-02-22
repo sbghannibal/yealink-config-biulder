@@ -161,7 +161,7 @@ require_once __DIR__ . '/_header.php';
             <label style="display:block; margin-bottom:12px; font-weight:600;"><?php echo __('form.permissions'); ?></label>
             <?php foreach ($all_permissions as $category => $perms): ?>
                 <div style="margin-bottom:16px;">
-                    <strong style="text-transform:capitalize; color:#667eea;"><?php echo htmlspecialchars($category); ?></strong>
+                    <strong style="text-transform:capitalize; color:#5d00b8;"><?php echo htmlspecialchars($category); ?></strong>
                     <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
                         <?php foreach ($perms as $perm): ?>
                             <label style="display:flex; align-items:center; gap:6px; font-weight:normal; background:#f8f9fa; padding:6px 10px; border-radius:4px; cursor:pointer;">

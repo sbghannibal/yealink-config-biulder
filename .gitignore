@@ -1,10 +1,29 @@
-.env
-config/.env
-.env
-config/.env
-*.backup
+# Database credentials
+settings/database.php
 
-# Downloads folder — keep the folder and its security files, ignore actual downloads
-downloads/*
-!downloads/.gitkeep
-!downloads/.htaccess
+# Uploads en tijdelijke bestanden
+uploads/*
+!uploads/.gitkeep
+tmp/*
+!tmp/.gitkeep
+
+# Logs
+*.log
+logs/*
+
+# Backups
+*.backup
+*.bak
+*.before_*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.env

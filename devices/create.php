@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mac_raw = trim((string)($_POST['mac_address'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
 
-        if ($name === '' || $device_type_id <= 0 || empty($customer_id)) {
+        if ($name === '' || $device_type_id <= 0 || empty($customer_id) || $mac_raw === '') {
             $error = __('error.device_fields_required');
         } else {
             // Normalize MAC if provided
@@ -164,8 +164,8 @@ require_once __DIR__ . '/../admin/_header.php';
             </div>
 
             <div class="form-group">
-                <label><?php echo __('form.mac_address_optional'); ?></label>
-                <input name="mac_address" type="text" placeholder="00:11:22:33:44:55" value="<?php echo htmlspecialchars($_POST['mac_address'] ?? ''); ?>">
+                <label><?php echo __('form.mac_address'); ?></label>
+                <input name="mac_address" type="text" required placeholder="00:11:22:33:44:55" value="<?php echo htmlspecialchars($_POST['mac_address'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
