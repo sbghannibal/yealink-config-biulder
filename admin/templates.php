@@ -1,8 +1,10 @@
 <?php
-$page_title = 'Config Templates';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/i18n.php';
+
+$page_title = __('page.templates.title');
 
 // Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
@@ -39,7 +41,7 @@ try {
 // Handle actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
-        $error = 'Ongeldige aanvraag (CSRF).';
+        $error = __('error.csrf_invalid');
     } else {
         $action = $_POST['action'] ?? '';
         
@@ -52,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_default = !empty($_POST['is_default']) ? 1 : 0;
             
             if (empty($template_name) || !$device_type_id || empty($template_content)) {
-                $error = 'Vul alle verplichte velden in.';
+                $error = __('error.fill_required_fields');
             } else {
                 try {
                     // If setting as default, unset other defaults for this device type
@@ -76,10 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $admin_id
                     ]);
                     
-                    $success = 'Template aangemaakt.';
+                    $success = __('success.template_created');
                 } catch (Exception $e) {
                     error_log('Template create error: ' . $e->getMessage());
-                    $error = 'Kon template niet aanmaken.';
+                    $error = __('error.template_create_failed');
                 }
             }
         }
@@ -95,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_default = !empty($_POST['is_default']) ? 1 : 0;
             
             if (!$template_id || empty($template_name) || !$device_type_id || empty($template_content)) {
-                $error = 'Vul alle verplichte velden in.';
+                $error = __('error.fill_required_fields');
             } else {
                 try {
                     // If setting as default, unset other defaults for this device type
@@ -121,10 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $template_id
                     ]);
                     
-                    $success = 'Template bijgewerkt.';
+                    $success = __('success.template_updated');
                 } catch (Exception $e) {
                     error_log('Template update error: ' . $e->getMessage());
-                    $error = 'Kon template niet bijwerken.';
+                    $error = __('error.template_update_failed');
                 }
             }
         }
@@ -135,10 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $stmt = $pdo->prepare('DELETE FROM config_templates WHERE id = ?');
                     $stmt->execute([$template_id]);
-                    $success = 'Template verwijderd.';
+                    $success = __('success.template_deleted');
                 } catch (Exception $e) {
                     error_log('Template delete error: ' . $e->getMessage());
-                    $error = 'Kon template niet verwijderen.';
+                    $error = __('error.template_delete_failed');
                 }
             }
         }
@@ -202,7 +204,7 @@ require_once __DIR__ . '/_header.php';
     <div class="templates-grid">
         <div>
             <div class="card">
-                <h3><?php echo $edit_template ? __('page.templates.title') . ' ' . __('button.edit') : 'Nieuw Template'; ?></h3>
+                <h3><?php echo $edit_template ? __('page.templates.title') . ' ' . __('button.edit') : __('label.new_template'); ?></h3>
                 <form method="post" class="template-form">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                     <input type="hidden" name="action" value="<?php echo $edit_template ? 'update' : 'create'; ?>">
@@ -228,7 +230,7 @@ require_once __DIR__ . '/_header.php';
                     </div>
                     
                     <div class="form-group">
-                        <label>Categorie</label>
+                        <label><?php echo __('form.category'); ?></label>
                         <input name="category" type="text" value="<?php echo htmlspecialchars($edit_template['category'] ?? ''); ?>" placeholder="b.v. Basic, Advanced, Hotel">
                     </div>
                     
@@ -238,18 +240,18 @@ require_once __DIR__ . '/_header.php';
                     </div>
                     
                     <div class="form-group">
-                        <label>Template Inhoud * <small>(gebruik {{VARIABELEN}})</small></label>
+                        <label><?php echo __('form.template_content'); ?> * <small>(gebruik {{VARIABELEN}})</small></label>
                         <textarea name="template_content" class="template-content" required><?php echo htmlspecialchars($edit_template['template_content'] ?? "[DEVICE_INFO]\ndevice_name={{DEVICE_NAME}}\ndevice_mac={{DEVICE_MAC}}\n\n[NETWORK]\ndhcp=1\n\n[SIP]\nproxy_ip={{PABX_IP}}\nproxy_port={{PABX_PORT}}"); ?></textarea>
                     </div>
                     
                     <?php if ($edit_template): ?>
                     <div class="form-group">
-                        <label><input type="checkbox" name="is_active" value="1" <?php echo ($edit_template['is_active'] ?? 1) ? 'checked' : ''; ?>> Actief</label>
+                        <label><input type="checkbox" name="is_active" value="1" <?php echo ($edit_template['is_active'] ?? 1) ? 'checked' : ''; ?>> <?php echo __('form.is_active'); ?></label>
                     </div>
                     <?php endif; ?>
                     
                     <div class="form-group">
-                        <label><input type="checkbox" name="is_default" value="1" <?php echo ($edit_template['is_default'] ?? 0) ? 'checked' : ''; ?>> Standaard template voor dit device type</label>
+                        <label><input type="checkbox" name="is_default" value="1" <?php echo ($edit_template['is_default'] ?? 0) ? 'checked' : ''; ?>> <?php echo __('form.template_is_default'); ?></label>
                     </div>
                     
                     <div style="display: flex; gap: 8px;">
@@ -264,10 +266,10 @@ require_once __DIR__ . '/_header.php';
         
         <div>
             <div class="card">
-                <h3>Beschikbare Templates (<?php echo count($templates); ?>)</h3>
+                <h3><?php echo __('label.available_templates'); ?> (<?php echo count($templates); ?>)</h3>
                 
                 <?php if (empty($templates)): ?>
-                    <p style="color: #666;">Geen templates gevonden.</p>
+                    <p style="color: #666;"><?php echo __('label.no_results'); ?></p>
                 <?php else: ?>
                     <?php
                     $grouped = [];
@@ -285,15 +287,15 @@ require_once __DIR__ . '/_header.php';
                                         <strong><?php echo htmlspecialchars($t['template_name']); ?></strong>
                                         <div style="font-size: 12px; color: #666;">
                                             <?php echo htmlspecialchars($t['type_name'] ?? '-'); ?>
-                                            <?php if ($t['is_default']): ?><span class="badge default">DEFAULT</span><?php endif; ?>
-                                            <?php if (!$t['is_active']): ?><span class="badge inactive">INACTIEF</span><?php endif; ?>
+                                            <?php if ($t['is_default']): ?><span class="badge default"><?php echo __('label.default_badge'); ?></span><?php endif; ?>
+                                            <?php if (!$t['is_active']): ?><span class="badge inactive"><?php echo __('label.inactive_badge'); ?></span><?php endif; ?>
                                         </div>
                                         <?php if ($t['description']): ?>
                                             <div style="font-size: 12px; margin-top: 4px;"><?php echo htmlspecialchars($t['description']); ?></div>
                                         <?php endif; ?>
                                     </div>
                                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                        <a class="btn" href="/admin/template_variables.php?template_id=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; background: #17a2b8;">Variabelen</a>
+                                        <a class="btn" href="/admin/template_variables.php?template_id=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; background: #17a2b8;"><?php echo __('button.variables'); ?></a>
                         <a class="btn" href="?edit=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center;"><?php echo __('button.edit'); ?></a>
                                         <form method="post" style="display: inline;" onsubmit="return confirm('<?php echo __('confirm.delete'); ?>');">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">

@@ -33,7 +33,7 @@ $stmt = $pdo->prepare('
 ');
 $stmt->execute([$admin_id]);
 $user_roles = $stmt->fetchAll(PDO::FETCH_COLUMN);
-$user_role_display = !empty($user_roles) ? implode(', ', $user_roles) : 'Geen rol';
+$user_role_display = !empty($user_roles) ? implode(', ', $user_roles) : __('page.dashboard.no_role');
 
 // Determine role badge color
 $role_badge_color = '#6c757d'; // default gray
@@ -55,7 +55,7 @@ function can_access($permission, $permission_map) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="<?php echo htmlspecialchars($_SESSION['language'] ?? 'nl'); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -329,9 +329,9 @@ function can_access($permission, $permission_map) {
                     <strong><?php echo htmlspecialchars($admin['username'] ?? 'Admin'); ?></strong>
                     <!-- Status badge -->
                     <?php if ($admin['is_active']): ?>
-                        <span class="badge badge-base badge-active">✅ Active</span>
+                        <span class="badge badge-base badge-active">✅ <?php echo __('status.active'); ?></span>
                     <?php else: ?>
-                        <span class="badge badge-base badge-inactive">⏸️ Inactive</span>
+                        <span class="badge badge-base badge-inactive">⏸️ <?php echo __('status.inactive'); ?></span>
                     <?php endif; ?>
                     <!-- Role badge -->
                     <span class="badge badge-base" style="background: <?php echo $role_badge_color; ?>; border-color: <?php echo $role_badge_color; ?>40;">
@@ -347,67 +347,64 @@ function can_access($permission, $permission_map) {
                 </select>
             </div>
             <form method="POST" action="/logout.php" style="display: inline;">
-                <button type="submit" class="header-logout">Logout</button>
+                <button type="submit" class="header-logout"><?php echo __('button.logout'); ?></button>
             </form>
         </div>
     </div>
 
     <nav>
         <a href="/admin/dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
-            📊 Dashboard
+            📊 <?php echo __('nav.dashboard'); ?>
         </a>
 
         <!-- DEVICES -->
         <a href="/devices/list.php" class="<?php echo $current_page === 'list.php' ? 'active' : ''; ?>">
-            📱 Devices
+            📱 <?php echo __('nav.devices'); ?>
         </a>
 
         <!-- CONFIG DROPDOWN -->
         <?php if (can_access('admin.device_types.manage', $permission_map) || can_access('config.manage', $permission_map) || can_access('admin.templates.manage', $permission_map) || can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map)): ?>
         <div class="nav-dropdown">
             <a class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php', 'builder.php', 'device_mapping.php', 'templates.php', 'template_variables.php', 'config_cleanup.php', 'bulk_find_replace.php', 'variables.php']) ? 'active' : ''; ?>">
-                ⚙️ Config <span class="dropdown-arrow">▼</span>
+                ⚙️ <?php echo __('nav.config'); ?> <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
                 <?php if (can_access('admin.device_types.manage', $permission_map)): ?>
                 <a href="/admin/device_types.php" class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php']) ? 'active' : ''; ?>">
-                    📦 Device Types
+                    📦 <?php echo __('nav.device_types'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('config.manage', $permission_map)): ?>
                 <a href="/settings/builder.php" class="<?php echo $current_page === 'builder.php' ? 'active' : ''; ?>">
-                    🛠️ Config Builder
+                    🛠️ <?php echo __('nav.config_builder'); ?>
                 </a>
                 <a href="/settings/device_mapping.php" class="<?php echo $current_page === 'device_mapping.php' ? 'active' : ''; ?>">
-                    🔗 Device Mapping
+                    🔗 <?php echo __('nav.device_mapping'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('admin.templates.manage', $permission_map)): ?>
                 <a href="/admin/templates.php" class="<?php echo $current_page === 'templates.php' ? 'active' : ''; ?>">
-                    📋 Templates
-                </a>
-                <a href="/admin/template_variables.php" class="<?php echo $current_page === 'template_variables.php' ? 'active' : ''; ?>">
-                    🔤 Template Variables
+                    📋 <?php echo __('nav.templates'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map)): ?>
                 <a href="/admin/variables.php" class="<?php echo $current_page === 'variables.php' ? 'active' : ''; ?>">
-                    🌍 Globale Variables
+                    🌍 <?php echo __('nav.global_variables'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('config.cleanup', $permission_map)): ?>
                 <a href="/admin/config_cleanup.php" class="<?php echo $current_page === 'config_cleanup.php' ? 'active' : ''; ?>">
-                    🗑️ Config Cleanup
+                    🗑️ <?php echo __('nav.config_cleanup'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (in_array('Expert', $user_roles) || in_array('Owner', $user_roles)): ?>
                 <a href="/admin/bulk_find_replace.php" class="<?php echo $current_page === 'bulk_find_replace.php' ? 'active' : ''; ?>">
-                    🔍 Bulk Find &amp; Replace
+                    🔍 <?php echo __('nav.bulk_find_replace'); ?>
                 </a>
                 <?php endif; ?>
             </div>
@@ -418,36 +415,36 @@ function can_access($permission, $permission_map) {
         <?php if (can_access('admin.users.view', $permission_map) || can_access('admin.roles.manage', $permission_map) || can_access('admin.settings.edit', $permission_map) || can_access('admin.audit.view', $permission_map) || can_access('customers.view', $permission_map)): ?>
         <div class="nav-dropdown">
             <a class="<?php echo in_array($current_page, ['users.php', 'users_create.php', 'users_edit.php', 'users_delete.php', 'roles.php', 'roles_edit.php', 'roles_delete.php', 'customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php', 'settings.php', 'audit.php']) ? 'active' : ''; ?>">
-                👥 Beheer <span class="dropdown-arrow">▼</span>
+                👥 <?php echo __('nav.admin'); ?> <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
                 <?php if (can_access('admin.users.view', $permission_map)): ?>
                 <a href="/admin/users.php" class="<?php echo in_array($current_page, ['users.php', 'users_create.php', 'users_edit.php', 'users_delete.php']) ? 'active' : ''; ?>">
-                    👥 Users
+                    👥 <?php echo __('nav.users'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('admin.roles.manage', $permission_map)): ?>
                 <a href="/admin/roles.php" class="<?php echo in_array($current_page, ['roles.php', 'roles_edit.php', 'roles_delete.php']) ? 'active' : ''; ?>">
-                    🔐 Roles & Permissions
+                    🔐 <?php echo __('nav.roles_permissions'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('customers.view', $permission_map)): ?>
                 <a href="/admin/customers.php" class="<?php echo in_array($current_page, ['customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php']) ? 'active' : ''; ?>">
-                    🏢 Customers
+                    🏢 <?php echo __('nav.customers'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('admin.settings.edit', $permission_map)): ?>
                 <a href="/admin/settings.php" class="<?php echo $current_page === 'settings.php' ? 'active' : ''; ?>">
-                    ⚙️ Settings
+                    ⚙️ <?php echo __('nav.settings'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('admin.audit.view', $permission_map)): ?>
                 <a href="/admin/audit.php" class="<?php echo $current_page === 'audit.php' ? 'active' : ''; ?>">
-                    📑 Audit Logs
+                    📑 <?php echo __('nav.audit_logs'); ?>
                 </a>
                 <?php endif; ?>
             </div>
@@ -457,7 +454,7 @@ function can_access($permission, $permission_map) {
         <!-- ACCOUNT REQUESTS (Owner only) -->
         <?php if (can_access('admin.accounts.manage', $permission_map)): ?>
         <a href="/admin/approve_account.php" class="<?php echo $current_page === 'approve_account.php' ? 'active' : ''; ?>">
-            📧 Account Verzoeken
+            📧 <?php echo __('nav.account_requests'); ?>
         </a>
         <?php endif; ?>
 
@@ -465,21 +462,21 @@ function can_access($permission, $permission_map) {
         <?php if (can_access('admin.tokens.manage', $permission_map) || can_access('admin.settings.edit', $permission_map)): ?>
         <div class="nav-dropdown">
             <a class="<?php echo in_array($current_page, ['tokens.php', 'staging_certificates.php', 'staging_credentials.php']) ? 'active' : ''; ?>" style="color: rgba(255, 200, 200, 0.9);">
-                🔒 Security <span class="dropdown-arrow">▼</span>
+                🔒 <?php echo __('nav.security'); ?> <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
                 <?php if (can_access('admin.tokens.manage', $permission_map)): ?>
                 <a href="/admin/tokens.php" class="<?php echo $current_page === 'tokens.php' ? 'active' : ''; ?>">
-                    🔑 API Tokens
+                    🔑 <?php echo __('nav.api_tokens'); ?>
                 </a>
                 <?php endif; ?>
 
                 <?php if (can_access('admin.settings.edit', $permission_map)): ?>
                 <a href="/admin/staging_certificates.php" class="<?php echo $current_page === 'staging_certificates.php' ? 'active' : ''; ?>">
-                    📜 Staging Certs
+                    📜 <?php echo __('nav.staging_certs'); ?>
                 </a>
                 <a href="/admin/staging_credentials.php" class="<?php echo $current_page === 'staging_credentials.php' ? 'active' : ''; ?>">
-                    🔐 Credentials
+                    🔐 <?php echo __('nav.staging_credentials'); ?>
                 </a>
                 <?php endif; ?>
             </div>

@@ -131,6 +131,14 @@ require_once __DIR__ . '/../admin/_header.php';
         .badge.warning { background: #ffc107; color: #000; }
         .badge.info { background: #17a2b8; }
         
+        .btn {
+            text-decoration: none !important;
+        }
+        
+        .btn:hover {
+            text-decoration: none !important;
+        }
+        
         /* Dropdown button styles */
         .action-buttons {
             display: flex;
@@ -456,7 +464,7 @@ require_once __DIR__ . '/../admin/_header.php';
             </select>
             <input type="hidden" name="per_page" value="<?php echo $per_page; ?>">
             <button type="submit" class="btn" style="background: #007bff; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;"><?php echo __('button.search'); ?></button>
-            <a class="btn" href="/devices/create.php" style="background: #28a745; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;"><?php echo __('devices.new'); ?></a>
+            <a class="btn" href="/devices/create.php" style="background: #28a745; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center; text-decoration: none;"><?php echo __('devices.new'); ?></a>
             <?php if ($search_customer || $filter_type): ?>
                 <a href="/devices/list.php?per_page=<?php echo $per_page; ?>" class="clear-filters-btn">
                     <?php echo __('devices.clear_filters'); ?>
