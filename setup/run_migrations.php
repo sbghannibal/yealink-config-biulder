@@ -19,10 +19,10 @@ foreach ($lines as $line) {
 }
 
 // Get database credentials
-db_host = getenv('DB_HOST') ?: 'localhost';
-db_name = getenv('DB_NAME') ?: 'admin_yealink';
-db_user = getenv('DB_USER') ?: 'admin_yealink';
-db_pass = getenv('DB_PASS') ?: '';
+$db_host = getenv('DB_HOST') ?: 'localhost';
+$db_name = getenv('DB_NAME') ?: 'admin_yealink';
+$db_user = getenv('DB_USER') ?: 'admin_yealink';
+$db_pass = getenv('DB_PASS') ?: '';
 
 echo "=================================\n";
 echo "Database Migration Runner\n";
