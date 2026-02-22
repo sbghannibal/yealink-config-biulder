@@ -36,7 +36,7 @@ try {
 
 // Fetch customers
 try {
-    $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 ORDER BY company_name ASC');
+    $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 AND deleted_at IS NULL ORDER BY company_name ASC');
     $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('devices/create fetch customers error: ' . $e->getMessage());

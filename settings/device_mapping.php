@@ -111,7 +111,7 @@ $query = '
     FROM devices d
     LEFT JOIN device_types dt ON d.device_type_id = dt.id
     LEFT JOIN customers c ON d.customer_id = c.id
-    WHERE 1=1
+    WHERE d.deleted_at IS NULL
 ';
 
 $params = [];

@@ -298,7 +298,7 @@ try {
 
     // Load customer list for step 4
     if ($step === 4) {
-        $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 ORDER BY company_name');
+        $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 AND deleted_at IS NULL ORDER BY company_name');
         $customer_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Generate preview - use stored variables from session

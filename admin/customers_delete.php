@@ -49,8 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Ongeldige aanvraag (CSRF).';
     } else {
         try {
-            // Delete customer (devices will have customer_id set to NULL due to ON DELETE SET NULL)
-            $stmt = $pdo->prepare('DELETE FROM customers WHERE id = ?');
+            // Soft delete: mark customer as deleted (not permanent)
+            $stmt = $pdo->prepare('UPDATE customers SET deleted_at = NOW(), is_active = 0 WHERE id = ?');
+            $stmt->execute([$customer_id]);
+
+            // Soft delete associated devices
+            $stmt = $pdo->prepare('UPDATE devices SET deleted_at = NOW(), is_active = 0 WHERE customer_id = ?');
             $stmt->execute([$customer_id]);
 
             // audit

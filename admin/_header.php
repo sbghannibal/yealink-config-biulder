@@ -168,6 +168,32 @@ function can_access($permission, $permission_map) {
             background: rgba(255,255,255,0.3);
         }
 
+        .lang-selector {
+            position: relative;
+        }
+
+        .lang-selector select {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .lang-selector select:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .lang-selector select option {
+            background: #5a3d8a;
+            color: white;
+        }
+
         nav {
             display: flex;
             gap: 0;
@@ -312,6 +338,13 @@ function can_access($permission, $permission_map) {
                     </span>
                 </div>
             </div>
+            <div class="lang-selector">
+                <select onchange="window.location.href='/admin/set_language.php?lang=' + this.value;" title="Taal / Language">
+                    <option value="nl" <?php echo ($_SESSION['language'] ?? 'nl') === 'nl' ? 'selected' : ''; ?>>🇳🇱 NL</option>
+                    <option value="fr" <?php echo ($_SESSION['language'] ?? 'nl') === 'fr' ? 'selected' : ''; ?>>🇫🇷 FR</option>
+                    <option value="en" <?php echo ($_SESSION['language'] ?? 'nl') === 'en' ? 'selected' : ''; ?>>🇬🇧 EN</option>
+                </select>
+            </div>
             <form method="POST" action="/logout.php" style="display: inline;">
                 <button type="submit" class="header-logout">Logout</button>
             </form>
@@ -329,9 +362,9 @@ function can_access($permission, $permission_map) {
         </a>
 
         <!-- CONFIG DROPDOWN -->
-        <?php if (can_access('admin.device_types.manage', $permission_map) || can_access('config.manage', $permission_map) || can_access('admin.templates.manage', $permission_map)): ?>
+        <?php if (can_access('admin.device_types.manage', $permission_map) || can_access('config.manage', $permission_map) || can_access('admin.templates.manage', $permission_map) || can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map)): ?>
         <div class="nav-dropdown">
-            <a class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php', 'builder.php', 'device_mapping.php', 'templates.php', 'template_variables.php', 'config_cleanup.php', 'bulk_find_replace.php']) ? 'active' : ''; ?>">
+            <a class="<?php echo in_array($current_page, ['device_types.php', 'device_types_edit.php', 'builder.php', 'device_mapping.php', 'templates.php', 'template_variables.php', 'config_cleanup.php', 'bulk_find_replace.php', 'variables.php']) ? 'active' : ''; ?>">
                 ⚙️ Config <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
@@ -359,6 +392,12 @@ function can_access($permission, $permission_map) {
                 </a>
                 <?php endif; ?>
 
+                <?php if (can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map)): ?>
+                <a href="/admin/variables.php" class="<?php echo $current_page === 'variables.php' ? 'active' : ''; ?>">
+                    🌍 Globale Variables
+                </a>
+                <?php endif; ?>
+
                 <?php if (can_access('config.cleanup', $permission_map)): ?>
                 <a href="/admin/config_cleanup.php" class="<?php echo $current_page === 'config_cleanup.php' ? 'active' : ''; ?>">
                     🗑️ Config Cleanup
@@ -375,9 +414,9 @@ function can_access($permission, $permission_map) {
         <?php endif; ?>
 
         <!-- ADMIN DROPDOWN -->
-        <?php if (can_access('admin.users.view', $permission_map) || can_access('admin.roles.manage', $permission_map) || can_access('admin.settings.edit', $permission_map) || can_access('admin.audit.view', $permission_map) || can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map) || can_access('customers.view', $permission_map)): ?>
+        <?php if (can_access('admin.users.view', $permission_map) || can_access('admin.roles.manage', $permission_map) || can_access('admin.settings.edit', $permission_map) || can_access('admin.audit.view', $permission_map) || can_access('customers.view', $permission_map)): ?>
         <div class="nav-dropdown">
-            <a class="<?php echo in_array($current_page, ['users.php', 'users_create.php', 'users_edit.php', 'users_delete.php', 'roles.php', 'customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php', 'settings.php', 'audit.php', 'variables.php']) ? 'active' : ''; ?>">
+            <a class="<?php echo in_array($current_page, ['users.php', 'users_create.php', 'users_edit.php', 'users_delete.php', 'roles.php', 'roles_edit.php', 'roles_delete.php', 'customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php', 'settings.php', 'audit.php']) ? 'active' : ''; ?>">
                 👥 Beheer <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
@@ -388,7 +427,7 @@ function can_access($permission, $permission_map) {
                 <?php endif; ?>
 
                 <?php if (can_access('admin.roles.manage', $permission_map)): ?>
-                <a href="/admin/roles.php" class="<?php echo $current_page === 'roles.php' ? 'active' : ''; ?>">
+                <a href="/admin/roles.php" class="<?php echo in_array($current_page, ['roles.php', 'roles_edit.php', 'roles_delete.php']) ? 'active' : ''; ?>">
                     🔐 Roles & Permissions
                 </a>
                 <?php endif; ?>
@@ -402,12 +441,6 @@ function can_access($permission, $permission_map) {
                 <?php if (can_access('admin.settings.edit', $permission_map)): ?>
                 <a href="/admin/settings.php" class="<?php echo $current_page === 'settings.php' ? 'active' : ''; ?>">
                     ⚙️ Settings
-                </a>
-                <?php endif; ?>
-
-                <?php if (can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map)): ?>
-                <a href="/admin/variables.php" class="<?php echo $current_page === 'variables.php' ? 'active' : ''; ?>">
-                    🔧 Variables
                 </a>
                 <?php endif; ?>
 

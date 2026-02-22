@@ -81,6 +81,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $action = $_POST['action'] ?? '';
 
+        // Activate existing config
+        if ($action === 'activate_config') {
+            $device_id = (int)($_POST['device_id'] ?? 0);
+            $config_version_id = (int)($_POST['config_version_id'] ?? 0);
+
+            if (!$device_id || !$config_version_id) {
+                $error = 'Device ID en Config Version ID zijn vereist.';
+            } else {
+                try {
+                    $pdo->beginTransaction();
+
+                    // Deactivate all configs for device
+                    $stmt = $pdo->prepare('
+                        UPDATE device_config_assignments
+                        SET is_active = 0, activated_at = NULL
+                        WHERE device_id = ?
+                    ');
+                    $stmt->execute([$device_id]);
+
+                    // Activate selected config
+                    $stmt = $pdo->prepare('
+                        UPDATE device_config_assignments
+                        SET is_active = 1, activated_at = NOW()
+                        WHERE device_id = ? AND config_version_id = ?
+                    ');
+                    $stmt->execute([$device_id, $config_version_id]);
+
+                    $pdo->commit();
+                    $success = 'Config succesvol geactiveerd.';
+
+                    header('Location: ?device_id=' . $device_id);
+                    exit;
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    error_log('Activate config error: ' . $e->getMessage());
+                    $error = 'Failed to activate config: ' . $e->getMessage();
+                }
+            }
+        }
+
         // Create new config version
         if ($action === 'create_config') {
             $device_id = (int)($_POST['device_id'] ?? 0);
@@ -193,7 +233,7 @@ $query = '
     FROM devices d
     LEFT JOIN device_types dt ON d.device_type_id = dt.id
     LEFT JOIN customers c ON d.customer_id = c.id
-    WHERE 1=1
+    WHERE d.deleted_at IS NULL
 ';
 
 $params = [];
@@ -447,7 +487,7 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                         <strong>Version <?php echo (int)$config['version_number']; ?></strong>
                                         <?php if ($config['is_active']): ?>
-                                            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: bold;">✓ ACTIVE</span>
+                                            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: bold;">✓ Actieve Config</span>
                                         <?php endif; ?>
                                     </div>
 
@@ -482,6 +522,16 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
                                         >
                                             📋 Copy & Edit
                                         </button>
+                                        <?php if (!$config['is_active']): ?>
+                                        <button
+                                            type="button"
+                                            class="btn"
+                                            style="background: #28a745; font-size: 12px; padding: 6px 12px; flex: 1; min-width: 120px;"
+                                            onclick="setConfigActive(<?php echo (int)$selected_device['id']; ?>, <?php echo (int)$config['id']; ?>, <?php echo (int)$config['version_number']; ?>)"
+                                        >
+                                            ✓ Set as Active
+                                        </button>
+                                        <?php endif; ?>
                                     </div>
 
                                     <!-- Preview Content -->
@@ -585,6 +635,35 @@ if (file_exists(__DIR__ . '/../admin/_header.php')) {
 
 
 <script>
+function setConfigActive(deviceId, configVersionId, versionNumber) {
+    if (!confirm('Config v' + versionNumber + ' activeren?\n\nDe huidige actieve config wordt gedeactiveerd.')) {
+        return;
+    }
+
+    const csrfToken = '<?php echo htmlspecialchars($csrf); ?>';
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.style.display = 'none';
+
+    const fields = {
+        'action': 'activate_config',
+        'device_id': deviceId,
+        'config_version_id': configVersionId,
+        'csrf_token': csrfToken
+    };
+
+    for (const [name, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
 function copyConfigToEditor(configId, versionName) {
     const csrfToken = '<?php echo htmlspecialchars($csrf); ?>';
     
