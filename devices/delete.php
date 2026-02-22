@@ -75,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // continue deletion even if audit fails
             }
 
-            // Delete device (cascade or manual related cleanup if needed)
-            $del = $pdo->prepare('DELETE FROM devices WHERE id = ?');
+            // Soft delete device (mark as deleted instead of permanent deletion)
+            $del = $pdo->prepare('UPDATE devices SET deleted_at = NOW(), is_active = 0 WHERE id = ?');
             $del->execute([$device_id]);
 
             $pdo->commit();

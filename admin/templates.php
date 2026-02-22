@@ -293,13 +293,13 @@ require_once __DIR__ . '/_header.php';
                                         <?php endif; ?>
                                     </div>
                                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                        <a class="btn" href="/admin/template_variables.php?template_id=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 4px 8px; background: #17a2b8;">Variabelen</a>
-                                        <a class="btn" href="?edit=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 4px 8px;">Bewerk</a>
+                                        <a class="btn" href="/admin/template_variables.php?template_id=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; background: #17a2b8;">Variabelen</a>
+                                        <a class="btn" href="?edit=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center;">Bewerk</a>
                                         <form method="post" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je dit template wilt verwijderen?');">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="template_id" value="<?php echo (int)$t['id']; ?>">
-                                            <button class="btn" type="submit" style="font-size: 11px; padding: 4px 8px; background: #dc3545;">Verwijder</button>
+                                            <button class="btn" type="submit" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; background: #dc3545;">Verwijder</button>
                                         </form>
                                     </div>
                                 </div>

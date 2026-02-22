@@ -96,15 +96,27 @@ require_once __DIR__ . '/_header.php';
         <?php else: ?>
             <table>
                 <thead>
-                    <tr><th>ID</th><th>Rol</th><th>Beschrijving</th><th>Permissies</th></tr>
+                    <tr><th>ID</th><th>Rol</th><th>Beschrijving</th><th>Permissies</th><th>Acties</th></tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($roles as $r): ?>
+                    <?php
+                    $system_roles = ['owner', 'admin', 'user'];
+                    foreach ($roles as $r):
+                        $is_system = in_array(strtolower($r['role_name']), $system_roles);
+                    ?>
                         <tr>
                             <td><?php echo (int)$r['id']; ?></td>
                             <td><?php echo htmlspecialchars($r['role_name']); ?></td>
                             <td><?php echo htmlspecialchars($r['description']); ?></td>
                             <td><?php echo htmlspecialchars(implode(', ', $permsByRole[$r['id']] ?? [])); ?></td>
+                            <td>
+                                <a class="btn" href="/admin/roles_edit.php?id=<?php echo (int)$r['id']; ?>" style="font-size:12px; padding:4px 10px; background:#007bff;">✏️ Bewerken</a>
+                                <?php if ($is_system): ?>
+                                    <span class="btn" style="font-size:12px; padding:4px 10px; background:#6c757d; cursor:default; opacity:0.7;" title="Systeemrol kan niet worden verwijderd">🔒 Systeem rol</span>
+                                <?php else: ?>
+                                    <a class="btn" href="/admin/roles_delete.php?id=<?php echo (int)$r['id']; ?>" style="font-size:12px; padding:4px 10px; background:#dc3545;" onclick="return confirm('Weet je zeker dat je deze rol wilt verwijderen?');">🗑️ Verwijderen</a>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

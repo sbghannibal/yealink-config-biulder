@@ -38,7 +38,7 @@ try {
     $count_sql = "SELECT COUNT(*) as total
         FROM devices d
         LEFT JOIN customers c ON d.customer_id = c.id
-        WHERE 1=1";
+        WHERE d.deleted_at IS NULL";
     
     $count_params = [];
     
@@ -73,7 +73,7 @@ try {
         FROM devices d 
         LEFT JOIN device_types dt ON d.device_type_id = dt.id
         LEFT JOIN customers c ON d.customer_id = c.id
-        WHERE 1=1";
+        WHERE d.deleted_at IS NULL";
     
     $params = [];
     
@@ -360,8 +360,8 @@ require_once __DIR__ . '/../admin/_header.php';
                 <?php endforeach; ?>
             </select>
             <input type="hidden" name="per_page" value="<?php echo $per_page; ?>">
-            <button type="submit" class="btn" style="background: #007bff; color: white;">Zoeken</button>
-            <a class="btn" href="/devices/create.php" style="background: #28a745; color: white;">➕ Nieuw Device</a>
+            <button type="submit" class="btn" style="background: #007bff; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;">Zoeken</button>
+            <a class="btn" href="/devices/create.php" style="background: #28a745; color: white; height: 42px; padding: 10px 16px; display: inline-flex; align-items: center;">➕ Nieuw Device</a>
             <?php if ($search_customer || $filter_type): ?>
                 <a href="/devices/list.php?per_page=<?php echo $per_page; ?>" class="clear-filters-btn">
                     ❌ Wis filters

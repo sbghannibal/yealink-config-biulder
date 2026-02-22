@@ -100,6 +100,14 @@ require_once __DIR__ . '/_header.php';
 ?>
 <style>.mono { font-family: monospace; }</style>
 
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 24px; border-radius: 8px; margin-bottom: 24px;">
+    <h3 style="margin: 0 0 8px 0; font-size: 18px;">🌍 Globale Variables</h3>
+    <p style="margin: 0; opacity: 0.9; font-size: 14px;">
+        Gebruik globale variabelen in je configuraties met de syntax <strong>{{VARNAME}}</strong>.<br>
+        Bijvoorbeeld: <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">{{SERVER_IP}}</code> wordt vervangen door de ingestelde waarde bij het genereren van de config.
+    </p>
+</div>
+
 <h2>Globale variabelen (gebruik in config met {{VARNAME}})</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>

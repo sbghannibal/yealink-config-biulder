@@ -23,8 +23,9 @@ $error = '';
 try {
     $stmt = $pdo->query('
         SELECT c.*, 
-               (SELECT COUNT(*) FROM devices d WHERE d.customer_id = c.id) as device_count
+               (SELECT COUNT(*) FROM devices d WHERE d.customer_id = c.id AND d.deleted_at IS NULL) as device_count
         FROM customers c
+        WHERE c.deleted_at IS NULL
         ORDER BY c.company_name ASC
     ');
     $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
