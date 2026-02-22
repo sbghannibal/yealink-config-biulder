@@ -78,6 +78,6 @@ function get_available_languages(): array {
     return [
         'nl' => ['flag' => '🇳🇱', 'label' => 'Nederlands'],
         'fr' => ['flag' => '🇫🇷', 'label' => 'Français'],
-        'en' => ['flag' => '🇬🇧', 'label' => 'English'],
+        'en' => ['flag' => '🇺🇸', 'label' => 'English (ENG)'],
     ];
 }

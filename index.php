@@ -3,6 +3,7 @@ $page_title = 'Dashboard';
 session_start();
 require_once __DIR__ . '/settings/database.php';
 require_once __DIR__ . '/includes/rbac.php';
+require_once __DIR__ . '/includes/i18n.php';
 
 // Redirect to login if not authenticated
 if (!isset($_SESSION['admin_id'])) {
@@ -22,7 +23,7 @@ $stmt = $pdo->prepare('
 ');
 $stmt->execute([$admin_id]);
 $user_roles = $stmt->fetchAll(PDO::FETCH_COLUMN);
-$user_role_display = !empty($user_roles) ? implode(', ', $user_roles) : 'Geen rol';
+$user_role_display = !empty($user_roles) ? implode(', ', $user_roles) : __('page.dashboard.no_role');
 
 // Determine role badge color
 $role_badge_color = '#6c757d'; // default gray
@@ -57,7 +58,8 @@ $stats = [
     'active_tokens' => 0,
     'pending_requests' => 0,
     'account_requests' => [],
-    'recent_audit' => []
+    'recent_audit' => [],
+    'recent_devices' => []
 ];
 
 $error = '';
@@ -106,9 +108,32 @@ try {
             error_log('Audit logs error: ' . $e->getMessage());
         }
     }
+
+    // Recent device changes (last 10)
+    if (has_permission($pdo, $admin_id, 'devices.view')) {
+        try {
+            $stmt = $pdo->prepare('
+                SELECT d.id, d.device_name, d.created_at, d.updated_at,
+                       c.company_name, c.customer_code,
+                       CASE
+                           WHEN d.created_at = d.updated_at THEN \'created\'
+                           ELSE \'updated\'
+                       END as change_type
+                FROM devices d
+                LEFT JOIN customers c ON d.customer_id = c.id
+                WHERE d.deleted_at IS NULL
+                ORDER BY d.updated_at DESC
+                LIMIT 10
+            ');
+            $stmt->execute();
+            $stats['recent_devices'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log('Recent devices error: ' . $e->getMessage());
+        }
+    }
 } catch (Exception $e) {
     error_log('Dashboard error: ' . $e->getMessage());
-    $error = 'Kon dashboardgegevens niet ophalen. Controleer de logs.';
+    $error = __('error.dashboard_load');
 }
 
 require_once __DIR__ . '/admin/_header.php';
@@ -293,7 +318,7 @@ require_once __DIR__ . '/admin/_header.php';
         </div>
         <div class="topbar-right">
             <div style="text-align: right;">
-                <div>Ingelogd als: <strong><?php echo htmlspecialchars($username); ?></strong></div>
+                <div><?php echo __('page.dashboard.logged_in_as'); ?>: <strong><?php echo htmlspecialchars($username); ?></strong></div>
                 <div style="margin-top: 4px;">
                     <span style="background: <?php echo $role_badge_color; ?>; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
                         <?php echo htmlspecialchars($user_role_display); ?>
@@ -313,7 +338,7 @@ require_once __DIR__ . '/admin/_header.php';
             <h2>
                 ⚠️ 
                 <?php echo $stats['pending_requests']; ?> 
-                Openstaande Account-Aanvra<?php echo $stats['pending_requests'] !== 1 ? 'gen' : 'ag'; ?>
+                <?php echo __('widget.account_requests.heading'); ?>
             </h2>
             
             <ul class="requests-list">
@@ -327,74 +352,74 @@ require_once __DIR__ . '/admin/_header.php';
                             </small>
                         </div>
                         <div class="requests-actions">
-                            <a href="/admin/approve_account.php?filter=pending">Beheer</a>
+                            <a href="/admin/approve_account.php?filter=pending"><?php echo __('widget.account_requests.manage'); ?></a>
                         </div>
                     </li>
                 <?php endforeach; ?>
             </ul>
             
             <p style="margin: 0; font-size: 13px; color: #856404;">
-                💡 <a href="/admin/approve_account.php?filter=pending" style="color: #856404; font-weight: 600;">Alle verzoeken bekijken →</a>
+                💡 <a href="/admin/approve_account.php?filter=pending" style="color: #856404; font-weight: 600;"><?php echo __('widget.account_requests.view_all'); ?></a>
             </p>
         </div>
     <?php endif; ?>
 
     <section class="stats">
         <div class="stat">
-            <h3>👥 Gebruikers</h3>
+            <h3><?php echo __('widget.users.title'); ?></h3>
             <p class="number"><?php echo $stats['admins']; ?></p>
             <?php if (has_permission($pdo, $admin_id, 'admin.users.view')): ?>
-            <p><a href="/admin/users.php">Beheer gebruikers</a></p>
+            <p><a href="/admin/users.php"><?php echo __('widget.users.manage'); ?></a></p>
             <?php endif; ?>
         </div>
 
         <div class="stat">
-            <h3>📱 Devices</h3>
+            <h3><?php echo __('widget.devices.title'); ?></h3>
             <p class="number"><?php echo $stats['devices']; ?></p>
             <?php if (has_permission($pdo, $admin_id, 'devices.view')): ?>
-            <p><a href="/devices/list.php">Bekijk devices</a></p>
+            <p><a href="/devices/list.php"><?php echo __('widget.devices.view'); ?></a></p>
             <?php endif; ?>
         </div>
 
         <div class="stat">
-            <h3>⚙️ Config Versies</h3>
+            <h3><?php echo __('widget.config_versions.title'); ?></h3>
             <p class="number"><?php echo $stats['config_versions']; ?></p>
             <?php if (has_permission($pdo, $admin_id, 'config.manage')): ?>
-            <p><a href="/settings/builder.php">Beheer versies</a></p>
+            <p><a href="/settings/builder.php"><?php echo __('widget.config_versions.manage'); ?></a></p>
             <?php endif; ?>
         </div>
 
         <div class="stat">
-            <h3>🔑 Actieve Tokens</h3>
+            <h3><?php echo __('widget.active_tokens.title'); ?></h3>
             <p class="number"><?php echo $stats['active_tokens']; ?></p>
             <?php if (has_permission($pdo, $admin_id, 'admin.tokens.manage')): ?>
-            <p><a href="/admin/tokens.php">Bekijk tokens</a></p>
+            <p><a href="/admin/tokens.php"><?php echo __('widget.tokens.view'); ?></a></p>
             <?php endif; ?>
         </div>
 
         <?php if ($stats['pending_requests'] > 0 && has_permission($pdo, $admin_id, 'admin.accounts.manage')): ?>
             <div class="stat warning">
-                <h3>📧 Account Verzoeken</h3>
+                <h3><?php echo __('widget.account_requests.title'); ?></h3>
                 <p class="number"><?php echo $stats['pending_requests']; ?></p>
-                <p><a href="/admin/approve_account.php">Goedkeuren</a></p>
+                <p><a href="/admin/approve_account.php"><?php echo __('widget.account_requests.approve'); ?></a></p>
             </div>
         <?php endif; ?>
     </section>
 
     <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
     <section class="card">
-        <h2>📝 Recente Activiteit</h2>
+        <h2><?php echo __('widget.recent_activity.title'); ?></h2>
         <?php if (empty($stats['recent_audit'])): ?>
-            <p>Geen recente audit-logs gevonden.</p>
+            <p><?php echo __('widget.recent_activity.no_logs'); ?></p>
         <?php else: ?>
             <table>
                 <thead>
                     <tr>
-                        <th>Tijd</th>
-                        <th>Gebruiker</th>
-                        <th>Actie</th>
-                        <th>Entiteit</th>
-                        <th>Details</th>
+                        <th><?php echo __('table.time'); ?></th>
+                        <th><?php echo __('table.user'); ?></th>
+                        <th><?php echo __('table.action'); ?></th>
+                        <th><?php echo __('table.entity'); ?></th>
+                        <th><?php echo __('table.details'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -418,27 +443,50 @@ require_once __DIR__ . '/admin/_header.php';
     </section>
     <?php endif; ?>
 
-    <div class="button-group">
-        <?php if (has_permission($pdo, $admin_id, 'admin.users.view')): ?>
-        <a class="btn" href="/admin/users.php">👥 Gebruikers Beheren</a>
+    <?php if (has_permission($pdo, $admin_id, 'devices.view')): ?>
+    <section class="card">
+        <h2>📱 <?php echo __('widget.recent_devices.title'); ?></h2>
+        <?php if (empty($stats['recent_devices'])): ?>
+            <p><?php echo __('widget.recent_devices.no_changes'); ?></p>
+        <?php else: ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th><?php echo __('table.device'); ?></th>
+                        <th><?php echo __('table.customer'); ?></th>
+                        <th><?php echo __('table.action'); ?></th>
+                        <th><?php echo __('table.time'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($stats['recent_devices'] as $dev): ?>
+                        <tr>
+                            <td>
+                                <a href="/devices/edit.php?id=<?php echo $dev['id']; ?>">
+                                    <?php echo htmlspecialchars($dev['device_name']); ?>
+                                </a>
+                            </td>
+                            <td>
+                                <?php if ($dev['company_name']): ?>
+                                    <?php echo htmlspecialchars($dev['company_name']); ?>
+                                <?php else: ?>
+                                    <span style="color: #6c757d;">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($dev['change_type'] === 'created'): ?>
+                                    <span class="badge success"><?php echo __('status.created'); ?></span>
+                                <?php else: ?>
+                                    <span class="badge info"><?php echo __('status.updated'); ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($dev['updated_at']); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         <?php endif; ?>
-        
-        <?php if (has_permission($pdo, $admin_id, 'admin.accounts.manage')): ?>
-        <a class="btn" href="/admin/approve_account.php">📧 Account Verzoeken</a>
-        <?php endif; ?>
-        
-        <?php if (has_permission($pdo, $admin_id, 'admin.templates.manage')): ?>
-        <a class="btn" href="/admin/templates.php">📋 Templates</a>
-        <?php endif; ?>
-        
-        <?php if (has_permission($pdo, $admin_id, 'devices.create')): ?>
-        <a class="btn" href="/devices/create.php">📱 Nieuw Device</a>
-        <?php endif; ?>
-        
-        <?php if (has_permission($pdo, $admin_id, 'admin.audit.view')): ?>
-        <a class="btn btn-secondary" href="/admin/audit.php">📑 Audit Logs</a>
-        <?php endif; ?>
-    </div>
-
+    </section>
+    <?php endif; ?>
 
 <?php require_once __DIR__ . '/admin/_footer.php'; ?>

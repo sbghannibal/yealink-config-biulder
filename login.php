@@ -2,6 +2,7 @@
 // login.php - Secure login page (uses settings/database.php which must provide $pdo)
 session_start();
 require_once __DIR__ . '/settings/database.php';
+require_once __DIR__ . '/includes/i18n.php';
 
 // If already logged in, redirect to dashboard
 if (isset($_SESSION['admin_id'])) {
@@ -41,15 +42,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Basic CSRF check
     $posted_csrf = $_POST['csrf_token'] ?? '';
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $posted_csrf)) {
-        $error = 'Ongeldige aanvraag (CSRF).';
+        $error = __('error.csrf_invalid');
     } elseif (count($_SESSION['login_attempts']) >= LOGIN_MAX_ATTEMPTS) {
-        $error = 'Te veel maal geprobeerd. Probeer het later opnieuw.';
+        $error = __('error.too_many_attempts');
     } else {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 
         if ($username === '' || $password === '') {
-            $error = 'Vul gebruikersnaam en wachtwoord in.';
+            $error = __('error.fill_username_password');
         } else {
             try {
                 $stmt = $pdo->prepare('SELECT id, username, password, is_active FROM admins WHERE username = ? LIMIT 1');
@@ -70,11 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     // Failed login - record attempt timestamp
                     $_SESSION['login_attempts'][] = time();
-                    $error = 'Ongeldige gebruikersnaam of wachtwoord.';
+                    $error = __('error.invalid_credentials');
                 }
             } catch (Exception $e) {
                 // Don't leak DB errors to users
-                $error = 'Er is een fout opgetreden. Probeer het later opnieuw.';
+                $error = __('error.server_error');
                 error_log('Login error: ' . $e->getMessage());
             }
         }
@@ -86,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Login - Yealink Config Builder</title>
+    <title><?php echo __('page.login.title'); ?></title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         * {
@@ -260,32 +261,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
 
             <div class="form-group">
-                <label for="username">Gebruikersnaam</label>
-                <input id="username" name="username" type="text" required autofocus placeholder="Voer je gebruikersnaam in">
+                <label for="username"><?php echo __('form.username'); ?></label>
+                <input id="username" name="username" type="text" required autofocus placeholder="<?php echo __('form.username'); ?>">
             </div>
 
             <div class="form-group">
-                <label for="password">Wachtwoord</label>
-                <input id="password" name="password" type="password" required placeholder="Voer je wachtwoord in">
+                <label for="password"><?php echo __('form.password'); ?></label>
+                <input id="password" name="password" type="password" required placeholder="<?php echo __('form.password'); ?>">
             </div>
 
-            <button type="submit" class="btn">🔓 Inloggen</button>
+            <button type="submit" class="btn">🔓 <?php echo __('button.login'); ?></button>
         </form>
 
         <div class="login-footer">
             <p>
-                📝 Heb je nog geen account?
-            </p>
-            <p>
-                Neem contact op met de beheerder via:
+                📝 <?php echo __('page.login.request_account'); ?>?
             </p>
             <a href="request_account.php" class="account-request-btn">
-                📧 Verzoek een Account
+                📧 <?php echo __('page.login.request_account'); ?>
             </a>
         </div>
     </div>
-    <footer style="text-align:center; padding:20px; color:#6c757d; font-size:13px;">
-        <p>Yealink Config Builder &copy; <?php echo date('Y'); ?></p>
-    </footer>
 </body>
 </html>
