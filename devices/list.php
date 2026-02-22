@@ -131,17 +131,107 @@ require_once __DIR__ . '/../admin/_header.php';
         .badge.warning { background: #ffc107; color: #000; }
         .badge.info { background: #17a2b8; }
         
-        .action-buttons { 
-            display: flex; 
-            gap: 6px; 
-            flex-wrap: wrap; 
+        /* Dropdown button styles */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
             align-items: center;
         }
-        .action-buttons .btn { 
-            font-size: 12px; 
-            padding: 6px 10px; 
-            white-space: nowrap;
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
             text-decoration: none;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Dropdown wrapper */
+        .dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            min-width: 180px;
+            z-index: 1000;
+            margin-top: 4px;
+        }
+
+        .dropdown-wrapper:hover .dropdown-menu,
+        .dropdown-wrapper:focus-within .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 8px 12px;
+            color: #212529;
+            text-decoration: none;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        .dropdown-item.disabled {
+            color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .dropdown-item.disabled:hover {
+            background: transparent;
+        }
+
+        .dropdown-item-danger {
+            color: #dc3545;
+        }
+
+        .dropdown-item-danger:hover {
+            background: #f8d7da;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #dee2e6;
+            margin: 4px 0;
         }
         
         table tbody tr:nth-child(even) { background: #f8f9fa; }
@@ -335,6 +425,11 @@ require_once __DIR__ . '/../admin/_header.php';
                 flex-wrap: wrap;
                 justify-content: center;
             }
+
+            .dropdown-menu {
+                right: auto;
+                left: 0;
+            }
         }
     </style>
 
@@ -442,26 +537,52 @@ require_once __DIR__ . '/../admin/_header.php';
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a class="btn" href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>" style="background: #28a745; color: white;">🔧 Initialiseren</a>
-                                    
-                                    <?php if ($d['config_version_id']): ?>
-                                        <a class="btn" href="/settings/builder.php?device_id=<?php echo (int)$d['id']; ?>" style="background: #17a2b8; color: white;">⚙️ Config Bewerken</a>
-                                    <?php else: ?>
-                                        <button class="btn" disabled title="Initialiseer eerst een config" style="background: #6c757d; color: white; cursor: not-allowed; opacity: 0.6;">⚙️ Config Bewerken</button>
-                                    <?php endif; ?>
-                                    
-                                    <a class="btn" href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>" style="background: #007bff; color: white;">✏️ Telefoon Bewerken</a>
-                                    
-                                    <?php if ($d['config_version_id']): ?>
-                                        <a href="/download_device_config.php?device_id=<?php echo (int)$d['id']; ?>&mac=<?php echo urlencode($d['mac_address']); ?>" 
-                                           class="btn" 
-                                           title="Download config voor <?php echo htmlspecialchars($d['device_name']); ?>"
-                                           style="background: #6c757d; color: white;">
-                                            📥 Download
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <a class="btn" href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>" onclick="return confirm('Weet je zeker dat je dit device wilt verwijderen?');" style="background: #dc3545; color: white;">🗑️ Verwijderen</a>
+                                    <!-- Primary action: Always visible -->
+                                    <a class="btn btn-primary" 
+                                       href="/devices/configure_wizard.php?device_id=<?php echo (int)$d['id']; ?>">
+                                        🔧 Initialiseren
+                                    </a>
+
+                                    <!-- Dropdown for secondary actions -->
+                                    <div class="dropdown-wrapper">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button">
+                                            Meer acties ▼
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <?php if ($d['config_version_id']): ?>
+                                                <a class="dropdown-item" 
+                                                   href="/settings/builder.php?device_id=<?php echo (int)$d['id']; ?>">
+                                                    ⚙️ Config Bewerken
+                                                </a>
+                                            <?php else: ?>
+                                                <span class="dropdown-item disabled" 
+                                                      title="Initialiseer eerst een config">
+                                                    ⚙️ Config Bewerken
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <a class="dropdown-item" 
+                                               href="/devices/edit.php?id=<?php echo (int)$d['id']; ?>">
+                                                ✏️ Telefoon Bewerken
+                                            </a>
+
+                                            <?php if ($d['config_version_id']): ?>
+                                                <a class="dropdown-item" 
+                                                   href="/download_device_config.php?device_id=<?php echo (int)$d['id']; ?>&mac=<?php echo urlencode($d['mac_address']); ?>"
+                                                   title="Download config voor <?php echo htmlspecialchars($d['device_name']); ?>">
+                                                    📥 Download
+                                                </a>
+                                            <?php endif; ?>
+
+                                            <div class="dropdown-divider"></div>
+
+                                            <a class="dropdown-item dropdown-item-danger" 
+                                               href="/devices/delete.php?id=<?php echo (int)$d['id']; ?>"
+                                               onclick="return confirm('Weet je zeker dat je dit device wilt verwijderen?');">
+                                                🗑️ Verwijderen
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
