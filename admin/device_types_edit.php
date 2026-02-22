@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/_header.php';
 ?>
 
-    <h2>Edit Device Type</h2>
+    <h2><?php echo __('page.devices.edit'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -147,29 +147,29 @@ require_once __DIR__ . '/_header.php';
             <input type="hidden" name="id" value="<?php echo (int)$type['id']; ?>">
 
             <div class="form-group">
-                <label>Type Name</label>
+                <label><?php echo __('form.name'); ?></label>
                 <input name="type_name" type="text" required value="<?php echo htmlspecialchars($type['type_name']); ?>">
             </div>
 
             <div class="form-group">
-                <label>Description</label>
+                <label><?php echo __('form.description'); ?></label>
                 <input name="description" type="text" value="<?php echo htmlspecialchars($type['description'] ?? ''); ?>">
             </div>
 
             <div style="display:flex; gap:8px; margin-top:16px;">
-                <button class="btn" type="submit" name="do" value="update">Save Changes</button>
-                <a class="btn btn-secondary" href="/admin/device_types.php">Cancel</a>
+                <button class="btn" type="submit" name="do" value="update"><?php echo __('button.save'); ?></button>
+                <a class="btn btn-secondary" href="/admin/device_types.php"><?php echo __('button.cancel'); ?></a>
 
                 <?php 
                 $device_count = (int)($type['device_count'] ?? 0);
                 if ($device_count > 0): 
                 ?>
                     <button class="btn btn-danger" type="button" disabled title="Cannot delete - devices are using this type" style="opacity:0.5;cursor:not-allowed;">
-                        Delete (<?php echo $device_count; ?> device<?php echo $device_count !== 1 ? 's' : ''; ?> in use)
+                        <?php echo __('button.delete'); ?> (<?php echo $device_count; ?> device<?php echo $device_count !== 1 ? 's' : ''; ?> in use)
                     </button>
                 <?php else: ?>
                     <button class="btn btn-danger" type="submit" name="do" value="delete" onclick="return confirm('Are you sure you want to delete this device type? This action cannot be undone.');">
-                        Delete Device Type
+                        <?php echo __('button.delete'); ?> Device Type
                     </button>
                 <?php endif; ?>
             </div>

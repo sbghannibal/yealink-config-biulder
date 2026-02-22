@@ -140,7 +140,7 @@ require_once __DIR__ . '/_header.php';
 </style>
 
 <h2>
-    🔐 Staging Provisioning Credentials
+    🔐 <?php echo __('page.staging_credentials.title'); ?>
     <span class="access-badge">OWNER ONLY</span>
 </h2>
 
@@ -283,7 +283,7 @@ curl -u <?php echo htmlspecialchars($current_auth_user); ?>:PASSWORD \
 </div>
 
 <div style="margin-top: 20px;">
-    <a href="/admin/staging_certificates.php" class="btn">← Terug naar Certificate Management</a>
+    <a href="/admin/staging_certificates.php" class="btn">← <?php echo __('button.back'); ?></a>
     <a href="/admin/dashboard.php" class="btn btn-secondary">Dashboard</a>
 </div>
 

@@ -86,7 +86,7 @@ require_once __DIR__ . '/_header.php';
 ?>
 
 <main class="container" style="max-width:700px; margin-top:20px;">
-    <h2>Klant Verwijderen</h2>
+    <h2><?php echo __('page.customers.delete'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
 
@@ -94,8 +94,8 @@ require_once __DIR__ . '/_header.php';
         <p><strong>Let op:</strong> Je staat op het punt om de volgende klant te verwijderen:</p>
         
         <div style="background:#f8f9fa; padding:16px; border-radius:4px; margin:16px 0;">
-            <p><strong>Klantcode:</strong> <?php echo htmlspecialchars($customer['customer_code']); ?></p>
-            <p><strong>Bedrijfsnaam:</strong> <?php echo htmlspecialchars($customer['company_name']); ?></p>
+            <p><strong><?php echo __('form.customer_code'); ?>:</strong> <?php echo htmlspecialchars($customer['customer_code']); ?></p>
+            <p><strong><?php echo __('form.company_name'); ?>:</strong> <?php echo htmlspecialchars($customer['company_name']); ?></p>
             <?php if ($customer['device_count'] > 0): ?>
                 <p style="color:#dc3545;"><strong>⚠️ Let op:</strong> Deze klant heeft <?php echo (int)$customer['device_count']; ?> device(s). De devices blijven bestaan maar worden ontkoppeld van deze klant.</p>
             <?php endif; ?>
@@ -108,8 +108,8 @@ require_once __DIR__ . '/_header.php';
             <input type="hidden" name="id" value="<?php echo (int)$customer_id; ?>">
             
             <div style="display:flex; gap:8px;">
-                <button class="btn" type="submit" style="background:#dc3545; color:white;">Ja, Verwijderen</button>
-                <a class="btn" href="/admin/customers.php" style="background:#6c757d;">Annuleren</a>
+                <button class="btn" type="submit" style="background:#dc3545; color:white;"><?php echo __('label.yes'); ?>, <?php echo __('button.delete'); ?></button>
+                <a class="btn" href="/admin/customers.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
             </div>
         </form>
     </div>

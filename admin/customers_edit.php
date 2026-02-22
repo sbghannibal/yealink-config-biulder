@@ -103,7 +103,7 @@ require_once __DIR__ . '/_header.php';
 ?>
 
 <main class="container" style="max-width:900px; margin-top:20px;">
-    <h2>Klant Bewerken</h2>
+    <h2><?php echo __('page.customers.edit'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -114,13 +114,13 @@ require_once __DIR__ . '/_header.php';
             <input type="hidden" name="id" value="<?php echo (int)$customer_id; ?>">
 
             <div class="form-group">
-                <label>Klantcode *</label>
+                <label><?php echo __('form.customer_code'); ?> *</label>
                 <input name="customer_code" type="text" required value="<?php echo htmlspecialchars($_POST['customer_code'] ?? $customer['customer_code']); ?>">
                 <small style="color: #6c757d;">Unieke identificatie voor de klant</small>
             </div>
 
             <div class="form-group">
-                <label>Bedrijfsnaam *</label>
+                <label><?php echo __('form.company_name'); ?> *</label>
                 <input name="company_name" type="text" required value="<?php echo htmlspecialchars($_POST['company_name'] ?? $customer['company_name']); ?>">
             </div>
 
@@ -130,38 +130,38 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Email</label>
+                <label><?php echo __('form.email'); ?></label>
                 <input name="email" type="email" value="<?php echo htmlspecialchars($_POST['email'] ?? $customer['email']); ?>">
             </div>
 
             <div class="form-group">
-                <label>Telefoon</label>
+                <label><?php echo __('form.phone'); ?></label>
                 <input name="phone" type="text" value="<?php echo htmlspecialchars($_POST['phone'] ?? $customer['phone']); ?>">
             </div>
 
             <div class="form-group">
-                <label>Adres</label>
+                <label><?php echo __('form.address'); ?></label>
                 <textarea name="address" rows="3"><?php echo htmlspecialchars($_POST['address'] ?? $customer['address']); ?></textarea>
             </div>
 
             <div class="form-group">
-                <label>Notities</label>
+                <label><?php echo __('form.notes'); ?></label>
                 <textarea name="notes" rows="4"><?php echo htmlspecialchars($_POST['notes'] ?? $customer['notes']); ?></textarea>
             </div>
 
             <div class="form-group">
-                <label>Actief</label>
+                <label><?php echo __('form.is_active'); ?></label>
                 <?php $cur_active = isset($_POST['is_active']) ? (int)$_POST['is_active'] : (int)$customer['is_active']; ?>
                 <select name="is_active">
-                    <option value="1" <?php echo $cur_active ? 'selected' : ''; ?>>Ja</option>
-                    <option value="0" <?php echo !$cur_active ? 'selected' : ''; ?>>Nee</option>
+                    <option value="1" <?php echo $cur_active ? 'selected' : ''; ?>><?php echo __('label.yes'); ?></option>
+                    <option value="0" <?php echo !$cur_active ? 'selected' : ''; ?>><?php echo __('label.no'); ?></option>
                 </select>
             </div>
 
             <div style="display:flex; gap:8px;">
-                <button class="btn" type="submit">Opslaan</button>
-                <a class="btn" href="/admin/customers.php" style="background:#6c757d;">Terug naar lijst</a>
-                <a class="btn" href="/admin/customers_delete.php?id=<?php echo (int)$customer_id; ?>" style="background:#dc3545;">Verwijderen</a>
+                <button class="btn" type="submit"><?php echo __('button.save'); ?></button>
+                <a class="btn" href="/admin/customers.php" style="background:#6c757d;"><?php echo __('button.back'); ?></a>
+                <a class="btn" href="/admin/customers_delete.php?id=<?php echo (int)$customer_id; ?>" style="background:#dc3545;"><?php echo __('button.delete'); ?></a>
             </div>
         </form>
     </div>

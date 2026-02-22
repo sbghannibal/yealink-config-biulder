@@ -75,28 +75,28 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 
-    <h2>Device Types</h2>
+    <h2><?php echo __('page.devices.title'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
     <div class="card" style="margin-bottom:20px;">
-        <h3>Add New Device Type</h3>
+        <h3><?php echo __('button.add'); ?> New Device Type</h3>
         <form method="post">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="create">
             <div class="form-group">
-                <label>Type Name (e.g., T40, W60P, T46S)</label>
+                <label><?php echo __('form.name'); ?> (e.g., T40, W60P, T46S)</label>
                 <input name="type_name" type="text" required placeholder="Enter device type name">
                 <small style="display:block;margin-top:4px;color:#666;">Must be unique. Common examples: T40, T46S, W60P, CP960</small>
             </div>
             <div class="form-group">
-                <label>Description (optional)</label>
+                <label><?php echo __('form.description'); ?> (optional)</label>
                 <input name="description" type="text" placeholder="e.g., Entry-level IP Phone, DECT Base Station">
             </div>
             <div style="display:flex;gap:8px;">
-                <button class="btn" type="submit">Create Device Type</button>
-                <a class="btn btn-secondary" href="/admin/dashboard.php">Back to Admin</a>
+                <button class="btn" type="submit"><?php echo __('button.create'); ?> Device Type</button>
+                <a class="btn btn-secondary" href="/admin/dashboard.php"><?php echo __('button.back'); ?></a>
             </div>
         </form>
     </div>
@@ -104,16 +104,16 @@ require_once __DIR__ . '/_header.php';
     <div class="card">
         <h3>Existing Device Types</h3>
         <?php if (empty($types)): ?>
-            <p>No device types found. Create one above to get started.</p>
+            <p><?php echo __('label.no_results'); ?>. Create one above to get started.</p>
         <?php else: ?>
             <table>
                 <thead>
                     <tr>
-                        <th>Type Name</th>
-                        <th>Description</th>
+                        <th><?php echo __('form.name'); ?></th>
+                        <th><?php echo __('form.description'); ?></th>
                         <th>Devices Using</th>
-                        <th>Created</th>
-                        <th>Actions</th>
+                        <th><?php echo __('table.created_at'); ?></th>
+                        <th><?php echo __('table.actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -137,7 +137,7 @@ require_once __DIR__ . '/_header.php';
                             </td>
                             <td style="font-size:13px;color:#666;"><?php echo date('M d, Y', strtotime($t['created_at'])); ?></td>
                             <td style="white-space:nowrap;">
-                                <a class="btn" href="/admin/device_types_edit.php?id=<?php echo (int)$t['id']; ?>" style="padding:6px 12px;font-size:13px;">Edit</a>
+                                <a class="btn" href="/admin/device_types_edit.php?id=<?php echo (int)$t['id']; ?>" style="padding:6px 12px;font-size:13px;"><?php echo __('button.edit'); ?></a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

@@ -108,7 +108,7 @@ require_once __DIR__ . '/_header.php';
     </p>
 </div>
 
-<h2>Globale variabelen (gebruik in config met {{VARNAME}})</h2>
+<h2><?php echo __('page.variables.title'); ?> (gebruik in config met {{VARNAME}})</h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -123,24 +123,24 @@ require_once __DIR__ . '/_header.php';
                 <input name="var_name" type="text" pattern="[A-Z0-9_]+" placeholder="SERVER_IP" required>
             </div>
             <div class="form-group">
-                <label>Waarde</label>
+                <label><?php echo __('table.value'); ?></label>
                 <input name="var_value" type="text" required>
             </div>
             <div class="form-group">
-                <label>Beschrijving (optioneel)</label>
+                <label><?php echo __('form.description'); ?> (optioneel)</label>
                 <input name="description" type="text">
             </div>
-            <button class="btn" type="submit">Aanmaken</button>
+            <button class="btn" type="submit"><?php echo __('button.create'); ?></button>
         </form>
     </section>
 
     <section class="card">
         <h3>Bestaande variabelen</h3>
         <?php if (empty($vars)): ?>
-            <p>Geen variabelen gevonden.</p>
+            <p><?php echo __('label.no_results'); ?></p>
         <?php else: ?>
             <table>
-                <thead><tr><th>ID</th><th>Naam</th><th>Waarde</th><th>Beschrijving</th><th>Aangemaakt</th><th>Acties</th></tr></thead>
+                <thead><tr><th><?php echo __('table.id'); ?></th><th>Naam</th><th><?php echo __('table.value'); ?></th><th><?php echo __('table.description'); ?></th><th><?php echo __('table.created_at'); ?></th><th><?php echo __('table.actions'); ?></th></tr></thead>
                 <tbody>
                     <?php foreach ($vars as $v): ?>
                         <tr>
@@ -150,12 +150,12 @@ require_once __DIR__ . '/_header.php';
                             <td><?php echo htmlspecialchars($v['description'] ?? '-'); ?></td>
                             <td><?php echo htmlspecialchars($v['created_at']); ?></td>
                             <td>
-                                <button class="btn" onclick="document.getElementById('edit-<?php echo (int)$v['id']; ?>').style.display='block';">Bewerken</button>
-                                <form method="post" style="display:inline" onsubmit="return confirm('Weet je zeker dat je deze variabele wilt verwijderen?');">
+                                <button class="btn" onclick="document.getElementById('edit-<?php echo (int)$v['id']; ?>').style.display='block';"><?php echo __('button.edit'); ?></button>
+                                <form method="post" style="display:inline" onsubmit="return confirm('<?php echo __('confirm.delete'); ?>');">
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                     <input type="hidden" name="do" value="delete">
                                     <input type="hidden" name="id" value="<?php echo (int)$v['id']; ?>">
-                                    <button class="btn" type="submit" style="background:#dc3545;">Verwijderen</button>
+                                    <button class="btn" type="submit" style="background:#dc3545;"><?php echo __('button.delete'); ?></button>
                                 </form>
 
                                 <!-- inline edit form, hidden by default -->
@@ -169,16 +169,16 @@ require_once __DIR__ . '/_header.php';
                                             <input name="var_name" type="text" value="<?php echo htmlspecialchars($v['var_name']); ?>" required>
                                         </div>
                                         <div class="form-group">
-                                            <label>Waarde</label>
+                                            <label><?php echo __('table.value'); ?></label>
                                             <input name="var_value" type="text" value="<?php echo htmlspecialchars($v['var_value']); ?>" required>
                                         </div>
                                         <div class="form-group">
-                                            <label>Beschrijving</label>
+                                            <label><?php echo __('form.description'); ?></label>
                                             <input name="description" type="text" value="<?php echo htmlspecialchars($v['description']); ?>">
                                         </div>
                                         <div style="display:flex; gap:8px;">
-                                            <button class="btn" type="submit">Opslaan</button>
-                                            <button type="button" class="btn" onclick="document.getElementById('edit-<?php echo (int)$v['id']; ?>').style.display='none';" style="background:#6c757d;">Annuleer</button>
+                                            <button class="btn" type="submit"><?php echo __('button.save'); ?></button>
+                                            <button type="button" class="btn" onclick="document.getElementById('edit-<?php echo (int)$v['id']; ?>').style.display='none';" style="background:#6c757d;"><?php echo __('button.cancel'); ?></button>
                                         </div>
                                     </form>
                                 </div>

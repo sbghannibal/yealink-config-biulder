@@ -67,36 +67,36 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 
-    <h2>Rollen & permissies</h2>
+    <h2><?php echo __('page.roles.title'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
     <section class="card">
-        <h3>Maak nieuwe rol</h3>
+        <h3><?php echo __('page.roles.create'); ?></h3>
         <form method="post">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="create_role">
             <div class="form-group">
-                <label>Rolnaam</label>
+                <label><?php echo __('form.name'); ?></label>
                 <input name="role_name" type="text" required>
             </div>
             <div class="form-group">
-                <label>Beschrijving</label>
+                <label><?php echo __('form.description'); ?></label>
                 <input name="description" type="text">
             </div>
-            <button class="btn" type="submit">Maak rol</button>
+            <button class="btn" type="submit"><?php echo __('button.create'); ?></button>
         </form>
     </section>
 
     <section class="card" style="margin-top:16px;">
-        <h3>Bestaande rollen</h3>
+        <h3><?php echo __('page.roles.title'); ?></h3>
         <?php if (empty($roles)): ?>
-            <p>Geen rollen gevonden.</p>
+            <p><?php echo __('label.no_results'); ?></p>
         <?php else: ?>
             <table>
                 <thead>
-                    <tr><th>ID</th><th>Rol</th><th>Beschrijving</th><th>Permissies</th><th>Acties</th></tr>
+                    <tr><th><?php echo __('table.id'); ?></th><th><?php echo __('table.role'); ?></th><th><?php echo __('table.description'); ?></th><th><?php echo __('form.permissions'); ?></th><th><?php echo __('table.actions'); ?></th></tr>
                 </thead>
                 <tbody>
                     <?php
@@ -110,11 +110,11 @@ require_once __DIR__ . '/_header.php';
                             <td><?php echo htmlspecialchars($r['description']); ?></td>
                             <td><?php echo htmlspecialchars(implode(', ', $permsByRole[$r['id']] ?? [])); ?></td>
                             <td>
-                                <a class="btn" href="/admin/roles_edit.php?id=<?php echo (int)$r['id']; ?>" style="font-size:12px; padding:4px 10px; background:#007bff;">✏️ Bewerken</a>
+                                <a class="btn" href="/admin/roles_edit.php?id=<?php echo (int)$r['id']; ?>" style="font-size:12px; padding:4px 10px; background:#007bff;">✏️ <?php echo __('button.edit'); ?></a>
                                 <?php if ($is_system): ?>
                                     <span class="btn" style="font-size:12px; padding:4px 10px; background:#6c757d; cursor:default; opacity:0.7;" title="Systeemrol kan niet worden verwijderd">🔒 Systeem rol</span>
                                 <?php else: ?>
-                                    <a class="btn" href="/admin/roles_delete.php?id=<?php echo (int)$r['id']; ?>" style="font-size:12px; padding:4px 10px; background:#dc3545;" onclick="return confirm('Weet je zeker dat je deze rol wilt verwijderen?');">🗑️ Verwijderen</a>
+                                    <a class="btn" href="/admin/roles_delete.php?id=<?php echo (int)$r['id']; ?>" style="font-size:12px; padding:4px 10px; background:#dc3545;" onclick="return confirm('<?php echo __('confirm.delete_role'); ?>');">🗑️ <?php echo __('button.delete'); ?></a>
                                 <?php endif; ?>
                             </td>
                         </tr>

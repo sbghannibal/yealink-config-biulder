@@ -187,7 +187,7 @@ require_once __DIR__ . '/_header.php';
     .badge.inactive { background: #dc3545; }
 </style>
 
-    <h2>Config Templates</h2>
+    <h2><?php echo __('page.templates.title'); ?></h2>
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <div></div>
@@ -202,7 +202,7 @@ require_once __DIR__ . '/_header.php';
     <div class="templates-grid">
         <div>
             <div class="card">
-                <h3><?php echo $edit_template ? 'Template Bewerken' : 'Nieuw Template'; ?></h3>
+                <h3><?php echo $edit_template ? __('page.templates.title') . ' ' . __('button.edit') : 'Nieuw Template'; ?></h3>
                 <form method="post" class="template-form">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                     <input type="hidden" name="action" value="<?php echo $edit_template ? 'update' : 'create'; ?>">
@@ -211,14 +211,14 @@ require_once __DIR__ . '/_header.php';
                     <?php endif; ?>
                     
                     <div class="form-group">
-                        <label>Template Naam *</label>
+                        <label><?php echo __('form.name'); ?> *</label>
                         <input name="template_name" type="text" required value="<?php echo htmlspecialchars($edit_template['template_name'] ?? ''); ?>">
                     </div>
                     
                     <div class="form-group">
-                        <label>Device Type *</label>
+                        <label><?php echo __('form.device_type'); ?> *</label>
                         <select name="device_type_id" required>
-                            <option value="">-- Kies type --</option>
+                            <option value="">-- <?php echo __('form.select_customer'); ?> --</option>
                             <?php foreach ($device_types as $dt): ?>
                                 <option value="<?php echo (int)$dt['id']; ?>" <?php echo ($edit_template && $edit_template['device_type_id'] == $dt['id']) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($dt['type_name']); ?>
@@ -233,7 +233,7 @@ require_once __DIR__ . '/_header.php';
                     </div>
                     
                     <div class="form-group">
-                        <label>Beschrijving</label>
+                        <label><?php echo __('form.description'); ?></label>
                         <textarea name="description" rows="2"><?php echo htmlspecialchars($edit_template['description'] ?? ''); ?></textarea>
                     </div>
                     
@@ -253,9 +253,9 @@ require_once __DIR__ . '/_header.php';
                     </div>
                     
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn" type="submit"><?php echo $edit_template ? 'Bijwerken' : 'Aanmaken'; ?></button>
+                        <button class="btn" type="submit"><?php echo $edit_template ? __('button.edit') : __('button.create'); ?></button>
                         <?php if ($edit_template): ?>
-                            <a class="btn" href="/admin/templates.php" style="background: #6c757d;">Annuleren</a>
+                            <a class="btn" href="/admin/templates.php" style="background: #6c757d;"><?php echo __('button.cancel'); ?></a>
                         <?php endif; ?>
                     </div>
                 </form>
@@ -294,12 +294,12 @@ require_once __DIR__ . '/_header.php';
                                     </div>
                                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
                                         <a class="btn" href="/admin/template_variables.php?template_id=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; background: #17a2b8;">Variabelen</a>
-                                        <a class="btn" href="?edit=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center;">Bewerk</a>
-                                        <form method="post" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je dit template wilt verwijderen?');">
+                        <a class="btn" href="?edit=<?php echo (int)$t['id']; ?>" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center;"><?php echo __('button.edit'); ?></a>
+                                        <form method="post" style="display: inline;" onsubmit="return confirm('<?php echo __('confirm.delete'); ?>');">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="template_id" value="<?php echo (int)$t['id']; ?>">
-                                            <button class="btn" type="submit" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; background: #dc3545;">Verwijder</button>
+                                            <button class="btn" type="submit" style="font-size: 11px; padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; background: #dc3545;"><?php echo __('button.delete'); ?></button>
                                         </form>
                                     </div>
                                 </div>

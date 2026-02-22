@@ -149,7 +149,7 @@ try {
 require_once __DIR__ . '/_header.php';
 ?>
 
-    <h2>Gebruiker bewerken</h2>
+    <h2><?php echo __('page.users.edit'); ?></h2>
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
@@ -160,17 +160,17 @@ require_once __DIR__ . '/_header.php';
             <input type="hidden" name="id" value="<?php echo (int)$user['id']; ?>">
 
             <div class="form-group">
-                <label>Gebruikersnaam</label>
+                <label><?php echo __('form.username'); ?></label>
                 <input name="username" type="text" value="<?php echo htmlspecialchars($user['username']); ?>" required>
             </div>
 
             <div class="form-group">
-                <label>E-mail</label>
+                <label><?php echo __('form.email'); ?></label>
                 <input name="email" type="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
             </div>
 
             <div class="form-group">
-                <label>Nieuw wachtwoord (leeg laten om ongewijzigd)</label>
+                <label><?php echo __('form.password'); ?></label>
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                     <input name="password" id="password-field" type="password" autocomplete="new-password" style="flex:1; min-width:200px;" oninput="checkPasswordStrength(this.value)">
                     <button type="button" onclick="generatePassword()" style="padding:8px 12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">🔑 Genereer wachtwoord</button>
@@ -181,20 +181,20 @@ require_once __DIR__ . '/_header.php';
             </div>
 
             <div class="form-group">
-                <label>Actief</label>
+                <label><?php echo __('form.is_active'); ?></label>
                 <select name="is_active">
-                    <option value="1" <?php echo $user['is_active'] ? 'selected' : ''; ?>>Ja</option>
-                    <option value="0" <?php echo !$user['is_active'] ? 'selected' : ''; ?>>Nee</option>
+                    <option value="1" <?php echo $user['is_active'] ? 'selected' : ''; ?>><?php echo __('label.yes'); ?></option>
+                    <option value="0" <?php echo !$user['is_active'] ? 'selected' : ''; ?>><?php echo __('label.no'); ?></option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Rol</label>
+                <label><?php echo __('form.role'); ?></label>
                 <?php if (empty($all_roles)): ?>
                     <p>Geen rollen geconfigureerd.</p>
                 <?php else: ?>
                     <select name="role_id">
-                        <option value="">-- Selecteer een rol --</option>
+                        <option value="">-- <?php echo __('form.select_role'); ?> --</option>
                         <?php foreach ($all_roles as $r): ?>
                             <option value="<?php echo (int)$r['id']; ?>"
                                 <?php echo (count($assigned) === 1 && in_array((int)$r['id'], $assigned, true)) ? 'selected' : ''; ?>>
@@ -208,8 +208,8 @@ require_once __DIR__ . '/_header.php';
                 <?php endif; ?>
             </div>
 
-            <button class="btn" type="submit">Opslaan</button>
-            <a class="btn" href="/admin/users.php" style="background:#6c757d;">Annuleren</a>
+            <button class="btn" type="submit"><?php echo __('button.save'); ?></button>
+            <a class="btn" href="/admin/users.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
         </form>
     </div>
 
