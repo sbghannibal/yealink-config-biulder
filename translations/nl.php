@@ -26,6 +26,7 @@ return [
     'nav.api_tokens'          => 'API Tokens',
     'nav.staging_certs'       => 'Staging Certs',
     'nav.staging_credentials' => 'Credentials',
+    'nav.copy_variables'      => 'Variabelen Kopiëren',
 
     // Buttons
     'button.save'    => 'Opslaan',
@@ -619,5 +620,21 @@ return [
     // Widget: Klanten
     'widget.total_customers.title'       => 'Actieve Klanten',
     'widget.customers.view'              => 'Bekijk Klanten',
+
+    // admin/copy_template_variables.php
+    'page.copy_template_variables.title'          => 'Variabelen Kopiëren',
+    'page.copy_template_variables.source'         => 'Bronsjabloon',
+    'page.copy_template_variables.target'         => 'Doelsjabloon(en)',
+    'page.copy_template_variables.overwrite'      => 'Bestaande variabelen overschrijven',
+    'page.copy_template_variables.copy_btn'       => 'Variabelen Kopiëren',
+    'page.copy_template_variables.select_source'  => 'Selecteer bronsjabloon',
+    'page.copy_template_variables.select_targets' => 'Selecteer één of meer doelsjablonen',
+    'page.copy_template_variables.no_templates'   => 'Geen sjablonen beschikbaar',
+    'page.copy_template_variables.vars'           => 'variabelen',
+    'page.copy_template_variables.no_source_vars' => 'Het bronsjabloon heeft geen variabelen om te kopiëren.',
+    'page.copy_template_variables.err_no_source'  => 'Selecteer een bronsjabloon.',
+    'page.copy_template_variables.err_no_target'  => 'Selecteer minimaal één doelsjabloon.',
+    'page.copy_template_variables.err_same'       => 'Bron en doel mogen niet hetzelfde sjabloon zijn.',
+    'page.copy_template_variables.success'        => 'Variabelen succesvol gekopieerd naar %d sjabloon(en). %d variabele(n) toegevoegd, %d overgeslagen.',
 
 ];

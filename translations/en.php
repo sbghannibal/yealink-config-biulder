@@ -26,6 +26,7 @@ return [
     'nav.api_tokens'          => 'API Tokens',
     'nav.staging_certs'       => 'Staging Certs',
     'nav.staging_credentials' => 'Credentials',
+    'nav.copy_variables'      => 'Copy Variables',
 
     // Buttons
     'button.save'    => 'Save',
@@ -619,5 +620,21 @@ return [
     // Widget: Customers
     'widget.total_customers.title'       => 'Active Customers',
     'widget.customers.view'              => 'View Customers',
+
+    // admin/copy_template_variables.php
+    'page.copy_template_variables.title'          => 'Copy Template Variables',
+    'page.copy_template_variables.source'         => 'Source Template',
+    'page.copy_template_variables.target'         => 'Target Template(s)',
+    'page.copy_template_variables.overwrite'      => 'Overwrite existing variables',
+    'page.copy_template_variables.copy_btn'       => 'Copy Variables',
+    'page.copy_template_variables.select_source'  => 'Select source template',
+    'page.copy_template_variables.select_targets' => 'Select one or more target templates',
+    'page.copy_template_variables.no_templates'   => 'No templates available',
+    'page.copy_template_variables.vars'           => 'variables',
+    'page.copy_template_variables.no_source_vars' => 'The source template has no variables to copy.',
+    'page.copy_template_variables.err_no_source'  => 'Please select a source template.',
+    'page.copy_template_variables.err_no_target'  => 'Please select at least one target template.',
+    'page.copy_template_variables.err_same'       => 'Source and target cannot be the same template.',
+    'page.copy_template_variables.success'        => 'Variables copied successfully to %d template(s). %d variable(s) added, %d skipped.',
 
 ];
