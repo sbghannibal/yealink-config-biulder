@@ -27,3 +27,11 @@ Thumbs.db
 *.swo
 *~
 .env
+
+# Firmware downloads
+downloads/Handset/*
+downloads/W70/*
+downloads/headset/*
+!downloads/Handset/.gitkeep
+!downloads/W70/.gitkeep
+!downloads/headset/.gitkeep
