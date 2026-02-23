@@ -624,6 +624,9 @@ return [
 
     // admin/copy_template_variables.php
     'page.copy_template_variables.title'          => 'Copier les variables de modèle',
+    'page.copy_template_variables.tip_source_needs_vars'          => 'Astuce : la source doit contenir des variables pour pouvoir les copier.',
+    'page.copy_template_variables.search_placeholder'          => 'Rechercher un modèle ou un type d’appareil…',
+    'page.copy_template_variables.all_device_types'          => 'Tous les types d’appareil',
     'page.copy_template_variables.source'         => 'Modèle source',
     'page.copy_template_variables.target'         => 'Modèle(s) cible(s)',
     'page.copy_template_variables.overwrite'      => 'Écraser les variables existantes',
