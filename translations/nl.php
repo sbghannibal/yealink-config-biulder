@@ -62,6 +62,7 @@ return [
     'confirm.delete_role'     => 'Weet je zeker dat je deze rol wilt verwijderen?',
     'confirm.delete_customer' => 'Weet je zeker dat je deze klant wilt verwijderen?',
     'confirm.unsaved_changes' => 'Je hebt niet-opgeslagen wijzigingen. Weet je zeker dat je wilt vertrekken?',
+    'confirm.overwrite_variables' => 'Bestaande variabelen in het doelsjabloon worden overschreven. Doorgaan?',
 
     // Buttons (expanded)
     'button.create_new' => 'Nieuw aanmaken',

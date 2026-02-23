@@ -62,6 +62,7 @@ return [
     'confirm.delete_role'     => 'Are you sure you want to delete this role?',
     'confirm.delete_customer' => 'Are you sure you want to delete this customer?',
     'confirm.unsaved_changes' => 'You have unsaved changes. Are you sure you want to leave?',
+    'confirm.overwrite_variables' => 'Existing variables in the target template(s) will be overwritten. Continue?',
 
     // Buttons (expanded)
     'button.create_new' => 'Create New',
