@@ -313,6 +313,70 @@ require_once __DIR__ . '/_header.php';
   display: inline-flex !important;
 }
 
+.copy-submit-row #btnCopy{
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+}
+
+/* --- Layout v2 (grid): checkbox | name+type | badge --- */
+.copy-submit-row{
+  margin-top: 20px;
+}
+.copy-submit-row #btnCopy{
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  display: inline-flex !important;
+}
+
+/* Apply only to the lists on this page */
+#srcList .template-item,
+#tgtList .template-item{
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) max-content !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+}
+
+/* checkbox/radio */
+#srcList .template-item > input,
+#tgtList .template-item > input{
+  margin: 0 !important;
+}
+
+/* label column must be allowed to shrink/grow */
+#srcList .template-item > label,
+#tgtList .template-item > label{
+  margin: 0 !important;
+  min-width: 0 !important;
+  display: inline !important; /* keep label simple; spans handle wrapping */
+}
+
+/* name wraps and uses available space */
+#srcList .template-item > label > span:first-child,
+#tgtList .template-item > label > span:first-child{
+  display: inline !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+/* device type stays compact */
+#srcList .template-item .device-type-label,
+#tgtList .template-item .device-type-label{
+  white-space: nowrap !important;
+}
+
+/* badge stays compact, never forces name column smaller than grid allows */
+#srcList .template-item > .var-badge,
+#tgtList .template-item > .var-badge{
+  white-space: nowrap !important;
+  margin-left: 0 !important;
+}
+
 </style>
 
 <h2>📋 <?php echo __('page.copy_template_variables.title'); ?></h2>
@@ -403,13 +467,6 @@ require_once __DIR__ . '/_header.php';
                     <?php endforeach; ?>
                 </select>
             </div>
-
-            <div class="target-actions">
-                <button type="button" class="btn btn-small btn-outline" id="btnSelectAll">Selecteer alles</button>
-                <button type="button" class="btn btn-small btn-outline" id="btnSelectNone">Deselecteer alles</button>
-                <button type="button" class="btn btn-small btn-outline" id="btnSelectSameType">Selecteer zelfde toesteltype als bron</button>
-            </div>
-
             <div class="template-list" id="tgtList">
                 <?php foreach ($templates as $tpl): ?>
                     <?php
@@ -423,9 +480,9 @@ require_once __DIR__ . '/_header.php';
                          data-name="<?php echo htmlspecialchars(strtolower($tpl_name), ENT_QUOTES); ?>"
                          data-device-type="<?php echo htmlspecialchars($tpl_dt_l, ENT_QUOTES); ?>"
                          data-var-count="<?php echo $var_count; ?>"
-                         onclick="document.getElementById('tgt_<?php echo $tpl_id; ?>').click()">
+                         onclick="if(!event.target.closest(\'input, label\')) document.getElementById(\'tgt_<?php echo $tpl_id; ?>\').click()">
                         <input type="checkbox" name="target_ids[]" id="tgt_<?php echo $tpl_id; ?>"
-                               value="<?php echo $tpl_id; ?>"
+                               onclick="event.stopPropagation()" value="<?php echo $tpl_id; ?>"
                                <?php echo in_array($tpl_id, $selected_targets, true) ? 'checked' : ''; ?>>
                         <label for="tgt_<?php echo $tpl_id; ?>">
                             <span><?php echo htmlspecialchars($tpl_name); ?></span>
@@ -448,7 +505,7 @@ require_once __DIR__ . '/_header.php';
         </div>
     </div>
 
-    <div style="margin-top: 20px;">
+    <div class="copy-submit-row">
         <button type="submit" class="btn" id="btnCopy" onclick="return confirmCopy()" disabled>
             📋 <?php echo __('page.copy_template_variables.copy_btn'); ?>
         </button>
@@ -465,12 +522,7 @@ require_once __DIR__ . '/_header.php';
   const srcType = document.getElementById('srcType');
   const tgtSearch = document.getElementById('tgtSearch');
   const tgtType = document.getElementById('tgtType');
-
-  const btnSelectAll = document.getElementById('btnSelectAll');
-  const btnSelectNone = document.getElementById('btnSelectNone');
-  const btnSelectSameType = document.getElementById('btnSelectSameType');
-
-  function selectedSourceId(){
+function selectedSourceId(){
     const el = form.querySelector('input[name=source_id]:checked');
     return el ? parseInt(el.value, 10) : null;
   }
@@ -505,36 +557,6 @@ require_once __DIR__ . '/_header.php';
     const ok = !!srcId && targets.length > 0 && !targets.includes(srcId);
     btnCopy.disabled = !ok;
   }
-
-  btnSelectAll.addEventListener('click', () => {
-    form.querySelectorAll("input[name='target_ids[]']").forEach(cb => cb.checked = true);
-    const srcId = selectedSourceId();
-    if (srcId) {
-      const self = document.getElementById('tgt_' + srcId);
-      if (self) self.checked = false;
-    }
-    refreshButtonState();
-  });
-
-  btnSelectNone.addEventListener('click', () => {
-    form.querySelectorAll("input[name='target_ids[]']").forEach(cb => cb.checked = false);
-    refreshButtonState();
-  });
-
-  btnSelectSameType.addEventListener('click', () => {
-    const dt = selectedSourceDeviceType();
-    form.querySelectorAll("input[name='target_ids[]']").forEach(cb => {
-      const row = cb.closest('.template-item');
-      const rowDt = row ? (row.getAttribute('data-device-type') || '') : '';
-      cb.checked = !!dt && rowDt === dt;
-    });
-    const srcId = selectedSourceId();
-    if (srcId) {
-      const self = document.getElementById('tgt_' + srcId);
-      if (self) self.checked = false;
-    }
-    refreshButtonState();
-  });
 
   form.addEventListener('input', () => refreshButtonState());
   form.addEventListener('change', (e) => {
