@@ -32,7 +32,8 @@ $error   = '';
 $success = '';
 
 // Detect copyable columns in template_variables dynamically
-function get_copy_columns(PDO $pdo): array {
+function get_copy_columns(PDO $pdo): array
+{
     $exclude = ['id', 'created_at', 'updated_at'];
     $stmt = $pdo->query("SHOW COLUMNS FROM template_variables");
     $cols = [];
@@ -45,7 +46,8 @@ function get_copy_columns(PDO $pdo): array {
 }
 
 // Load all templates with variable counts
-function load_templates(PDO $pdo): array {
+function load_templates(PDO $pdo): array
+{
     $stmt = $pdo->query('
         SELECT
             ct.id,
@@ -64,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = __('error.csrf_invalid');
     } else {
-        $source_id  = !empty($_POST['source_id'])  ? (int)$_POST['source_id']  : null;
-        $target_ids = !empty($_POST['target_ids'])  ? array_map('intval', (array)$_POST['target_ids']) : [];
+        $source_id  = !empty($_POST['source_id']) ? (int) $_POST['source_id'] : null;
+        $target_ids = !empty($_POST['target_ids']) ? array_map('intval', (array) $_POST['target_ids']) : [];
         $overwrite  = !empty($_POST['overwrite']);
 
         if (!$source_id) {
@@ -74,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = __('page.copy_template_variables.err_no_target');
         } else {
             // Remove source from targets if accidentally included
-            $target_ids = array_filter($target_ids, fn($id) => $id !== $source_id);
+            $target_ids = array_values(array_filter($target_ids, fn ($id) => $id !== $source_id));
             if (empty($target_ids)) {
                 $error = __('page.copy_template_variables.err_same');
             }
@@ -116,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
 
                             // Build insert/update values excluding id, parent_variable_id, template_id
-                            $insert_cols = array_filter($copy_cols, fn($c) => $c !== 'parent_variable_id' && $c !== 'template_id');
+                            $insert_cols = array_filter($copy_cols, fn ($c) => $c !== 'parent_variable_id' && $c !== 'template_id');
                             $insert_cols = array_values($insert_cols);
 
                             $values = [];
@@ -126,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             if ($existing && $overwrite) {
                                 // UPDATE
-                                $set_parts = array_map(fn($c) => "`$c` = ?", $insert_cols);
+                                $set_parts = array_map(fn ($c) => "`$c` = ?", $insert_cols);
                                 $upd = $pdo->prepare(
                                     'UPDATE template_variables SET ' . implode(', ', $set_parts) .
                                     ' WHERE id = ?'
@@ -138,12 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 // INSERT
                                 $col_list = array_merge(['template_id'], $insert_cols);
                                 $placeholders = implode(', ', array_fill(0, count($col_list), '?'));
-                                $col_names    = implode(', ', array_map(fn($c) => "`$c`", $col_list));
+                                $col_names    = implode(', ', array_map(fn ($c) => "`$c`", $col_list));
                                 $ins = $pdo->prepare(
                                     "INSERT INTO template_variables ($col_names) VALUES ($placeholders)"
                                 );
                                 $ins->execute(array_merge([$target_id], $values));
-                                $new_id = (int)$pdo->lastInsertId();
+                                $new_id = (int) $pdo->lastInsertId();
                                 $id_map[$var['id']] = $new_id;
                                 $total_added++;
                             }
@@ -190,53 +192,191 @@ try {
     $templates = [];
 }
 
-$selected_source  = !empty($_POST['source_id'])  ? (int)$_POST['source_id']  : null;
-$selected_targets = !empty($_POST['target_ids'])  ? array_map('intval', (array)$_POST['target_ids']) : [];
+$selected_source  = !empty($_POST['source_id']) ? (int) $_POST['source_id'] : null;
+$selected_targets = !empty($_POST['target_ids']) ? array_map('intval', (array) $_POST['target_ids']) : [];
+
+// Build device type list for filters
+$device_types = [];
+foreach ($templates as $tpl) {
+    $dt = trim((string)($tpl['device_type_name'] ?? ''));
+    if ($dt !== '') {
+        $device_types[$dt] = true;
+    }
+}
+$device_types = array_keys($device_types);
+sort($device_types, SORT_NATURAL | SORT_FLAG_CASE);
 
 require_once __DIR__ . '/_header.php';
 ?>
 
 <style>
-    .copy-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-    }
-    .template-list {
-        max-height: 420px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background: #fafafa;
-    }
-    .template-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        border-bottom: 1px solid #eee;
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-    .template-item:last-child { border-bottom: none; }
-    .template-item:hover { background: #f0f0ff; }
-    .template-item input[type="radio"],
-    .template-item input[type="checkbox"] { cursor: pointer; flex-shrink: 0; }
-    .template-item label { cursor: pointer; flex: 1; margin: 0; }
-    .var-badge {
-        background: #6c757d;
-        color: #fff;
-        font-size: 11px;
-        padding: 2px 7px;
-        border-radius: 10px;
-        white-space: nowrap;
-    }
-    .var-badge.has-vars { background: #28a745; }
-    .device-type-label { font-size: 11px; color: #999; }
-    .overwrite-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
-    @media (max-width: 768px) {
-        .copy-grid { grid-template-columns: 1fr; }
-    }
+.copy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+.template-list {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fafafa;
+}
+.template-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+}
+.template-item:last-child { border-bottom: none; }
+.template-item:hover { background: #f0f0ff; }
+.template-item input[type="radio"],
+.template-item input[type="checkbox"] { cursor: pointer; flex-shrink: 0; }
+.template-item label { cursor: pointer; flex: 1; margin: 0; min-width: 0; }
+.template-item label span:first-child { white-space: normal; word-break: break-word; }
+.var-badge {
+    background: #6c757d;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.var-badge.has-vars { background: #28a745; }
+.device-type-label { font-size: 11px; color: #999; }
+.overwrite-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+
+.filter-bar { display:flex; gap:10px; flex-wrap:wrap; margin: 10px 0 12px; }
+.filter-bar input[type="search"]{
+    flex: 1;
+    min-width: 180px;
+    padding: 8px 10px;
+    border:1px solid #ddd;
+    border-radius:4px;
+}
+.filter-bar select{
+    min-width: 180px;
+    padding: 8px 10px;
+    border:1px solid #ddd;
+    border-radius:4px;
+    background:#fff;
+}
+.target-actions{ display:flex; gap:8px; flex-wrap:wrap; margin: 10px 0 0; }
+.btn-small{ padding:6px 10px; font-size:12px; }
+.btn-outline{ background:#fff; border:1px solid #6c757d; color:#333; }
+.btn-outline:hover{ background:#f7f7f7; }
+.muted{ color:#6c757d; font-size:12px; }
+
+@media (max-width: 768px) {
+    .copy-grid { grid-template-columns: 1fr; }
+}
+/* --- UI fixes v4: hard reset button styling inside target-actions --- */
+#targetCard .target-actions{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+#targetCard .target-actions button{
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: 1px solid #6c757d;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+#targetCard .target-actions button:hover{ background:#f7f7f7; }
+#targetCard .target-actions button:active{ transform: translateY(1px); }
+#targetCard .target-actions button:focus{ outline: 2px solid rgba(70, 122, 255, 0.35); outline-offset: 2px; }
+
+/* --- Stable template row layout --- */
+.template-item{ display:flex; align-items:center; gap:10px; }
+.template-item input[type="radio"], .template-item input[type="checkbox"]{ margin:0; }
+.template-item label{ display:flex; align-items:baseline; gap:6px; min-width:0; flex:1; }
+.template-item label span:first-child{ white-space:normal; overflow:visible; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.template-item .device-type-label{ white-space:nowrap; flex-shrink:0; }
+.template-item .var-badge{ flex-shrink:0; margin-left:auto; }
+
+
+/* --- Fix: make the main submit button compact (do not stretch full width) --- */
+#copyForm > div[style*="margin-top"] .btn#btnCopy{
+  width: fit-content !important;
+  display: inline-flex !important;
+}
+
+.copy-submit-row #btnCopy{
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+}
+
+/* --- Layout v2 (grid): checkbox | name+type | badge --- */
+.copy-submit-row{
+  margin-top: 20px;
+}
+.copy-submit-row #btnCopy{
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  display: inline-flex !important;
+}
+
+/* Apply only to the lists on this page */
+#srcList .template-item,
+#tgtList .template-item{
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) max-content !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+}
+
+/* checkbox/radio */
+#srcList .template-item > input,
+#tgtList .template-item > input{
+  margin: 0 !important;
+}
+
+/* label column must be allowed to shrink/grow */
+#srcList .template-item > label,
+#tgtList .template-item > label{
+  margin: 0 !important;
+  min-width: 0 !important;
+  display: inline !important; /* keep label simple; spans handle wrapping */
+}
+
+/* name wraps and uses available space */
+#srcList .template-item > label > span:first-child,
+#tgtList .template-item > label > span:first-child{
+  display: inline !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+/* device type stays compact */
+#srcList .template-item .device-type-label,
+#tgtList .template-item .device-type-label{
+  white-space: nowrap !important;
+}
+
+/* badge stays compact, never forces name column smaller than grid allows */
+#srcList .template-item > .var-badge,
+#tgtList .template-item > .var-badge{
+  white-space: nowrap !important;
+  margin-left: 0 !important;
+}
+
 </style>
 
 <h2>📋 <?php echo __('page.copy_template_variables.title'); ?></h2>
@@ -260,49 +400,100 @@ require_once __DIR__ . '/_header.php';
 
     <div class="copy-grid">
         <!-- SOURCE -->
-        <div class="card">
+        <div class="card" id="sourceCard">
             <h3>📤 <?php echo __('page.copy_template_variables.source'); ?></h3>
             <p style="color:#666;font-size:13px;"><?php echo __('page.copy_template_variables.select_source'); ?></p>
-            <div class="template-list">
+
+            <div class="filter-bar">
+                <input type="search" id="srcSearch" placeholder="Zoek sjabloon of toesteltype…" autocomplete="off">
+                <select id="srcType">
+                    <option value="">Alle toesteltypes</option>
+                    <?php foreach ($device_types as $dt): ?>
+                        <option value="<?php echo htmlspecialchars(strtolower($dt), ENT_QUOTES); ?>">
+                            <?php echo htmlspecialchars($dt); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="muted">Tip: bron moet variabelen hebben om te kunnen kopiëren.</div>
+
+            <div class="template-list" id="srcList">
                 <?php foreach ($templates as $tpl): ?>
-                <div class="template-item" onclick="document.getElementById('src_<?php echo (int)$tpl['id']; ?>').click()">
-                    <input type="radio" name="source_id" id="src_<?php echo (int)$tpl['id']; ?>"
-                           value="<?php echo (int)$tpl['id']; ?>"
-                           <?php echo $selected_source === (int)$tpl['id'] ? 'checked' : ''; ?>>
-                    <label for="src_<?php echo (int)$tpl['id']; ?>">
-                        <span><?php echo htmlspecialchars($tpl['name'] ?? ''); ?></span>
-                        <?php if (!empty($tpl['device_type_name'])): ?>
-                            <span class="device-type-label"> — <?php echo htmlspecialchars($tpl['device_type_name']); ?></span>
-                        <?php endif; ?>
-                    </label>
-                    <span class="var-badge <?php echo ($tpl['var_count'] ?? 0) > 0 ? 'has-vars' : ''; ?>">
-                        <?php echo (int)($tpl['var_count'] ?? 0); ?> <?php echo __('page.copy_template_variables.vars'); ?>
-                    </span>
-                </div>
+                    <?php
+                        $tpl_id = (int)($tpl['id'] ?? 0);
+                        $tpl_name = (string)($tpl['name'] ?? '');
+                        $tpl_dt = (string)($tpl['device_type_name'] ?? '');
+                        $tpl_dt_l = strtolower(trim($tpl_dt));
+                        $var_count = (int)($tpl['var_count'] ?? 0);
+                        $disabled = ($var_count === 0);
+                    ?>
+                    <div class="template-item"
+                         data-name="<?php echo htmlspecialchars(strtolower($tpl_name), ENT_QUOTES); ?>"
+                         data-device-type="<?php echo htmlspecialchars($tpl_dt_l, ENT_QUOTES); ?>"
+                         data-var-count="<?php echo $var_count; ?>"
+                         onclick="document.getElementById('src_<?php echo $tpl_id; ?>').click()">
+                        <input type="radio" name="source_id" id="src_<?php echo $tpl_id; ?>"
+                               value="<?php echo $tpl_id; ?>"
+                               <?php echo $selected_source === $tpl_id ? 'checked' : ''; ?>
+                               <?php echo $disabled ? 'disabled' : ''; ?>>
+                        <label for="src_<?php echo $tpl_id; ?>">
+                            <span><?php echo htmlspecialchars($tpl_name); ?></span>
+                            <?php if ($tpl_dt !== ''): ?>
+                                <span class="device-type-label"> — <?php echo htmlspecialchars($tpl_dt); ?></span>
+                            <?php endif; ?>
+                        </label>
+                        <span class="var-badge <?php echo $var_count > 0 ? 'has-vars' : ''; ?>">
+                            <?php echo $var_count; ?> <?php echo __('page.copy_template_variables.vars'); ?>
+                        </span>
+                    </div>
                 <?php endforeach; ?>
             </div>
         </div>
 
         <!-- TARGET -->
-        <div class="card">
+        <div class="card" id="targetCard">
             <h3>📥 <?php echo __('page.copy_template_variables.target'); ?></h3>
             <p style="color:#666;font-size:13px;"><?php echo __('page.copy_template_variables.select_targets'); ?></p>
-            <div class="template-list">
+
+            <div class="filter-bar">
+                <input type="search" id="tgtSearch" placeholder="Zoek sjabloon of toesteltype…" autocomplete="off">
+                <select id="tgtType">
+                    <option value="">Alle toesteltypes</option>
+                    <?php foreach ($device_types as $dt): ?>
+                        <option value="<?php echo htmlspecialchars(strtolower($dt), ENT_QUOTES); ?>">
+                            <?php echo htmlspecialchars($dt); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="template-list" id="tgtList">
                 <?php foreach ($templates as $tpl): ?>
-                <div class="template-item" onclick="document.getElementById('tgt_<?php echo (int)$tpl['id']; ?>').click()">
-                    <input type="checkbox" name="target_ids[]" id="tgt_<?php echo (int)$tpl['id']; ?>"
-                           value="<?php echo (int)$tpl['id']; ?>"
-                           <?php echo in_array((int)$tpl['id'], $selected_targets, true) ? 'checked' : ''; ?>>
-                    <label for="tgt_<?php echo (int)$tpl['id']; ?>">
-                        <span><?php echo htmlspecialchars($tpl['name'] ?? ''); ?></span>
-                        <?php if (!empty($tpl['device_type_name'])): ?>
-                            <span class="device-type-label"> — <?php echo htmlspecialchars($tpl['device_type_name']); ?></span>
-                        <?php endif; ?>
-                    </label>
-                    <span class="var-badge <?php echo ($tpl['var_count'] ?? 0) > 0 ? 'has-vars' : ''; ?>">
-                        <?php echo (int)($tpl['var_count'] ?? 0); ?> <?php echo __('page.copy_template_variables.vars'); ?>
-                    </span>
-                </div>
+                    <?php
+                        $tpl_id = (int)($tpl['id'] ?? 0);
+                        $tpl_name = (string)($tpl['name'] ?? '');
+                        $tpl_dt = (string)($tpl['device_type_name'] ?? '');
+                        $tpl_dt_l = strtolower(trim($tpl_dt));
+                        $var_count = (int)($tpl['var_count'] ?? 0);
+                    ?>
+                    <div class="template-item"
+                         data-name="<?php echo htmlspecialchars(strtolower($tpl_name), ENT_QUOTES); ?>"
+                         data-device-type="<?php echo htmlspecialchars($tpl_dt_l, ENT_QUOTES); ?>"
+                         data-var-count="<?php echo $var_count; ?>"
+                         onclick="if(!event.target.closest(\'input, label\')) document.getElementById(\'tgt_<?php echo $tpl_id; ?>\').click()">
+                        <input type="checkbox" name="target_ids[]" id="tgt_<?php echo $tpl_id; ?>"
+                               onclick="event.stopPropagation()" value="<?php echo $tpl_id; ?>"
+                               <?php echo in_array($tpl_id, $selected_targets, true) ? 'checked' : ''; ?>>
+                        <label for="tgt_<?php echo $tpl_id; ?>">
+                            <span><?php echo htmlspecialchars($tpl_name); ?></span>
+                            <?php if ($tpl_dt !== ''): ?>
+                                <span class="device-type-label"> — <?php echo htmlspecialchars($tpl_dt); ?></span>
+                            <?php endif; ?>
+                        </label>
+                        <span class="var-badge <?php echo $var_count > 0 ? 'has-vars' : ''; ?>">
+                            <?php echo $var_count; ?> <?php echo __('page.copy_template_variables.vars'); ?>
+                        </span>
+                    </div>
                 <?php endforeach; ?>
             </div>
 
@@ -314,21 +505,90 @@ require_once __DIR__ . '/_header.php';
         </div>
     </div>
 
-    <div style="margin-top: 20px;">
-        <button type="submit" class="btn" onclick="return confirmCopy()">
+    <div class="copy-submit-row">
+        <button type="submit" class="btn" id="btnCopy" onclick="return confirmCopy()" disabled>
             📋 <?php echo __('page.copy_template_variables.copy_btn'); ?>
         </button>
     </div>
 </form>
 
 <script>
-function confirmCopy() {
-    var overwrite = document.getElementById('overwrite').checked;
-    if (overwrite) {
-        return confirm('<?php echo addslashes(__('confirm.overwrite_variables')); ?>');
+(function(){
+  const form = document.getElementById('copyForm');
+  const btnCopy = document.getElementById('btnCopy');
+  const overwrite = document.getElementById('overwrite');
+
+  const srcSearch = document.getElementById('srcSearch');
+  const srcType = document.getElementById('srcType');
+  const tgtSearch = document.getElementById('tgtSearch');
+  const tgtType = document.getElementById('tgtType');
+function selectedSourceId(){
+    const el = form.querySelector('input[name=source_id]:checked');
+    return el ? parseInt(el.value, 10) : null;
+  }
+
+  function selectedTargetIds(){
+    return Array.from(form.querySelectorAll("input[name='target_ids[]']:checked")).map(x => parseInt(x.value, 10));
+  }
+
+  function selectedSourceDeviceType(){
+    const srcId = selectedSourceId();
+    if (!srcId) return '';
+    const radio = document.getElementById('src_' + srcId);
+    const row = radio ? radio.closest('.template-item') : null;
+    return row ? (row.getAttribute('data-device-type') || '') : '';
+  }
+
+  function applyFilter(listEl, query, type){
+    const q = (query || '').trim().toLowerCase();
+    const t = (type || '').trim().toLowerCase();
+    listEl.querySelectorAll('.template-item').forEach(row => {
+      const name = row.getAttribute('data-name') || '';
+      const dt = row.getAttribute('data-device-type') || '';
+      const okQuery = !q || name.includes(q) || dt.includes(q);
+      const okType = !t || dt === t;
+      row.style.display = (okQuery && okType) ? '' : 'none';
+    });
+  }
+
+  function refreshButtonState(){
+    const srcId = selectedSourceId();
+    const targets = selectedTargetIds();
+    const ok = !!srcId && targets.length > 0 && !targets.includes(srcId);
+    btnCopy.disabled = !ok;
+  }
+
+  form.addEventListener('input', () => refreshButtonState());
+  form.addEventListener('change', (e) => {
+    if (e.target && e.target.matches('input[name=source_id]')) {
+      const srcId = selectedSourceId();
+      if (srcId) {
+        const self = document.getElementById('tgt_' + srcId);
+        if (self) self.checked = false;
+      }
+      // Re-apply same-type selection if user wants; we won’t force it.
+    }
+    refreshButtonState();
+  });
+
+  srcSearch.addEventListener('input', () => applyFilter(document.getElementById('srcList'), srcSearch.value, srcType.value));
+  srcType.addEventListener('change', () => applyFilter(document.getElementById('srcList'), srcSearch.value, srcType.value));
+  tgtSearch.addEventListener('input', () => applyFilter(document.getElementById('tgtList'), tgtSearch.value, tgtType.value));
+  tgtType.addEventListener('change', () => applyFilter(document.getElementById('tgtList'), tgtSearch.value, tgtType.value));
+
+  // Initial
+  applyFilter(document.getElementById('srcList'), '', '');
+  applyFilter(document.getElementById('tgtList'), '', '');
+  refreshButtonState();
+
+  window.confirmCopy = function(){
+    if (btnCopy.disabled) return false;
+    if (overwrite && overwrite.checked) {
+      return confirm(<?php echo json_encode(__('confirm.overwrite_variables')); ?>);
     }
     return true;
-}
+  };
+})();
 </script>
 <?php endif; ?>
 
