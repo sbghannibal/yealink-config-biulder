@@ -274,6 +274,45 @@ require_once __DIR__ . '/_header.php';
 @media (max-width: 768px) {
     .copy-grid { grid-template-columns: 1fr; }
 }
+/* --- UI fixes v4: hard reset button styling inside target-actions --- */
+#targetCard .target-actions{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+#targetCard .target-actions button{
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: 1px solid #6c757d;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+#targetCard .target-actions button:hover{ background:#f7f7f7; }
+#targetCard .target-actions button:active{ transform: translateY(1px); }
+#targetCard .target-actions button:focus{ outline: 2px solid rgba(70, 122, 255, 0.35); outline-offset: 2px; }
+
+/* --- Stable template row layout --- */
+.template-item{ display:flex; align-items:center; gap:10px; }
+.template-item input[type="radio"], .template-item input[type="checkbox"]{ margin:0; }
+.template-item label{ display:flex; align-items:baseline; gap:6px; min-width:0; flex:1; }
+.template-item label span:first-child{ white-space:normal; overflow:visible; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.template-item .device-type-label{ white-space:nowrap; flex-shrink:0; }
+.template-item .var-badge{ flex-shrink:0; margin-left:auto; }
+
+
+/* --- Fix: make the main submit button compact (do not stretch full width) --- */
+#copyForm > div[style*="margin-top"] .btn#btnCopy{
+  width: fit-content !important;
+  display: inline-flex !important;
+}
+
 </style>
 
 <h2>📋 <?php echo __('page.copy_template_variables.title'); ?></h2>
