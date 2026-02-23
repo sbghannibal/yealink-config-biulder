@@ -41,7 +41,6 @@ $csrf = $_SESSION['csrf_token'];
 
 $error = '';
 $success = '';
-$debug_info = ''; // DEBUG
 
 // Handle wizard reset
 if (isset($_GET['reset']) && $_GET['reset'] === '1') {
@@ -81,13 +80,6 @@ if (!isset($_SESSION['wizard_data'])) {
 
 $wizard_data = &$_SESSION['wizard_data'];
 
-// DEBUG: Log wizard data per step
-error_log("=== WIZARD STEP $step ===");
-error_log("session_id: " . session_id());
-error_log("wizard_data keys: " . json_encode(array_keys($wizard_data)));
-error_log("wizard_data['variables']: " . json_encode($wizard_data['variables']));
-error_log("wizard_data['customer_id']: " . ($wizard_data['customer_id'] ?? 'null'));
-
 // Load device if ID provided
 $device = null;
 if ($device_id) {
@@ -116,8 +108,6 @@ if ($device_id) {
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    error_log("POST action: " . ($_POST['action'] ?? 'none'));
-    
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = 'Ongeldige aanvraag (CSRF).';
     } else {
@@ -138,7 +128,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'select_template' && $step === 2) {
             $wizard_data['template_id'] = !empty($_POST['template_id']) ? (int)$_POST['template_id'] : null;
             if ($wizard_data['template_id']) {
-                error_log("Template selected: " . $wizard_data['template_id']);
                 header('Location: ?step=3' . ($device_id ? "&device_id=$device_id" : ''));
                 exit;
             } else {
@@ -161,9 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
-            error_log("=== STEP 3 POST - Variables collected ===");
-            error_log("Total variables: " . count($wizard_data['variables']));
-            error_log("Variables: " . json_encode($wizard_data['variables']));
             header('Location: ?step=4' . ($device_id ? "&device_id=$device_id" : ''));
             exit;
         }
@@ -176,10 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Selecteer een klant.';
             } else {
                 try {
-                    // Generate config from template
-                    error_log("=== STEP 4 POST - Generating config ===");
-                    error_log("Using variables: " . json_encode($wizard_data['variables']));
-                    
                     $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
 
                     if (!$result['success']) {
@@ -284,9 +266,12 @@ try {
     // Load template variables for step 3
     if ($step === 3 && $wizard_data['template_id']) {
         $stmt = $pdo->prepare('
-            SELECT * FROM template_variables
-            WHERE template_id = ?
-            ORDER BY display_order, var_name
+            SELECT tv.*,
+                   pv.var_name AS parent_var_name
+            FROM template_variables tv
+            LEFT JOIN template_variables pv ON tv.parent_variable_id = pv.id
+            WHERE tv.template_id = ?
+            ORDER BY tv.display_order, tv.var_name
         ');
         $stmt->execute([$wizard_data['template_id']]);
         $template_variables = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -303,8 +288,6 @@ try {
 
         // Generate preview - use stored variables from session
         if ($wizard_data['template_id']) {
-            error_log("=== STEP 4 GET - Generating preview ===");
-            error_log("Using variables: " . json_encode($wizard_data['variables']));
             $result = generate_config_from_template($pdo, $wizard_data['template_id'], $wizard_data['variables']);
             if ($result['success']) {
                 $wizard_data['config_content'] = $result['content'];
@@ -376,7 +359,6 @@ require_once __DIR__ . '/../admin/_header.php';
 
     <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
-    <?php if ($debug_info): echo $debug_info; endif; // DEBUG ?>
 
     <div class="wizard-content card">
         <?php if ($step === 1): ?>
@@ -467,7 +449,55 @@ require_once __DIR__ . '/../admin/_header.php';
                 </div>
             </form>
 
-        <?php elseif ($step === 4): ?>
+            <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                function updateChildVisibility() {
+                    document.querySelectorAll('[data-parent-var]').forEach(function (child) {
+                        var parentName = child.getAttribute('data-parent-var');
+                        var showWhen = child.getAttribute('data-show-when') || 'always';
+
+                        if (showWhen === 'always') {
+                            child.style.display = '';
+                            return;
+                        }
+
+                        var parentInput = document.querySelector('[name="var_' + parentName + '"]');
+                        if (!parentInput) {
+                            child.style.display = '';
+                            return;
+                        }
+
+                        var parentValue = parentInput.value;
+                        var show = false;
+
+                        if (showWhen === 'not_empty') {
+                            show = parentValue !== '';
+                        } else if (showWhen === 'true') {
+                            show = parentValue === '1' || parentValue === 'true' || parentValue === 'yes';
+                        } else if (showWhen === 'false') {
+                            show = parentValue === '0' || parentValue === 'false' || parentValue === 'no' || parentValue === '';
+                        } else {
+                            show = true;
+                        }
+
+                        child.style.display = show ? '' : 'none';
+                        // Disable required validation on hidden fields
+                        child.querySelectorAll('[required]').forEach(function (el) {
+                            el.disabled = !show;
+                        });
+                    });
+                }
+
+                // Run on load
+                updateChildVisibility();
+
+                // Re-run whenever any input changes
+                document.querySelectorAll('input, select, textarea').forEach(function (el) {
+                    el.addEventListener('change', updateChildVisibility);
+                    el.addEventListener('input', updateChildVisibility);
+                });
+            });
+            </script>
             <!-- Step 4: Customer Selection & Preview -->
             <h3>Stap 4: Selecteer Klant & Preview</h3>
             <p>Controleer de gegenereerde configuratie en selecteer een klant:</p>
