@@ -78,6 +78,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $template_id) {
             $options = trim($_POST['options'] ?? '');
             $display_order = !empty($_POST['display_order']) ? (int)$_POST['display_order'] : 0;
             
+            // Master/child fields (only when columns exist)
+            $variable_group = $has_master_child_columns ? trim($_POST['variable_group'] ?? '') : null;
+            $is_group_master = $has_master_child_columns ? (!empty($_POST['is_group_master']) ? 1 : 0) : null;
+            $parent_variable_id = $has_master_child_columns ? (!empty($_POST['parent_variable_id']) ? (int)$_POST['parent_variable_id'] : null) : null;
+            $show_when_parent = $has_master_child_columns ? ($_POST['show_when_parent'] ?? 'always') : null;
+            
             if (empty($var_name)) {
                 $error = __('error.var_name_required');
             } else {
@@ -91,27 +97,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $template_id) {
                 
                 if (!$error) {
                     try {
-                        $stmt = $pdo->prepare('
-                            INSERT INTO template_variables 
-                            (template_id, var_name, var_label, var_type, default_value, is_required, 
-                             placeholder, help_text, min_value, max_value, regex_pattern, options, display_order)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ');
-                        $stmt->execute([
-                            $template_id,
-                            $var_name,
-                            $var_label ?: null,
-                            $var_type,
-                            $default_value ?: null,
-                            $is_required,
-                            $placeholder ?: null,
-                            $help_text ?: null,
-                            $min_value,
-                            $max_value,
-                            $regex_pattern ?: null,
-                            $options ?: null,
-                            $display_order
-                        ]);
+                        if ($has_master_child_columns) {
+                            $stmt = $pdo->prepare('
+                                INSERT INTO template_variables 
+                                (template_id, var_name, var_label, var_type, default_value, is_required, 
+                                 placeholder, help_text, min_value, max_value, regex_pattern, options, display_order,
+                                 variable_group, is_group_master, parent_variable_id, show_when_parent)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ');
+                            $stmt->execute([
+                                $template_id,
+                                $var_name,
+                                $var_label ?: null,
+                                $var_type,
+                                $default_value ?: null,
+                                $is_required,
+                                $placeholder ?: null,
+                                $help_text ?: null,
+                                $min_value,
+                                $max_value,
+                                $regex_pattern ?: null,
+                                $options ?: null,
+                                $display_order,
+                                $variable_group ?: null,
+                                $is_group_master,
+                                $parent_variable_id,
+                                $show_when_parent ?: 'always'
+                            ]);
+                        } else {
+                            $stmt = $pdo->prepare('
+                                INSERT INTO template_variables 
+                                (template_id, var_name, var_label, var_type, default_value, is_required, 
+                                 placeholder, help_text, min_value, max_value, regex_pattern, options, display_order)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ');
+                            $stmt->execute([
+                                $template_id,
+                                $var_name,
+                                $var_label ?: null,
+                                $var_type,
+                                $default_value ?: null,
+                                $is_required,
+                                $placeholder ?: null,
+                                $help_text ?: null,
+                                $min_value,
+                                $max_value,
+                                $regex_pattern ?: null,
+                                $options ?: null,
+                                $display_order
+                            ]);
+                        }
                         
                         $success = __('success.variable_created');
                     } catch (Exception $e) {
@@ -141,6 +176,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $template_id) {
             $options = trim($_POST['options'] ?? '');
             $display_order = !empty($_POST['display_order']) ? (int)$_POST['display_order'] : 0;
             
+            // Master/child fields (only when columns exist)
+            $variable_group = $has_master_child_columns ? trim($_POST['variable_group'] ?? '') : null;
+            $is_group_master = $has_master_child_columns ? (!empty($_POST['is_group_master']) ? 1 : 0) : null;
+            $parent_variable_id = $has_master_child_columns ? (!empty($_POST['parent_variable_id']) ? (int)$_POST['parent_variable_id'] : null) : null;
+            $show_when_parent = $has_master_child_columns ? ($_POST['show_when_parent'] ?? 'always') : null;
+            
             if (!$var_id || empty($var_name)) {
                 $error = __('error.variable_id_name_required');
             } else {
@@ -154,29 +195,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $template_id) {
                 
                 if (!$error) {
                     try {
-                        $stmt = $pdo->prepare('
-                            UPDATE template_variables 
-                            SET var_name = ?, var_label = ?, var_type = ?, default_value = ?, is_required = ?,
-                                placeholder = ?, help_text = ?, min_value = ?, max_value = ?, 
-                                regex_pattern = ?, options = ?, display_order = ?
-                            WHERE id = ? AND template_id = ?
-                        ');
-                        $stmt->execute([
-                            $var_name,
-                            $var_label ?: null,
-                            $var_type,
-                            $default_value ?: null,
-                            $is_required,
-                            $placeholder ?: null,
-                            $help_text ?: null,
-                            $min_value,
-                            $max_value,
-                            $regex_pattern ?: null,
-                            $options ?: null,
-                            $display_order,
-                            $var_id,
-                            $template_id
-                        ]);
+                        if ($has_master_child_columns) {
+                            $stmt = $pdo->prepare('
+                                UPDATE template_variables 
+                                SET var_name = ?, var_label = ?, var_type = ?, default_value = ?, is_required = ?,
+                                    placeholder = ?, help_text = ?, min_value = ?, max_value = ?, 
+                                    regex_pattern = ?, options = ?, display_order = ?,
+                                    variable_group = ?, is_group_master = ?, parent_variable_id = ?, show_when_parent = ?
+                                WHERE id = ? AND template_id = ?
+                            ');
+                            $stmt->execute([
+                                $var_name,
+                                $var_label ?: null,
+                                $var_type,
+                                $default_value ?: null,
+                                $is_required,
+                                $placeholder ?: null,
+                                $help_text ?: null,
+                                $min_value,
+                                $max_value,
+                                $regex_pattern ?: null,
+                                $options ?: null,
+                                $display_order,
+                                $variable_group ?: null,
+                                $is_group_master,
+                                $parent_variable_id,
+                                $show_when_parent ?: 'always',
+                                $var_id,
+                                $template_id
+                            ]);
+                        } else {
+                            $stmt = $pdo->prepare('
+                                UPDATE template_variables 
+                                SET var_name = ?, var_label = ?, var_type = ?, default_value = ?, is_required = ?,
+                                    placeholder = ?, help_text = ?, min_value = ?, max_value = ?, 
+                                    regex_pattern = ?, options = ?, display_order = ?
+                                WHERE id = ? AND template_id = ?
+                            ');
+                            $stmt->execute([
+                                $var_name,
+                                $var_label ?: null,
+                                $var_type,
+                                $default_value ?: null,
+                                $is_required,
+                                $placeholder ?: null,
+                                $help_text ?: null,
+                                $min_value,
+                                $max_value,
+                                $regex_pattern ?: null,
+                                $options ?: null,
+                                $display_order,
+                                $var_id,
+                                $template_id
+                            ]);
+                        }
                         
                         $success = __('success.variable_updated');
                     } catch (Exception $e) {
@@ -230,6 +302,20 @@ if ($editing && $template_id) {
     } catch (Exception $e) {
         error_log('Failed to load variable: ' . $e->getMessage());
     }
+}
+
+// Detect whether master/child columns are present (check all four required columns)
+$has_master_child_columns = false;
+try {
+    $col_check = $pdo->query("
+        SELECT COUNT(*) FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'template_variables'
+          AND COLUMN_NAME IN ('variable_group','is_group_master','parent_variable_id','show_when_parent')
+    ");
+    $has_master_child_columns = ((int)$col_check->fetchColumn() === 4);
+} catch (Exception $e) {
+    // Column check failed; treat as not available
 }
 
 require_once __DIR__ . '/_header.php';
@@ -385,6 +471,55 @@ document.addEventListener('DOMContentLoaded', updateTypeFields);
                         <input name="display_order" type="number" value="<?php echo $edit_variable['display_order'] ?? 0; ?>" min="0">
                     </div>
                     
+                    <?php if ($has_master_child_columns): ?>
+                    <div class="form-section" style="margin-top:12px;">
+                        <h4 style="margin-top:0;font-size:14px;color:#666;">Master/Child Relatie</h4>
+                        
+                        <div class="form-group">
+                            <label>Variabele groep</label>
+                            <input name="variable_group" type="text" value="<?php echo htmlspecialchars($edit_variable['variable_group'] ?? ''); ?>" placeholder="bijv. sip_account">
+                            <small style="color:#666;">Optionele groepsnaam voor gerelateerde variabelen.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><input type="checkbox" name="is_group_master" value="1" <?php echo !empty($edit_variable['is_group_master']) ? 'checked' : ''; ?>> Is groepsmaster</label>
+                            <small style="color:#666;">Aanvinken als deze variabele de zichtbaarheid van onderliggende variabelen bepaalt.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Bovenliggende variabele</label>
+                            <select name="parent_variable_id">
+                                <option value="">-- Geen (altijd tonen) --</option>
+                                <?php foreach ($variables as $v):
+                                    // Skip self when editing
+                                    if ($edit_variable && (int)$v['id'] === (int)$edit_variable['id']) continue;
+                                    $sel = (!empty($edit_variable['parent_variable_id']) && (int)$edit_variable['parent_variable_id'] === (int)$v['id']) ? 'selected' : '';
+                                ?>
+                                    <option value="<?php echo (int)$v['id']; ?>" <?php echo $sel; ?>>{{<?php echo htmlspecialchars($v['var_name']); ?>}}</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Tonen wanneer bovenliggende variabele</label>
+                            <select name="show_when_parent">
+                                <?php
+                                $show_opts = [
+                                    'always'    => 'Altijd tonen',
+                                    'true'      => 'Waar / 1 / ja',
+                                    'false'     => 'Onwaar / 0 / nee',
+                                    'not_empty' => 'Niet leeg',
+                                ];
+                                $cur_show = $edit_variable['show_when_parent'] ?? 'always';
+                                foreach ($show_opts as $val => $lbl):
+                                ?>
+                                    <option value="<?php echo $val; ?>" <?php echo $cur_show === $val ? 'selected' : ''; ?>><?php echo htmlspecialchars($lbl); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
                     <div class="form-group">
                         <label><input type="checkbox" name="is_required" value="1" <?php echo ($edit_variable['is_required'] ?? 0) ? 'checked' : ''; ?>> <?php echo __('label.required_field'); ?></label>
                     </div>
@@ -406,6 +541,13 @@ document.addEventListener('DOMContentLoaded', updateTypeFields);
                 <?php if (empty($variables)): ?>
                     <p style="color: #666;"><?php echo __('label.no_variables_defined'); ?></p>
                 <?php else: ?>
+                    <?php
+                    // Build O(1) lookup: id -> var_name for parent display
+                    $var_id_to_name = [];
+                    foreach ($variables as $v) {
+                        $var_id_to_name[(int)$v['id']] = $v['var_name'];
+                    }
+                    ?>
                     <?php foreach ($variables as $v): ?>
                         <div class="var-card">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -413,6 +555,14 @@ document.addEventListener('DOMContentLoaded', updateTypeFields);
                                     <strong>{{<?php echo htmlspecialchars($v['var_name']); ?>}}</strong>
                                     <span class="type-badge"><?php echo htmlspecialchars($v['var_type']); ?></span>
                                     <?php if ($v['is_required']): ?><span style="color:red;margin-left:4px;">*</span><?php endif; ?>
+                                    <?php if ($has_master_child_columns && !empty($v['is_group_master'])): ?>
+                                        <span style="background:#007bff;color:white;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px;">master</span>
+                                    <?php endif; ?>
+                                    <?php if ($has_master_child_columns && !empty($v['parent_variable_id'])):
+                                        $parent_name = $var_id_to_name[(int)$v['parent_variable_id']] ?? '';
+                                    ?>
+                                        <span style="background:#6c757d;color:white;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px;">child van {{<?php echo htmlspecialchars($parent_name); ?>}}</span>
+                                    <?php endif; ?>
                                     <?php if ($v['var_label']): ?>
                                         <div style="font-size: 12px; color: #666; margin-top: 2px;">
                                             <?php echo htmlspecialchars($v['var_label']); ?>

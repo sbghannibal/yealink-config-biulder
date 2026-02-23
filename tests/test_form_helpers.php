@@ -189,4 +189,46 @@ $display = get_variable_display_value('secretpassword', $password_var);
 echo "  Password masked: " . ($display === '••••••••' ? '✓ PASS' : '✗ FAIL') . "\n";
 
 echo "\n=== All tests completed ===\n";
+
+// Test 16: Child variable with data-parent-var and data-show-when attributes
+echo "\nTest 16: Child variable data attributes\n";
+$child_var = [
+    'var_name' => 'CHILD_FIELD',
+    'var_label' => 'Child Field',
+    'var_type' => 'text',
+    'is_required' => false,
+    'parent_var_name' => 'PARENT_FIELD',
+    'show_when_parent' => 'true',
+    'help_text' => null,
+];
+$html = render_variable_input($child_var, '', ['show_label' => true]);
+echo "  Has data-parent-var: " . (strpos($html, 'data-parent-var="PARENT_FIELD"') !== false ? '✓ PASS' : '✗ FAIL') . "\n";
+echo "  Has data-show-when: " . (strpos($html, 'data-show-when="true"') !== false ? '✓ PASS' : '✗ FAIL') . "\n";
+
+// Test 17: Variable without parent has no data attributes
+echo "\nTest 17: Non-child variable has no data attributes\n";
+$normal_var = [
+    'var_name' => 'NORMAL_FIELD',
+    'var_type' => 'text',
+    'is_required' => false,
+    'help_text' => null,
+];
+$html = render_variable_input($normal_var, '', ['show_label' => false]);
+echo "  No data-parent-var: " . (strpos($html, 'data-parent-var') === false ? '✓ PASS' : '✗ FAIL') . "\n";
+echo "  No data-show-when: " . (strpos($html, 'data-show-when') === false ? '✓ PASS' : '✗ FAIL') . "\n";
+
+// Test 18: show_when_parent defaults to 'always' when parent_var_name is set but show_when_parent absent
+echo "\nTest 18: show_when_parent defaults gracefully\n";
+$child_var_no_show = [
+    'var_name' => 'CHILD_NOSHOW',
+    'var_type' => 'text',
+    'is_required' => false,
+    'parent_var_name' => 'MASTER_VAR',
+    'help_text' => null,
+];
+$html = render_variable_input($child_var_no_show, '', ['show_label' => false]);
+echo "  Has data-parent-var: " . (strpos($html, 'data-parent-var="MASTER_VAR"') !== false ? '✓ PASS' : '✗ FAIL') . "\n";
+echo "  Defaults show-when to always: " . (strpos($html, 'data-show-when="always"') !== false ? '✓ PASS' : '✗ FAIL') . "\n";
+
+echo "\n=== Extended tests completed ===\n";
 ?>

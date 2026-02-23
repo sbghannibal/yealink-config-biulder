@@ -43,8 +43,15 @@ function render_variable_input($variable, $current_value = null, $options = []) 
     // Build input name
     $input_name = $name_prefix . htmlspecialchars($var_name);
     
-    // Build container
-    $html = '<div class="var-input ' . htmlspecialchars($css_class) . '">';
+    // Build container with optional master/child data attributes
+    $container_attrs = 'class="var-input ' . htmlspecialchars($css_class) . '"';
+    $parent_var_name = $variable['parent_var_name'] ?? null;
+    $show_when_parent = $variable['show_when_parent'] ?? 'always';
+    if (!empty($parent_var_name)) {
+        $container_attrs .= ' data-parent-var="' . htmlspecialchars($parent_var_name) . '"';
+        $container_attrs .= ' data-show-when="' . htmlspecialchars($show_when_parent) . '"';
+    }
+    $html = '<div ' . $container_attrs . '>';
     
     // Render label if requested
     if ($show_label) {
