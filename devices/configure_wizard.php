@@ -497,7 +497,8 @@ require_once __DIR__ . '/../admin/_header.php';
                     el.addEventListener('input', updateChildVisibility);
                 });
             });
-            </script>
+            </script> 
+            <?php elseif ($step === 4): ?>
             <!-- Step 4: Customer Selection & Preview -->
             <h3>Stap 4: Selecteer Klant & Preview</h3>
             <p>Controleer de gegenereerde configuratie en selecteer een klant:</p>
