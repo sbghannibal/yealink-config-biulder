@@ -292,30 +292,25 @@ require_once __DIR__ . '/../admin/_header.php';
             display: inline-block;
         }
 
-        .dropdown-menu {
+.dropdown-menu {
             display: none;
             position: absolute;
             top: 100%;
             right: 0;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             min-width: 180px;
-            z-index: 1000;
-            margin-top: 4px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            padding: 8px 0;
         }
 
-        .dropdown-wrapper:hover .dropdown-menu,
-        .dropdown-wrapper:focus-within .dropdown-menu {
-            display: none;
-        }
-
-        .dropdown-menu.show {
+.dropdown-menu.show {
             display: block;
         }
 
-        .dropdown-item {
+.dropdown-item {
             display: block;
             padding: 8px 12px;
             color: #212529;
@@ -546,10 +541,20 @@ require_once __DIR__ . '/../admin/_header.php';
             }
 
             .dropdown-menu {
-                right: auto;
-                left: 0;
-            }
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            min-width: 180px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            padding: 8px 0;
         }
+
+}
     </style>
 
     <div style="margin-bottom:20px;">
@@ -772,6 +777,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Dropdown toggle: click-based with fixed positioning to avoid overflow clipping
     document.querySelectorAll(".dropdown-toggle").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             e.stopPropagation();
             var wrapper = this.closest(".dropdown-wrapper");
             var menu = wrapper.querySelector(".dropdown-menu");
