@@ -265,7 +265,7 @@ return [
     'error.dashboard_load'             => 'Could not load dashboard data. Please check the logs.',
 
     // Devices list
-    'devices.search.placeholder'  => '🔍 Search by customer name or code...',
+    'devices.search.placeholder'  => '🔍 Search by customer name, code or MAC address...',
     'devices.filter.all_models'   => 'All models',
     'devices.new'                 => '➕ New Device',
     'devices.clear_filters'       => '❌ Clear filters',

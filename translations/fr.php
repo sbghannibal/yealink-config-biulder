@@ -265,7 +265,7 @@ return [
     'error.dashboard_load'             => 'Impossible de charger les données du tableau de bord. Vérifiez les journaux.',
 
     // Devices list
-    'devices.search.placeholder'  => '🔍 Rechercher par nom ou code client...',
+    'devices.search.placeholder'  => '🔍 Rechercher par nom, code client ou adresse MAC...',
     'devices.filter.all_models'   => 'Tous les modèles',
     'devices.new'                 => '➕ Nouvel appareil',
     'devices.clear_filters'       => '❌ Effacer les filtres',
