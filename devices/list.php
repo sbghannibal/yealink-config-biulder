@@ -125,11 +125,12 @@ try {
     $count_params = [];
     
     if ($search_customer) {
-        $sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ?)";
-        $count_sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ?)";
+        $count_sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ? OR REPLACE(REPLACE(UPPER(d.mac_address), ':', ''), '-', '') LIKE ?)";
         $search_param = '%' . $search_customer . '%';
+        $mac_search_param = '%' . strtoupper(preg_replace('/[:\-]/', '', $search_customer)) . '%';
         $count_params[] = $search_param;
         $count_params[] = $search_param;
+        $count_params[] = $mac_search_param;
     }
     if ($filter_type) {
         $count_sql .= " AND d.device_type_id = ?";
@@ -163,10 +164,12 @@ try {
     $params = [];
     
     if ($search_customer) {
-        $sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ?)";
+        $sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ? OR REPLACE(REPLACE(UPPER(d.mac_address), ':', ''), '-', '') LIKE ?)";
         $search_param = '%' . $search_customer . '%';
+        $mac_search_param = '%' . strtoupper(preg_replace('/[:\-]/', '', $search_customer)) . '%';
         $params[] = $search_param;
         $params[] = $search_param;
+        $params[] = $mac_search_param;
     }
     if ($filter_type) {
         $sql .= " AND d.device_type_id = ?";
@@ -305,6 +308,10 @@ require_once __DIR__ . '/../admin/_header.php';
 
         .dropdown-wrapper:hover .dropdown-menu,
         .dropdown-wrapper:focus-within .dropdown-menu {
+            display: none;
+        }
+
+        .dropdown-menu.show {
             display: block;
         }
 
@@ -762,6 +769,42 @@ require_once __DIR__ . '/../admin/_header.php';
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // Dropdown toggle: click-based with fixed positioning to avoid overflow clipping
+    document.querySelectorAll(".dropdown-toggle").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            var wrapper = this.closest(".dropdown-wrapper");
+            var menu = wrapper.querySelector(".dropdown-menu");
+            var isOpen = menu.classList.contains("show");
+
+            // Close all open dropdowns first
+            document.querySelectorAll(".dropdown-menu.show").forEach(function(m) {
+                m.classList.remove("show");
+                m.style.top = "";
+                m.style.left = "";
+                m.style.position = "";
+            });
+
+            if (!isOpen) {
+                var rect = btn.getBoundingClientRect();
+                menu.style.position = "fixed";
+                menu.style.top = (rect.bottom + 4) + "px";
+                menu.style.left = Math.max(0, rect.right - 180) + "px"; // 180 = min-width of .dropdown-menu
+                menu.classList.add("show");
+            }
+        });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", function() {
+        document.querySelectorAll(".dropdown-menu.show").forEach(function(m) {
+            m.classList.remove("show");
+            m.style.top = "";
+            m.style.left = "";
+            m.style.position = "";
+        });
+    });
+
     const selectAllCheckbox = document.getElementById("selectAll");
     const deviceCheckboxes = document.querySelectorAll(".device-checkbox");
     const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");

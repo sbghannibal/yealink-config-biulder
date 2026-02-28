@@ -265,7 +265,7 @@ return [
     'error.dashboard_load'             => 'Kon dashboardgegevens niet ophalen. Controleer de logs.',
 
     // Devices list
-    'devices.search.placeholder'  => '🔍 Zoek op klant naam of code...',
+    'devices.search.placeholder'  => '🔍 Zoek op klant naam, code of MAC-adres...',
     'devices.filter.all_models'   => 'Alle modellen',
     'devices.new'                 => '➕ Nieuw Device',
     'devices.clear_filters'       => '❌ Wis filters',
