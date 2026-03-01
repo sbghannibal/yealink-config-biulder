@@ -68,6 +68,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+
+// Delete provision attempts matching current filters
+if (($_SERVER["REQUEST_METHOD"] ?? "") === "POST" && ($_POST["action"] ?? "") === "delete_filtered") {
+    if (!hash_equals($csrf, $_POST["csrf_token"] ?? "")) {
+        $error = __("error.csrf_invalid");
+    } else {
+        $del_status = trim($_POST["status"] ?? "");
+        $del_model  = trim($_POST["model"] ?? "");
+        $del_mac    = trim($_POST["mac"] ?? "");
+
+        $del_mac_norm = strtoupper(preg_replace("/[^0-9A-F]/i", "", $del_mac));
+
+        $del_where  = [];
+        $del_params = [];
+
+        if ($del_status !== "") {
+            $del_where[]  = "status = ?";
+            $del_params[] = $del_status;
+        }
+        if ($del_model !== "") {
+            $del_where[]  = "device_model LIKE ?";
+            $del_params[] = "%" . $del_model . "%";
+        }
+        if ($del_mac_norm !== "") {
+            $del_where[]  = "mac_normalized LIKE ?";
+            $del_params[] = "%" . $del_mac_norm . "%";
+        }
+
+        // Safety: require at least one filter
+        if (empty($del_where)) {
+            $error = "Refusing to delete: please set at least one filter (status/model/mac).";
+        } else {
+            try {
+                $sql = "DELETE FROM provision_attempts WHERE " . implode(" AND ", $del_where);
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($del_params);
+                $success = "Deleted " . $stmt->rowCount() . " provision attempts.";
+            } catch (Exception $e) {
+                error_log("provision_attempts delete_filtered error: " . $e->getMessage());
+                $error = "Could not delete filtered provision attempts.";
+            }
+        }
+    }
+}
+
+
 // Filters
 $filter_status = trim($_GET['status']  ?? '');
 $filter_model  = trim($_GET['model']   ?? '');
@@ -215,6 +261,16 @@ require_once __DIR__ . '/_header.php';
 </form>
 
 <!-- Attempts table -->
+
+<form method="post" style="margin-bottom:12px;" onsubmit="return confirm('Delete ALL attempts matching the current filters?' );">
+  <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+  <input type="hidden" name="action" value="delete_filtered">
+  <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
+  <input type="hidden" name="model" value="<?php echo htmlspecialchars($filter_model); ?>">
+  <input type="hidden" name="mac" value="<?php echo htmlspecialchars($filter_mac); ?>">
+  <button class="btn" style="background:#dc3545;" type="submit">Delete filtered</button>
+</form>
+
 <section class="card" style="overflow-x:auto;">
     <?php if (empty($attempts)): ?>
         <p><?php echo __('label.no_results'); ?></p>

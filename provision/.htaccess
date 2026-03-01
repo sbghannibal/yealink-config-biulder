@@ -7,10 +7,11 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 # Rewrite .cfg requests to index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.+\.cfg)$ index.php [QSA,L]
+RewriteRule ^(.+\.(cfg|boot|enc))$ index.php [QSA,L]
 
-# Allow .cfg files - NO client cert required
-<Files "*.cfg">
+
+# Allow .cfg and .boot files - NO client cert required
+<FilesMatch "\.(cfg|boot|enc)$">
     SSLVerifyClient none
     Allow from all
-</Files>
+</FilesMatch>

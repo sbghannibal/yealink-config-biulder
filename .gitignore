@@ -55,3 +55,16 @@ downloads/T33G/*
 !downloads/T54W/.gitkeep
 !downloads/T53/.gitkeep
 !downloads/T33G/.gitkeep
+
+# Local backup files
+*.backup
+*.bak_*
+*.php.backup
+*.php.bak_*
+*.php.backup_*
+
+# Local env backups
+.env.bak_*
+
+# Environment
+.env

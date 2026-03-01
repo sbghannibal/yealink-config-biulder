@@ -584,6 +584,7 @@ return [
     'form.device_type_name_placeholder'  => 'Entrez le nom du type d\'appareil',
     'label.existing_device_types'        => 'Types d\'appareils existants',
     'label.devices'                      => 'Appareils',
+    'label.device'                      => 'Appareil',
     'table.devices_using'                => 'Appareils utilisant ce type',
     'label.no_devices'                   => 'Aucun appareil',
     'label.in_use'                       => 'En cours d\'utilisation',

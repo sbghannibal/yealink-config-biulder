@@ -118,6 +118,7 @@ function log_provision_attempt($pdo, array $data) {
 
 // --- Shared attempt data built up progressively ---
 $file_info    = parse_requested_file($request_uri);
+error_log("file_info: " . json_encode($file_info) . " ext_check=" . (($file_info["ext"] ?? "") ?: "NULL"));
 $device_model = parse_device_model($user_agent);
 
   // Normalize noisy Yealink filenames so they dedup into a few buckets
@@ -253,15 +254,26 @@ try {
 
     error_log("ACTIVE config found, sending response");
 
-    // Log to legacy provision_logs table for backwards compatibility
+    // Log to legacy provision_logs table for backwards compatibility (CFG only)
+    if (($file_info['ext'] ?? '') === 'cfg') {
     try {
         $stmt = $pdo->prepare('
-            INSERT INTO provision_logs (device_id, mac_address, ip_address, proxy_ip_address, user_agent, provisioned_at)
+            INSERT INTO provision_logs (device_id, mac_address, ip_address, user_agent, provisioned_at)
             VALUES (?, ?, ?, ?, NOW())
         ');
-        $stmt->execute([$device['id'], $mac_formatted, $ip_address, $user_agent]);
+        $stmt->execute([$device["id"], $mac_formatted, $ip_address, $user_agent]);
     } catch (Exception $e) {
         error_log("Failed to log to provision_logs: " . $e->getMessage());
+    }
+    }
+
+
+    // If .boot was requested: log it (already done above) but do NOT serve config.
+    // Return 404 so the device continues with .cfg.
+    if (($file_info['ext'] ?? '') === 'boot') {
+        http_response_code(404);
+        header('Content-Type: text/plain; charset=utf-8');
+        exit('Not found');
     }
 
     // Return config file

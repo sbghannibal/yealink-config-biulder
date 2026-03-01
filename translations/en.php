@@ -584,6 +584,7 @@ return [
     'form.device_type_name_placeholder'  => 'Enter device type name',
     'label.existing_device_types'        => 'Existing Device Types',
     'label.devices'                      => 'Devices',
+    'label.device'                      => 'Device',
     'table.devices_using'                => 'Devices using this type',
     'label.no_devices'                   => 'No devices',
     'label.in_use'                       => 'In use',

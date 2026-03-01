@@ -584,6 +584,7 @@ return [
     'form.device_type_name_placeholder'  => 'Voer apparaattype naam in',
     'label.existing_device_types'        => 'Bestaande apparaattypes',
     'label.devices'                      => 'Apparaten',
+    'label.device'                      => 'Apparaat',
     'table.devices_using'                => 'Apparaten die dit type gebruiken',
     'label.no_devices'                   => 'Geen apparaten',
     'label.in_use'                       => 'In gebruik',
