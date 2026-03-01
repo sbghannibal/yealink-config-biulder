@@ -40,27 +40,29 @@ function parse_device_model($ua) {
 function log_provision_attempt($pdo, array $data) {
     $dedup_window = 60; // seconds
 
-    $mac    = $data['mac_normalized'] ?? null;
-    $status = $data['status']         ?? 'unknown';
-    $uri    = $data['request_uri']    ?? '';
+    $mac      = $data['mac_normalized'] ?? null;
+    $status   = $data['status']         ?? 'unknown';
+    $uri      = $data['request_uri']    ?? '';
+    $filename = $data['requested_filename'] ?? null;
 
     try {
+        // Dedup: same mac+status+requested_filename within window
         if ($mac !== null) {
             $stmt = $pdo->prepare('
                 SELECT id FROM provision_attempts
-                WHERE mac_normalized = ? AND status = ? AND request_uri = ?
+                WHERE mac_normalized = ? AND status = ? AND requested_filename <=> ?
                   AND last_seen_at >= DATE_SUB(NOW(), INTERVAL ? SECOND)
                 LIMIT 1
             ');
-            $stmt->execute([$mac, $status, $uri, $dedup_window]);
+            $stmt->execute([$mac, $status, $filename, $dedup_window]);
         } else {
             $stmt = $pdo->prepare('
                 SELECT id FROM provision_attempts
-                WHERE mac_normalized IS NULL AND status = ? AND request_uri = ?
+                WHERE mac_normalized IS NULL AND status = ? AND requested_filename <=> ?
                   AND last_seen_at >= DATE_SUB(NOW(), INTERVAL ? SECOND)
                 LIMIT 1
             ');
-            $stmt->execute([$status, $uri, $dedup_window]);
+            $stmt->execute([$status, $filename, $dedup_window]);
         }
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -70,39 +72,43 @@ function log_provision_attempt($pdo, array $data) {
                 SET attempt_count     = attempt_count + 1,
                     last_seen_at      = NOW(),
                     ip_address        = ?,
+                    proxy_ip_address  = ?,
                     device_id         = COALESCE(?, device_id),
                     config_version_id = COALESCE(?, config_version_id)
                 WHERE id = ?
             ');
             $upd->execute([
-                $data['ip_address']        ?? '',
-                $data['device_id']         ?? null,
+                $data['ip_address'] ?? '',
+                $data['proxy_ip_address'] ?? ($data['ip_address'] ?? ''),
+                $data['device_id'] ?? null,
                 $data['config_version_id'] ?? null,
                 $existing['id'],
             ]);
         } else {
             $ins = $pdo->prepare('
                 INSERT INTO provision_attempts
-                  (mac_normalized, mac_formatted, mac_source, request_uri,
-                   requested_filename, requested_ext, ip_address, user_agent,
-                   device_model, status, device_id, config_version_id,
-                   attempt_count, first_seen_at, last_seen_at, created_at)
+                  (mac_normalized, mac_formatted, mac_source, status, request_uri,
+                   requested_filename, requested_ext,
+                   ip_address, proxy_ip_address, user_agent,
+                   device_model, device_id, config_version_id,
+                   attempt_count, first_seen_at, last_seen_at)
                 VALUES
-                  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW(), NOW())
+                  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
             ');
             $ins->execute([
-                $data['mac_normalized']     ?? null,
-                $data['mac_formatted']      ?? null,
-                $data['mac_source']         ?? 'none',
-                $data['request_uri']        ?? '',
-                $data['requested_filename'] ?? null,
-                $data['requested_ext']      ?? null,
-                $data['ip_address']         ?? '',
-                $data['user_agent']         ?? '',
-                $data['device_model']       ?? null,
+                $data['mac_normalized'] ?? null,
+                $data['mac_formatted'] ?? null,
+                $data['mac_source'] ?? 'none',
                 $status,
-                $data['device_id']          ?? null,
-                $data['config_version_id']  ?? null,
+                $data['request_uri'] ?? '',
+                $data['requested_filename'] ?? null,
+                $data['requested_ext'] ?? null,
+                $data['ip_address'] ?? '',
+                $data['proxy_ip_address'] ?? ($data['ip_address'] ?? ''),
+                $data['user_agent'] ?? '',
+                $data['device_model'] ?? null,
+                $data['device_id'] ?? null,
+                $data['config_version_id'] ?? null,
             ]);
         }
     } catch (Exception $e) {
@@ -114,14 +120,31 @@ function log_provision_attempt($pdo, array $data) {
 $file_info    = parse_requested_file($request_uri);
 $device_model = parse_device_model($user_agent);
 
+  // Normalize noisy Yealink filenames so they dedup into a few buckets
+  $requested_filename_raw  = $file_info['filename'] ?? null;
+  $requested_filename_norm = $requested_filename_raw;
+
+  if (is_string($requested_filename_norm)) {
+      // y000000000000.boot / y000000000175.cfg etc
+      if (preg_match('/^y\d{12}\.(boot|cfg)$/i', $requested_filename_norm, $m)) {
+          $requested_filename_norm = '__yealink_generic__.' . strtolower($m[1]);
+      }
+      // 12-hex MAC filenames like 249ad8b38b35.boot/.cfg
+      elseif (preg_match('/^[0-9a-f]{12}\.(boot|cfg)$/i', $requested_filename_norm, $m)) {
+          $requested_filename_norm = '__mac__.' . strtolower($m[1]);
+      }
+  }
+
+
 $attempt = [
     'mac_normalized'     => null,
     'mac_formatted'      => null,
     'mac_source'         => 'none',
     'request_uri'        => $request_uri,
-    'requested_filename' => $file_info['filename'],
+    'requested_filename' => $requested_filename_norm,
     'requested_ext'      => $file_info['ext'],
     'ip_address'         => $ip_address,
+    'proxy_ip_address'  => ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? ''),
     'user_agent'         => $user_agent,
     'device_model'       => $device_model,
     'status'             => 'unknown',
@@ -233,7 +256,7 @@ try {
     // Log to legacy provision_logs table for backwards compatibility
     try {
         $stmt = $pdo->prepare('
-            INSERT INTO provision_logs (device_id, mac_address, ip_address, user_agent, provisioned_at)
+            INSERT INTO provision_logs (device_id, mac_address, ip_address, proxy_ip_address, user_agent, provisioned_at)
             VALUES (?, ?, ?, ?, NOW())
         ');
         $stmt->execute([$device['id'], $mac_formatted, $ip_address, $user_agent]);

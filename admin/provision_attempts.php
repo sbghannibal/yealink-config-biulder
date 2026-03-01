@@ -31,17 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = __('error.csrf_invalid');
     } else {
-        $model_code     = strtoupper(trim($_POST['model_code'] ?? ''));
+        $model     = strtoupper(trim($_POST['model'] ?? ''));
         $device_type_id = (int)($_POST['device_type_id'] ?? 0);
-        if ($model_code === '' || $device_type_id <= 0) {
+        if ($model === '' || $device_type_id <= 0) {
             $error = __('error.provision_mapping_fields_required');
         } else {
             try {
                 $pdo->prepare('
-                    INSERT INTO device_model_mappings (model_code, device_type_id)
+                    INSERT INTO device_model_mappings (model, device_type_id)
                     VALUES (?, ?)
                     ON DUPLICATE KEY UPDATE device_type_id = VALUES(device_type_id), updated_at = NOW()
-                ')->execute([$model_code, $device_type_id]);
+                ')->execute([$model, $device_type_id]);
                 $success = __('success.provision_mapping_saved');
             } catch (Exception $e) {
                 error_log('provision_attempts save_mapping error: ' . $e->getMessage());
@@ -92,6 +92,9 @@ if ($filter_mac_norm !== '') {
     $params[] = '%' . $filter_mac_norm . '%';
 }
 
+// Force view: only show __mac__.boot buckets
+$where[]  = "pa.requested_filename = '__mac__.boot'";
+
 $where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
 // Load latest attempt per mac_normalized (or per row if mac is null)
@@ -104,9 +107,12 @@ try {
                dmm.device_type_id AS suggested_type_id,
                dt2.type_name      AS suggested_type_name
         FROM provision_attempts pa
-        LEFT JOIN devices d   ON d.mac_address = pa.mac_formatted AND d.is_active = 1
+        LEFT JOIN devices d
+          ON d.mac_address COLLATE utf8mb4_unicode_ci = pa.mac_formatted COLLATE utf8mb4_unicode_ci
+         AND d.is_active = 1
         LEFT JOIN device_config_assignments dca ON dca.device_id = d.id AND dca.is_active = 1
-        LEFT JOIN device_model_mappings dmm ON dmm.model_code = pa.device_model
+        LEFT JOIN device_model_mappings dmm
+          ON dmm.model COLLATE utf8mb4_unicode_ci = pa.device_model COLLATE utf8mb4_unicode_ci
         LEFT JOIN device_types dt2 ON dt2.id = dmm.device_type_id
         $where_sql
         ORDER BY pa.last_seen_at DESC
@@ -135,7 +141,7 @@ try {
         SELECT dmm.*, dt.type_name
         FROM device_model_mappings dmm
         LEFT JOIN device_types dt ON dt.id = dmm.device_type_id
-        ORDER BY dmm.model_code ASC
+        ORDER BY dmm.model ASC
     ');
     $mappings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
@@ -243,7 +249,7 @@ require_once __DIR__ . '/_header.php';
                 <tr>
                     <td>
                         <code><?php echo htmlspecialchars($mac_display); ?></code>
-                        <?php if ($a['requested_filename']): ?>
+                        <?php if (!empty($a['requested_filename']) && $a['requested_filename'] !== '__mac__.boot'): ?>
                             <br><small style="color:#999;"><?php echo htmlspecialchars($a['requested_filename']); ?></small>
                         <?php endif; ?>
                     </td>
@@ -308,8 +314,8 @@ require_once __DIR__ . '/_header.php';
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action" value="save_mapping">
             <div class="form-group">
-                <label><?php echo __('label.model_code'); ?></label>
-                <input name="model_code" type="text" placeholder="e.g. W75DM" style="text-transform:uppercase;" required>
+                <label><?php echo __('label.model'); ?></label>
+                <input name="model" type="text" placeholder="e.g. W75DM" style="text-transform:uppercase;" required>
             </div>
             <div class="form-group">
                 <label><?php echo __('form.device_type'); ?></label>
@@ -329,11 +335,11 @@ require_once __DIR__ . '/_header.php';
     <div class="card" style="flex:2; min-width:320px;">
         <h3 style="margin-top:0;"><?php echo __('label.existing_mappings'); ?></h3>
         <table>
-            <thead><tr><th><?php echo __('label.model_code'); ?></th><th><?php echo __('form.device_type'); ?></th><th></th></tr></thead>
+            <thead><tr><th><?php echo __('label.model'); ?></th><th><?php echo __('form.device_type'); ?></th><th></th></tr></thead>
             <tbody>
                 <?php foreach ($mappings as $m): ?>
                 <tr>
-                    <td><code><?php echo htmlspecialchars($m['model_code']); ?></code></td>
+                    <td><code><?php echo htmlspecialchars($m['model']); ?></code></td>
                     <td><?php echo htmlspecialchars($m['type_name'] ?? '—'); ?></td>
                     <td>
                         <form method="post" style="display:inline;" onsubmit="return confirm(<?php echo json_encode(__('confirm.delete')); ?>);">
