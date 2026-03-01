@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS `provision_attempts` (
   `request_uri`        VARCHAR(512)  NOT NULL DEFAULT '',
   `requested_filename` VARCHAR(128)  NULL COMMENT 'e.g. 249ad8b388c6.boot',
   `requested_ext`      VARCHAR(16)   NULL COMMENT 'boot, cfg, etc.',
-  `ip_address`         VARCHAR(45)   NOT NULL DEFAULT '',
+  `ip_address`         VARCHAR(45)   NOT NULL DEFAULT '' COMMENT 'Real client IP (from X-Forwarded-For or REMOTE_ADDR)',
+  `proxy_ip_address`   VARCHAR(45)   NULL COMMENT 'Proxy/load-balancer IP (REMOTE_ADDR when X-Forwarded-For is used)',
   `user_agent`         VARCHAR(512)  NOT NULL DEFAULT '',
   `device_model`       VARCHAR(64)   NULL COMMENT 'Parsed from UA, e.g. W75DM',
   `status`             VARCHAR(32)   NOT NULL DEFAULT 'unknown'
@@ -23,6 +24,8 @@ CREATE TABLE IF NOT EXISTS `provision_attempts` (
   -- Indexes for querying latest per MAC
   INDEX `idx_mac_normalized`  (`mac_normalized`),
   INDEX `idx_mac_status`      (`mac_normalized`, `status`),
+  -- Dedup bucket index: mac_normalized + status + requested_filename
+  INDEX `idx_dedup_bucket`    (`mac_normalized`, `status`, `requested_filename`(64)),
   -- Retention: delete unknown device rows older than 30 days
   INDEX `idx_device_id_date`  (`device_id`, `last_seen_at`),
   -- Status filtering

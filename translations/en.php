@@ -643,6 +643,7 @@ return [
     'label.status'                          => 'Status',
     'label.model'                           => 'Model',
     'label.ip_address'                      => 'IP Address',
+    'label.proxy_ip_address'                => 'Proxy/load-balancer IP',
     'table.mac'                             => 'MAC',
     'label.all_statuses'                    => 'All statuses',
     'label.last_attempt'                    => 'Last attempt',
