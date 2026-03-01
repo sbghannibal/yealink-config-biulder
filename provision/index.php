@@ -12,7 +12,27 @@ error_log("USER_AGENT: " . ($_SERVER['HTTP_USER_AGENT'] ?? 'NONE'));
 
 $user_agent  = $_SERVER['HTTP_USER_AGENT'] ?? '';
 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-$ip_address  = $_SERVER['REMOTE_ADDR'] ?? '';
+$remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+// Detect real client IP from X-Forwarded-For (or similar) headers; keep REMOTE_ADDR as proxy IP.
+// Note: these headers can be spoofed by clients if the server is not behind a trusted proxy.
+// They are used for logging purposes only and do not influence access-control decisions.
+function get_client_ip() {
+    foreach (['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'HTTP_CF_CONNECTING_IP'] as $header) {
+        if (!empty($_SERVER[$header])) {
+            // X-Forwarded-For may contain a comma-separated list; take the first (leftmost) entry.
+            $ip = trim(explode(',', $_SERVER[$header])[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? '';
+}
+
+$ip_address  = get_client_ip();
+// proxy_ip is REMOTE_ADDR when a forwarding header was used, otherwise null.
+$proxy_ip    = ($ip_address !== $remote_addr) ? $remote_addr : null;
 
 // --- Helper: parse filename and extension from URI ---
 function parse_requested_file($uri) {
@@ -36,31 +56,29 @@ function parse_device_model($ua) {
     return null;
 }
 
-// --- Helper: upsert provision_attempt with dedup (60-second window) ---
+// --- Helper: upsert provision_attempt with dedup by bucket key ---
+// Bucket: mac_normalized + status + requested_filename  (or request_uri + status when mac is null)
 function log_provision_attempt($pdo, array $data) {
-    $dedup_window = 60; // seconds
-
-    $mac    = $data['mac_normalized'] ?? null;
-    $status = $data['status']         ?? 'unknown';
-    $uri    = $data['request_uri']    ?? '';
+    $mac      = $data['mac_normalized']     ?? null;
+    $status   = $data['status']             ?? 'unknown';
+    $filename = $data['requested_filename'] ?? null;
+    $uri      = $data['request_uri']        ?? '';
 
     try {
         if ($mac !== null) {
             $stmt = $pdo->prepare('
                 SELECT id FROM provision_attempts
-                WHERE mac_normalized = ? AND status = ? AND request_uri = ?
-                  AND last_seen_at >= DATE_SUB(NOW(), INTERVAL ? SECOND)
+                WHERE mac_normalized = ? AND status = ? AND requested_filename <=> ?
                 LIMIT 1
             ');
-            $stmt->execute([$mac, $status, $uri, $dedup_window]);
+            $stmt->execute([$mac, $status, $filename]);
         } else {
             $stmt = $pdo->prepare('
                 SELECT id FROM provision_attempts
                 WHERE mac_normalized IS NULL AND status = ? AND request_uri = ?
-                  AND last_seen_at >= DATE_SUB(NOW(), INTERVAL ? SECOND)
                 LIMIT 1
             ');
-            $stmt->execute([$status, $uri, $dedup_window]);
+            $stmt->execute([$status, $uri]);
         }
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -70,12 +88,14 @@ function log_provision_attempt($pdo, array $data) {
                 SET attempt_count     = attempt_count + 1,
                     last_seen_at      = NOW(),
                     ip_address        = ?,
+                    proxy_ip_address  = ?,
                     device_id         = COALESCE(?, device_id),
                     config_version_id = COALESCE(?, config_version_id)
                 WHERE id = ?
             ');
             $upd->execute([
                 $data['ip_address']        ?? '',
+                $data['proxy_ip_address']  ?? null,
                 $data['device_id']         ?? null,
                 $data['config_version_id'] ?? null,
                 $existing['id'],
@@ -84,11 +104,11 @@ function log_provision_attempt($pdo, array $data) {
             $ins = $pdo->prepare('
                 INSERT INTO provision_attempts
                   (mac_normalized, mac_formatted, mac_source, request_uri,
-                   requested_filename, requested_ext, ip_address, user_agent,
+                   requested_filename, requested_ext, ip_address, proxy_ip_address, user_agent,
                    device_model, status, device_id, config_version_id,
                    attempt_count, first_seen_at, last_seen_at, created_at)
                 VALUES
-                  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW(), NOW())
+                  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW(), NOW())
             ');
             $ins->execute([
                 $data['mac_normalized']     ?? null,
@@ -98,6 +118,7 @@ function log_provision_attempt($pdo, array $data) {
                 $data['requested_filename'] ?? null,
                 $data['requested_ext']      ?? null,
                 $data['ip_address']         ?? '',
+                $data['proxy_ip_address']   ?? null,
                 $data['user_agent']         ?? '',
                 $data['device_model']       ?? null,
                 $status,
@@ -122,6 +143,7 @@ $attempt = [
     'requested_filename' => $file_info['filename'],
     'requested_ext'      => $file_info['ext'],
     'ip_address'         => $ip_address,
+    'proxy_ip_address'   => $proxy_ip,
     'user_agent'         => $user_agent,
     'device_model'       => $device_model,
     'status'             => 'unknown',

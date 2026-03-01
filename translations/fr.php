@@ -646,6 +646,7 @@ return [
     'label.status'                          => 'Statut',
     'label.model'                           => 'Modèle',
     'label.ip_address'                      => 'Adresse IP',
+    'label.proxy_ip_address'                => 'IP proxy/équilibreur de charge',
     'table.mac'                             => 'MAC',
     'label.all_statuses'                    => 'Tous les statuts',
     'label.last_attempt'                    => 'Dernière tentative',

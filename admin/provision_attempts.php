@@ -248,7 +248,14 @@ require_once __DIR__ . '/_header.php';
                         <?php endif; ?>
                     </td>
                     <td><?php echo $a['device_model'] ? htmlspecialchars($a['device_model']) : '—'; ?></td>
-                    <td><?php echo htmlspecialchars($a['ip_address']); ?></td>
+                    <td>
+                        <?php echo htmlspecialchars($a['ip_address']); ?>
+                        <?php if (!empty($a['proxy_ip_address'])): ?>
+                            <br><small style="color:#999;" title="<?php echo __('label.proxy_ip_address'); ?>">
+                                🔀 <?php echo htmlspecialchars($a['proxy_ip_address']); ?>
+                            </small>
+                        <?php endif; ?>
+                    </td>
                     <td><span class="badge-status <?php echo $status_class; ?>"><?php echo htmlspecialchars($a['status']); ?></span></td>
                     <td><?php echo htmlspecialchars($a['last_seen_at']); ?></td>
                     <td>
