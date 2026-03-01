@@ -419,7 +419,7 @@ function can_access($permission, $permission_map) {
         <!-- ADMIN DROPDOWN -->
         <?php if (can_access('admin.users.view', $permission_map) || can_access('admin.roles.manage', $permission_map) || can_access('admin.settings.edit', $permission_map) || can_access('admin.audit.view', $permission_map) || can_access('customers.view', $permission_map)): ?>
         <div class="nav-dropdown">
-            <a class="<?php echo in_array($current_page, ['users.php', 'users_create.php', 'users_edit.php', 'users_delete.php', 'roles.php', 'roles_edit.php', 'roles_delete.php', 'customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php', 'settings.php', 'audit.php']) ? 'active' : ''; ?>">
+            <a class="<?php echo in_array($current_page, ['users.php', 'users_create.php', 'users_edit.php', 'users_delete.php', 'roles.php', 'roles_edit.php', 'roles_delete.php', 'customers.php', 'customers_add.php', 'customers_edit.php', 'customers_delete.php', 'settings.php', 'audit.php', 'provision_attempts.php']) ? 'active' : ''; ?>">
                 👥 <?php echo __('nav.admin'); ?> <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
@@ -450,6 +450,9 @@ function can_access($permission, $permission_map) {
                 <?php if (can_access('admin.audit.view', $permission_map)): ?>
                 <a href="/admin/audit.php" class="<?php echo $current_page === 'audit.php' ? 'active' : ''; ?>">
                     📑 <?php echo __('nav.audit_logs'); ?>
+                </a>
+                <a href="/admin/provision_attempts.php" class="<?php echo $current_page === 'provision_attempts.php' ? 'active' : ''; ?>">
+                    📡 <?php echo __('nav.provision_attempts'); ?>
                 </a>
                 <?php endif; ?>
             </div>

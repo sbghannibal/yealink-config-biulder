@@ -135,10 +135,21 @@ require_once __DIR__ . '/../admin/_header.php';
 
             <div class="form-group">
                 <label><?php echo __('form.model'); ?></label>
+                <?php
+                // Prefill device_type_id from POST, then GET
+                $preselect_type = (int)($_POST['device_type_id'] ?? $_GET['device_type_id'] ?? 0);
+                // Show hint when arriving from provision_attempts with a model suggestion
+                $prefill_model_hint = trim((string)($_GET['device_model'] ?? ''));
+                ?>
+                <?php if ($prefill_model_hint !== '' && !isset($_POST['device_type_id'])): ?>
+                    <small style="display:block; margin-bottom:4px; color:#555;">
+                        💡 <?php echo __('label.model_hint'); ?>: <strong><?php echo htmlspecialchars($prefill_model_hint); ?></strong>
+                    </small>
+                <?php endif; ?>
                 <select name="device_type_id" required>
                     <option value="">-- <?php echo __('form.select_model'); ?> --</option>
                     <?php foreach ($types as $t): ?>
-                        <option value="<?php echo (int)$t['id']; ?>" <?php echo (isset($_POST['device_type_id']) && $_POST['device_type_id'] == $t['id']) ? 'selected' : ''; ?>>
+                        <option value="<?php echo (int)$t['id']; ?>" <?php echo $preselect_type == $t['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($t['type_name']); ?>
                         </option>
                     <?php endforeach; ?>
@@ -165,7 +176,17 @@ require_once __DIR__ . '/../admin/_header.php';
 
             <div class="form-group">
                 <label><?php echo __('form.mac_address'); ?></label>
-                <input name="mac_address" type="text" required placeholder="00:11:22:33:44:55" value="<?php echo htmlspecialchars($_POST['mac_address'] ?? ''); ?>">
+                <?php
+                // Accept mac from POST, then GET (normalize colon format)
+                $mac_prefill = $_POST['mac_address'] ?? '';
+                if ($mac_prefill === '' && isset($_GET['mac'])) {
+                    $mac_norm = strtoupper(preg_replace('/[^0-9A-F]/i', '', $_GET['mac']));
+                    if (preg_match('/^[0-9A-F]{12}$/', $mac_norm)) {
+                        $mac_prefill = implode(':', str_split($mac_norm, 2));
+                    }
+                }
+                ?>
+                <input name="mac_address" type="text" required placeholder="00:11:22:33:44:55" value="<?php echo htmlspecialchars($mac_prefill); ?>">
             </div>
 
             <div class="form-group">

@@ -31,6 +31,7 @@ php scripts/apply_migration_and_permissions.php --yes --sql=migrations/03_config
 php scripts/apply_migration_and_permissions.php --yes --sql=migrations/05_device_config_assignments.sql
 php scripts/apply_migration_and_permissions.php --yes --sql=migrations/06_config_templates.sql
 php scripts/apply_migration_and_permissions.php --yes --sql=migrations/07_template_variables.sql
+php scripts/apply_migration_and_permissions.php --yes --sql=migrations/14_provision_attempts.sql
 ```
 
 **BELANGRIJK**: Maak altijd een backup van de database voordat je migraties uitvoert!
@@ -519,6 +520,23 @@ WHERE download_time < DATE_SUB(NOW(), INTERVAL 90 DAY);
 OPTIMIZE TABLE config_download_history;
 OPTIMIZE TABLE device_config_assignments;
 ```
+
+### Provision Attempts Retentie (Cron)
+
+Onbekende apparaten (device_id IS NULL) in de `provision_attempts` tabel worden automatisch
+verwijderd na 30 dagen via het cleanup-script:
+
+```bash
+# Handmatig uitvoeren
+php /path/to/yealink-config-builder/scripts/cleanup_provision_attempts.php
+```
+
+**Aanbevolen cron-entry (dagelijks om 03:00):**
+```cron
+0 3 * * * /usr/bin/php /path/to/yealink-config-builder/scripts/cleanup_provision_attempts.php >> /var/log/yealink_cleanup.log 2>&1
+```
+
+Rijen met een gekoppeld `device_id` (bekende apparaten) worden nooit automatisch verwijderd.
 
 ### Backup Strategie
 
