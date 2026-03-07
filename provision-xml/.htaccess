@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# Redirect all .xml and .cnf.xml requests to the index.php file.
+RewriteRule ^provision-xml/(.*\.(xml|cnf\.xml))$ index.php [QSA,L]
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Allow access without client cert
+SSLVerifyClient none
