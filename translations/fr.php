@@ -64,6 +64,10 @@ return [
     'confirm.delete_customer' => 'Êtes-vous sûr de vouloir supprimer ce client ?',
     'confirm.unsaved_changes' => 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter ?',
     'confirm.overwrite_variables' => 'Les variables existantes dans le(s) modèle(s) cible(s) seront écrasées. Continuer ?',
+    'table.device_name' => 'Nom de l’appareil',    // fr
+    'table.deleted_at'  => 'Supprimé le',          // fr
+    'error.action_failed' => 'Échec de l’action. Veuillez réessayer.',
+    'success.device_config_deleted' => 'Config assignment(s) removed.',
 
     // Buttons (expanded)
     'button.create_new' => 'Créer nouveau',

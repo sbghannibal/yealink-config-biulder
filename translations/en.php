@@ -64,6 +64,10 @@ return [
     'confirm.delete_customer' => 'Are you sure you want to delete this customer?',
     'confirm.unsaved_changes' => 'You have unsaved changes. Are you sure you want to leave?',
     'confirm.overwrite_variables' => 'Existing variables in the target template(s) will be overwritten. Continue?',
+    'table.device_name' => 'Device name',          // en
+    'table.deleted_at'  => 'Deleted at',           // en
+    'error.action_failed' => 'Action failed. Please try again.',
+    'success.device_config_deleted' => 'Config assignment(s) removed.',
 
     // Buttons (expanded)
     'button.create_new' => 'Create New',
