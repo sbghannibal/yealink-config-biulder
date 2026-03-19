@@ -27,6 +27,7 @@ return [
     'nav.staging_certs'       => 'Staging Certs',
     'nav.staging_credentials' => 'Credentials',
     'nav.copy_variables'      => 'Variabelen Kopiëren',
+    'nav.restore_devices'     => 'Verwijderde Apparaten',
 
     // Buttons
     'button.save'    => 'Opslaan',
@@ -664,4 +665,24 @@ return [
     'success.provision_mapping_saved'       => 'Mapping opgeslagen.',
     'success.provision_mapping_deleted'     => 'Mapping verwijderd.',
 
+    'page.devices_restore.title'           => 'Verwijderde Apparaten',
+    'page.devices_restore.heading'         => '♻️ Verwijderde Apparaten Herstellen',
+    'page.devices_restore.search'          => 'Zoeken op naam, MAC of klant...',
+    'page.devices_restore.no_deleted'      => 'Geen verwijderde apparaten gevonden.',
+    'page.devices_restore.showing'         => 'Weergave :from tot :to van :total verwijderde apparaten',
+    'table.configs'                        => 'Configs',
+    'table.configs_count'                  => ':count config(s)',
+    'table.configs_none'                   => 'Geen',
+    'button.restore'                       => '✓ Herstellen',
+    'button.delete_configs'                => '🗑️ Configs',
+    'button.delete_permanently'            => '❌ Definitief',
+    'confirm.restore_device'               => 'Weet je zeker dat je dit apparaat wilt herstellen?',
+    'confirm.delete_configs'               => 'Alle :count config(s) van dit apparaat verwijderen?',
+    'confirm.delete_permanently'           => 'WAARSCHUWING: Dit apparaat en alle bijbehorende configs worden DEFINITIEF verwijderd! Dit kan niet ongedaan gemaakt worden!',
+    'success.device_restored'              => 'Apparaat ":name" is hersteld! ✅',
+    'success.configs_deleted'              => ':count config(s) verwijderd van ":name"! ✅',
+    'success.no_configs_deleted'           => 'Geen configs om te verwijderen voor ":name"! ✅',
+    'success.device_deleted_permanently'   => 'Apparaat ":name" en alle configs zijn DEFINITIEF verwijderd! 🗑️',
+    'error.device_not_found'               => 'Apparaat niet gevonden.',
+    'error.device_not_deleted'             => 'Apparaat niet gevonden of is niet verwijderd.',
 ];

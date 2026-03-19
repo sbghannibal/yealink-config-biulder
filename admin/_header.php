@@ -364,6 +364,13 @@ function can_access($permission, $permission_map) {
             📱 <?php echo __('nav.devices'); ?>
         </a>
 
+        <!-- RESTORE DELETED DEVICES (Owner/Expert only) -->
+        <?php if (has_permission($pdo, $admin_id, 'devices.restore')): ?>
+        <a href="/admin/devices_restore.php" class="<?php echo $current_page === 'devices_restore.php' ? 'active' : ''; ?>">
+    ♻️ <?php echo __('nav.restore_devices'); ?>
+        </a>
+        <?php endif; ?>
+
         <!-- CONFIG DROPDOWN -->
         <?php if (can_access('admin.device_types.manage', $permission_map) || can_access('config.manage', $permission_map) || can_access('admin.templates.manage', $permission_map) || can_access('admin.variables.manage', $permission_map) || can_access('variables.manage', $permission_map)): ?>
         <div class="nav-dropdown">

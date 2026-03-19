@@ -32,7 +32,7 @@ if ($role_id <= 0) {
 
 // All known permissions grouped by category
 $all_permissions = [
-    'devices'   => ['devices.manage', 'devices.view', 'devices.delete'],
+    'devices'   => ['devices.manage', 'devices.view', 'devices.delete', 'devices.restore'],
     'customers' => ['customers.view', 'customers.manage', 'customers.delete'],
     'config'    => ['config.manage', 'config.cleanup'],
     'templates' => ['admin.templates.manage'],

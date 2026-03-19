@@ -70,7 +70,7 @@ try {
     $stats['admins'] = (int) $stmt->fetchColumn();
 
     // Totale devices
-    $stmt = $pdo->query('SELECT COUNT(*) FROM devices');
+    $stmt = $pdo->query('SELECT COUNT(*) FROM devices WHERE deleted_at IS NULL');
     $stats['devices'] = (int) $stmt->fetchColumn();
 
     // Totale config versies

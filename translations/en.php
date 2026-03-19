@@ -27,6 +27,7 @@ return [
     'nav.staging_certs'       => 'Staging Certs',
     'nav.staging_credentials' => 'Credentials',
     'nav.copy_variables'      => 'Copy Variables',
+    'nav.restore_devices'     => 'Restore Deleted Devices',
 
     // Buttons
     'button.save'    => 'Save',
@@ -664,4 +665,24 @@ return [
     'success.provision_mapping_saved'       => 'Mapping saved.',
     'success.provision_mapping_deleted'     => 'Mapping deleted.',
 
+    'page.devices_restore.title'           => 'Deleted Devices',
+    'page.devices_restore.heading'         => '♻️ Restore Deleted Devices',
+    'page.devices_restore.search'          => 'Search by name, MAC or customer...',
+    'page.devices_restore.no_deleted'      => 'No deleted devices found.',
+    'page.devices_restore.showing'         => 'Showing :from to :to of :total deleted devices',
+    'table.configs'                        => 'Configs',
+    'table.configs_count'                  => ':count config(s)',
+    'table.configs_none'                   => 'None',
+    'button.restore'                       => '✓ Restore',
+    'button.delete_configs'                => '🗑️ Configs',
+    'button.delete_permanently'            => '❌ Permanently',
+    'confirm.restore_device'               => 'Are you sure you want to restore this device?',
+    'confirm.delete_configs'               => 'Delete all :count config(s) from this device?',
+    'confirm.delete_permanently'           => 'WARNING: This device and all associated configs will be PERMANENTLY deleted! This cannot be undone!',
+    'success.device_restored'              => 'Device ":name" has been restored! ✅',
+    'success.configs_deleted'              => ':count config(s) deleted from ":name"! ✅',
+    'success.no_configs_deleted'           => 'No configs to delete for ":name"! ✅',
+    'success.device_deleted_permanently'   => 'Device ":name" and all configs have been PERMANENTLY deleted! 🗑️',
+    'error.device_not_found'               => 'Device not found.',
+    'error.device_not_deleted'             => 'Device not found or is not deleted.',
 ];

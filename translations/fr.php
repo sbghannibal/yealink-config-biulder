@@ -27,6 +27,7 @@ return [
     'nav.staging_certs'       => 'Certs de staging',
     'nav.staging_credentials' => 'Identifiants',
     'nav.copy_variables'      => 'Copier les variables',
+    'nav.restore_devices'     => 'Appareils Supprimés',
 
     // Buttons
     'button.save'    => 'Enregistrer',
@@ -667,4 +668,24 @@ return [
     'success.provision_mapping_saved'       => 'Mappage sauvegardé.',
     'success.provision_mapping_deleted'     => 'Mappage supprimé.',
 
+    'page.devices_restore.title'           => 'Appareils supprimés',
+    'page.devices_restore.heading'         => '♻️ Restaurer les appareils supprimés',
+    'page.devices_restore.search'          => 'Rechercher par nom, MAC ou client...',
+    'page.devices_restore.no_deleted'      => 'Aucun appareil supprimé trouvé.',
+    'page.devices_restore.showing'         => 'Affichage :from à :to sur :total appareils supprimés',
+    'table.configs'                        => 'Configs',
+    'table.configs_count'                  => ':count config(s)',
+    'table.configs_none'                   => 'Aucun',
+    'button.restore'                       => '✓ Restaurer',
+    'button.delete_configs'                => '🗑️ Configs',
+    'button.delete_permanently'            => '❌ Définitivement',
+    'confirm.restore_device'               => 'Êtes-vous sûr de vouloir restaurer cet appareil?',
+    'confirm.delete_configs'               => 'Supprimer tous les :count config(s) de cet appareil?',
+    'confirm.delete_permanently'           => 'AVERTISSEMENT: Cet appareil et toutes ses configurations associées seront SUPPRIMÉS DE MANIÈRE PERMANENTE! Cela ne peut pas être annulé!',
+    'success.device_restored'              => 'Appareil ":name" restauré! ✅',
+    'success.configs_deleted'              => ':count config(s) supprimé(s) de ":name"! ✅',
+    'success.no_configs_deleted'           => 'Aucune config à supprimer pour ":name"! ✅',
+    'success.device_deleted_permanently'   => 'Appareil ":name" et toutes ses configurations ont été SUPPRIMÉS DÉFINITIVEMENT! 🗑️',
+    'error.device_not_found'               => 'Appareil non trouvé.',
+    'error.device_not_deleted'             => 'Appareil non trouvé ou non supprimé.',
 ];
