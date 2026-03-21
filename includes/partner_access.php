@@ -82,9 +82,20 @@ function require_partner_or_owner(PDO $pdo, int $admin_id): void
  */
 function _get_active_partner_company_id(PDO $pdo, int $admin_id): ?int
 {
+    $row = _get_active_partner_company($pdo, $admin_id);
+    return $row ? (int)$row['partner_company_id'] : null;
+}
+
+/**
+ * Internal: fetch the full active partner company record for an admin.
+ * Returns an associative array with at least partner_company_id and is_master,
+ * or null when not found / inactive.
+ */
+function _get_active_partner_company(PDO $pdo, int $admin_id): ?array
+{
     try {
         $stmt = $pdo->prepare('
-            SELECT apc.partner_company_id
+            SELECT apc.partner_company_id, pc.is_master
             FROM admin_partner_company apc
             JOIN partner_companies pc ON pc.id = apc.partner_company_id
             WHERE apc.admin_id = ? AND pc.is_active = 1
@@ -92,9 +103,9 @@ function _get_active_partner_company_id(PDO $pdo, int $admin_id): ?int
         ');
         $stmt->execute([$admin_id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? (int)$row['partner_company_id'] : null;
+        return $row ?: null;
     } catch (Exception $e) {
-        error_log('_get_active_partner_company_id error: ' . $e->getMessage());
+        error_log('_get_active_partner_company error: ' . $e->getMessage());
         return null;
     }
 }
@@ -103,7 +114,7 @@ function _get_active_partner_company_id(PDO $pdo, int $admin_id): ?int
  * Return the set of customer IDs the admin is allowed to see.
  *
  * Return values:
- *  - null  → Owner: no filter, show everything.
+ *  - null  → Owner or master partner: no filter, show everything.
  *  - []    → non-owner without an active partner company: show nothing.
  *  - [1,2] → non-owner with partner: the customer IDs where can_view = 1.
  */
@@ -113,10 +124,17 @@ function get_allowed_customer_ids_for_admin(PDO $pdo, int $admin_id): ?array
         return null; // no restriction
     }
 
-    $partner_id = _get_active_partner_company_id($pdo, $admin_id);
-    if ($partner_id === null) {
+    $partner = _get_active_partner_company($pdo, $admin_id);
+    if ($partner === null) {
         return []; // no partner → deny everything
     }
+
+    // Master partner sees all customers (like Owner), but without the Owner role.
+    if ((int)$partner['is_master'] === 1) {
+        return null;
+    }
+
+    $partner_id = (int)$partner['partner_company_id'];
 
     try {
         $stmt = $pdo->prepare('

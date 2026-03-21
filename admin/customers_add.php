@@ -3,6 +3,7 @@ $page_title = 'Nieuwe Klant';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -15,6 +16,10 @@ if (!has_permission($pdo, $admin_id, 'customers.create')) {
     header('Location: /access_denied.php');
     exit;
 }
+
+// Non-owners must have an active partner assignment.
+require_any_role($pdo, $admin_id);
+require_partner_or_owner($pdo, $admin_id);
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
@@ -50,6 +55,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare('INSERT INTO customers (customer_code, company_name, contact_person, email, phone, address, notes, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
                     $stmt->execute([$customer_code, $company_name, $contact_person, $email, $phone, $address, $notes, $is_active]);
                     $newId = $pdo->lastInsertId();
+
+                    // Auto-link the new customer to the creating admin's partner company
+                    // so that non-owner admins can immediately see the customer they created.
+                    if (!is_owner($pdo, $admin_id)) {
+                        $partner_id = _get_active_partner_company_id($pdo, $admin_id);
+                        if ($partner_id !== null) {
+                            try {
+                                $link = $pdo->prepare('
+                                    INSERT INTO partner_company_customers (partner_company_id, customer_id, can_view, created_at, updated_at)
+                                    VALUES (?, ?, 1, NOW(), NOW())
+                                    ON DUPLICATE KEY UPDATE can_view = 1, updated_at = NOW()
+                                ');
+                                $link->execute([$partner_id, (int)$newId]);
+                            } catch (Exception $e) {
+                                error_log('admin/customers_add partner_company_customers insert error: ' . $e->getMessage());
+                            }
+                        }
+                    }
 
                     // audit
                     try {
