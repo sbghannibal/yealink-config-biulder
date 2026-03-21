@@ -3,6 +3,7 @@ $page_title = 'Device bewerken';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -45,6 +46,9 @@ try {
     exit;
 }
 
+// Ownership check: only allow editing devices within allowed customers
+assert_device_allowed($pdo, $admin_id, $device_id);
+
 // Fetch device types for dropdown
 try {
     $stmt = $pdo->query('SELECT id, type_name FROM device_types ORDER BY type_name ASC');
@@ -54,10 +58,14 @@ try {
     error_log('devices/edit fetch types error: ' . $e->getMessage());
 }
 
-// Fetch customers
+// Fetch customers (tenant-aware)
 try {
-    $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 AND deleted_at IS NULL ORDER BY company_name ASC');
-    $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $allowed_customers = get_allowed_customer_ids_for_admin($pdo, $admin_id);
+    $cust_params = [];
+    $cust_filter = build_customer_filter($allowed_customers, 'id', $cust_params);
+    $cust_stmt = $pdo->prepare('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 AND deleted_at IS NULL' . $cust_filter . ' ORDER BY company_name ASC');
+    $cust_stmt->execute($cust_params);
+    $customers = $cust_stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $customers = [];
     error_log('devices/edit fetch customers error: ' . $e->getMessage());
@@ -77,6 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($name === '' || $device_type_id <= 0) {
             $error = 'Vul minimaal naam en model in.';
         } else {
+            // Verify customer is in allowed set if provided
+            if ($customer_id !== null) {
+                assert_customer_allowed($pdo, $admin_id, $customer_id);
+            }
             $mac = null;
             if ($mac_raw !== '') {
                 $normalized = strtoupper(preg_replace('/[^0-9A-F]/i', '', $mac_raw));

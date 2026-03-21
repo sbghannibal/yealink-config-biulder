@@ -3,6 +3,7 @@ $page_title = 'Admin Dashboard';
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 require_once __DIR__ . '/../includes/i18n.php';
 
 // Zorg dat gebruiker is ingelogd
@@ -64,67 +65,121 @@ $stats = [
 
 $error = '';
 
+// Determine tenant filter (null = owner = no filter; [] = no access; [ids] = filter)
+$allowed_customers = get_allowed_customer_ids_for_admin($pdo, $admin_id);
+
 try {
-    // Totale admins
-    $stmt = $pdo->query('SELECT COUNT(*) FROM admins');
-    $stats['admins'] = (int) $stmt->fetchColumn();
-
-    // Totale devices
-    $stmt = $pdo->query('SELECT COUNT(*) FROM devices WHERE deleted_at IS NULL');
-    $stats['devices'] = (int) $stmt->fetchColumn();
-
-    // Totale config versies
-    $stmt = $pdo->query('SELECT COUNT(*) FROM config_versions');
-    $stats['config_versions'] = (int) $stmt->fetchColumn();
-
-    // Totaal aantal actieve klanten
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM customers WHERE is_active = 1 AND deleted_at IS NULL');
-    $stmt->execute();
-    $stats['total_customers'] = (int) $stmt->fetchColumn();
-
-    // Pending account requests
-    try {
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM account_requests WHERE status = ?');
-        $stmt->execute(['pending']);
-        $stats['pending_requests'] = (int) $stmt->fetchColumn();
-        
-        // Haal de pending requests op (max 5)
-        $stmt = $pdo->prepare('SELECT * FROM account_requests WHERE status = ? ORDER BY created_at DESC LIMIT 5');
-        $stmt->execute(['pending']);
-        $stats['account_requests'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        // account_requests tabel bestaat mogelijk niet
-        error_log('Account requests error: ' . $e->getMessage());
+    // Totale admins (always global for Owner; hidden for non-owner)
+    if ($allowed_customers === null) {
+        $stmt = $pdo->query('SELECT COUNT(*) FROM admins');
+        $stats['admins'] = (int) $stmt->fetchColumn();
     }
 
-    // Recente audit logs (laatste 10)
-    try {
-        $stmt = $pdo->prepare('SELECT al.*, a.username FROM audit_logs al LEFT JOIN admins a ON al.admin_id = a.id ORDER BY al.created_at DESC LIMIT 10');
+    // Totale devices (tenant-aware)
+    if ($allowed_customers === null) {
+        $stmt = $pdo->query('SELECT COUNT(*) FROM devices WHERE deleted_at IS NULL');
+        $stats['devices'] = (int) $stmt->fetchColumn();
+    } elseif (!empty($allowed_customers)) {
+        $placeholders = implode(',', array_fill(0, count($allowed_customers), '?'));
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM devices WHERE deleted_at IS NULL AND customer_id IN ($placeholders)");
+        $stmt->execute(array_values($allowed_customers));
+        $stats['devices'] = (int) $stmt->fetchColumn();
+    }
+
+    // Totale config versies (tenant-aware via device_config_assignments → devices → customer)
+    if ($allowed_customers === null) {
+        $stmt = $pdo->query('SELECT COUNT(*) FROM config_versions');
+        $stats['config_versions'] = (int) $stmt->fetchColumn();
+    } elseif (!empty($allowed_customers)) {
+        $placeholders = implode(',', array_fill(0, count($allowed_customers), '?'));
+        $stmt = $pdo->prepare("
+            SELECT COUNT(DISTINCT dca.config_version_id)
+            FROM device_config_assignments dca
+            JOIN devices d ON d.id = dca.device_id
+            WHERE d.customer_id IN ($placeholders)
+        ");
+        $stmt->execute(array_values($allowed_customers));
+        $stats['config_versions'] = (int) $stmt->fetchColumn();
+    }
+
+    // Totaal aantal actieve klanten (tenant-aware)
+    if ($allowed_customers === null) {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM customers WHERE is_active = 1 AND deleted_at IS NULL');
         $stmt->execute();
-        $stats['recent_audit'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        // audit_logs tabel bestaat mogelijk niet
-        error_log('Audit logs error: ' . $e->getMessage());
+        $stats['total_customers'] = (int) $stmt->fetchColumn();
+    } elseif (!empty($allowed_customers)) {
+        $placeholders = implode(',', array_fill(0, count($allowed_customers), '?'));
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM customers WHERE is_active = 1 AND deleted_at IS NULL AND id IN ($placeholders)");
+        $stmt->execute(array_values($allowed_customers));
+        $stats['total_customers'] = (int) $stmt->fetchColumn();
     }
 
-    // Recent device changes (last 10)
+    // Pending account requests (Owner only)
+    if ($allowed_customers === null) {
+        try {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM account_requests WHERE status = ?');
+            $stmt->execute(['pending']);
+            $stats['pending_requests'] = (int) $stmt->fetchColumn();
+            
+            // Haal de pending requests op (max 5)
+            $stmt = $pdo->prepare('SELECT * FROM account_requests WHERE status = ? ORDER BY created_at DESC LIMIT 5');
+            $stmt->execute(['pending']);
+            $stats['account_requests'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            // account_requests tabel bestaat mogelijk niet
+            error_log('Account requests error: ' . $e->getMessage());
+        }
+    }
+
+    // Recente audit logs (Owner only)
+    if ($allowed_customers === null) {
+        try {
+            $stmt = $pdo->prepare('SELECT al.*, a.username FROM audit_logs al LEFT JOIN admins a ON al.admin_id = a.id ORDER BY al.created_at DESC LIMIT 10');
+            $stmt->execute();
+            $stats['recent_audit'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            // audit_logs tabel bestaat mogelijk niet
+            error_log('Audit logs error: ' . $e->getMessage());
+        }
+    }
+
+    // Recent device changes (last 10, tenant-aware)
     if (has_permission($pdo, $admin_id, 'devices.view')) {
         try {
-            $stmt = $pdo->prepare('
-                SELECT d.id, d.device_name, d.created_at, d.updated_at,
-                       c.company_name, c.customer_code,
-                       CASE
-                           WHEN d.created_at = d.updated_at THEN \'created\'
-                           ELSE \'updated\'
-                       END as change_type
-                FROM devices d
-                LEFT JOIN customers c ON d.customer_id = c.id
-                WHERE d.deleted_at IS NULL
-                ORDER BY d.updated_at DESC
-                LIMIT 10
-            ');
-            $stmt->execute();
-            $stats['recent_devices'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($allowed_customers === null) {
+                $stmt = $pdo->prepare('
+                    SELECT d.id, d.device_name, d.created_at, d.updated_at,
+                           c.company_name, c.customer_code,
+                           CASE
+                               WHEN d.created_at = d.updated_at THEN \'created\'
+                               ELSE \'updated\'
+                           END as change_type
+                    FROM devices d
+                    LEFT JOIN customers c ON d.customer_id = c.id
+                    WHERE d.deleted_at IS NULL
+                    ORDER BY d.updated_at DESC
+                    LIMIT 10
+                ');
+                $stmt->execute();
+                $stats['recent_devices'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } elseif (!empty($allowed_customers)) {
+                $placeholders = implode(',', array_fill(0, count($allowed_customers), '?'));
+                $stmt = $pdo->prepare("
+                    SELECT d.id, d.device_name, d.created_at, d.updated_at,
+                           c.company_name, c.customer_code,
+                           CASE
+                               WHEN d.created_at = d.updated_at THEN 'created'
+                               ELSE 'updated'
+                           END as change_type
+                    FROM devices d
+                    LEFT JOIN customers c ON d.customer_id = c.id
+                    WHERE d.deleted_at IS NULL AND d.customer_id IN ($placeholders)
+                    ORDER BY d.updated_at DESC
+                    LIMIT 10
+                ");
+                $stmt->execute(array_values($allowed_customers));
+                $stats['recent_devices'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
         } catch (Exception $e) {
             error_log('Recent devices error: ' . $e->getMessage());
         }

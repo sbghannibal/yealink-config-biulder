@@ -3,6 +3,7 @@ $page_title = 'Device Mapping & Config Management';
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 require_once __DIR__ . '/../includes/i18n.php';
 
 $page_title = __('page.device_mapping.title');
@@ -20,6 +21,10 @@ if (!has_permission($pdo, $admin_id, 'config.manage')) {
     header('Location: /access_denied.php');
     exit;
 }
+
+// Require role + partner assignment (or be owner)
+require_any_role($pdo, $admin_id);
+require_partner_or_owner($pdo, $admin_id);
 
 // CSRF token
 if (empty($_SESSION['csrf_token'])) {
@@ -43,6 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $config_version_id = (int)($_POST['config_version_id'] ?? 0);
             
             if ($device_id && $config_version_id) {
+                // Ownership checks
+                assert_device_allowed($pdo, $admin_id, $device_id);
+                assert_config_version_allowed($pdo, $admin_id, $config_version_id);
                 try {
                     $pdo->beginTransaction();
                     
@@ -88,6 +96,11 @@ $search_customer_code = isset($_GET['search_customer_code']) ? trim($_GET['searc
 $filter_type = isset($_GET['filter_type']) ? (int)$_GET['filter_type'] : 0;
 $selected_device_id = isset($_GET['device_id']) ? (int)$_GET['device_id'] : 0;
 
+// Ownership check when a device is pre-selected via GET parameter
+if ($selected_device_id > 0) {
+    assert_device_allowed($pdo, $admin_id, $selected_device_id);
+}
+
 // Get device types for filter
 $device_types = [];
 try {
@@ -96,6 +109,9 @@ try {
 } catch (Exception $e) {
     error_log('Device types error: ' . $e->getMessage());
 }
+
+// Get allowed customer IDs for tenant filtering
+$allowed_customers = get_allowed_customer_ids_for_admin($pdo, $admin_id);
 
 // Build search query for devices - FIXED: Use subquery to get active config info without duplicates
 $devices = [];
@@ -118,6 +134,9 @@ $query = '
 ';
 
 $params = [];
+
+// Tenant filter
+$query .= build_customer_filter($allowed_customers, 'd.customer_id', $params);
 
 if (!empty($search_device)) {
     $query .= ' AND d.device_name LIKE ?';

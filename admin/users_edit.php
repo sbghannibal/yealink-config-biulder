@@ -3,6 +3,7 @@ $page_title = 'Gebruiker bewerken';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 require_once __DIR__ . '/../includes/i18n.php';
 
 if (!isset($_SESSION['admin_id'])) {
@@ -61,6 +62,18 @@ try {
     error_log('users_edit fetch roles error: ' . $e->getMessage());
 }
 
+// Fetch partner companies (for the partner assignment dropdown)
+$all_partner_companies = [];
+$can_manage_partners = is_owner($pdo, $current_admin_id) || has_permission($pdo, $current_admin_id, 'partners.manage');
+if ($can_manage_partners) {
+    try {
+        $stmt = $pdo->query('SELECT id, name FROM partner_companies ORDER BY name ASC');
+        $all_partner_companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('users_edit fetch partner companies error: ' . $e->getMessage());
+    }
+}
+
 // Handle POST (update)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
@@ -71,6 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $is_active = isset($_POST['is_active']) && $_POST['is_active'] == '1' ? 1 : 0;
         $password = $_POST['password'] ?? '';
         $role_id = isset($_POST['role_id']) && $_POST['role_id'] !== '' ? (int)$_POST['role_id'] : null;
+        // Partner company assignment (only saved when current admin can manage partners)
+        $partner_company_id = ($can_manage_partners && isset($_POST['partner_company_id']) && $_POST['partner_company_id'] !== '')
+                              ? (int)$_POST['partner_company_id'] : null;
         $allowed_languages = ['nl', 'fr', 'en'];
         $preferred_language = in_array($_POST['preferred_language'] ?? '', $allowed_languages, true)
             ? $_POST['preferred_language']
@@ -106,6 +122,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($role_id !== null) {
                     $ins = $pdo->prepare('INSERT INTO admin_roles (admin_id, role_id) VALUES (?, ?)');
                     $ins->execute([$user_id, $role_id]);
+                }
+
+                // Update partner company assignment (only if current admin may manage partners)
+                if ($can_manage_partners) {
+                    $stmt = $pdo->prepare('DELETE FROM admin_partner_company WHERE admin_id = ?');
+                    $stmt->execute([$user_id]);
+                    if ($partner_company_id !== null) {
+                        $stmt = $pdo->prepare('INSERT INTO admin_partner_company (admin_id, partner_company_id) VALUES (?, ?)');
+                        $stmt->execute([$user_id, $partner_company_id]);
+                    }
                 }
 
                 $pdo->commit();
@@ -144,6 +170,19 @@ try {
     $stmt->execute([$user_id]);
     $assigned = $stmt->fetchAll(PDO::FETCH_COLUMN);
     $assigned = array_map('intval', $assigned);
+
+    // Fetch current partner company assignment for this user
+    $assigned_partner_company_id = null;
+    if ($can_manage_partners) {
+        try {
+            $stmt = $pdo->prepare('SELECT partner_company_id FROM admin_partner_company WHERE admin_id = ? LIMIT 1');
+            $stmt->execute([$user_id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $assigned_partner_company_id = $row ? (int)$row['partner_company_id'] : null;
+        } catch (Exception $e) {
+            error_log('users_edit fetch partner assignment error: ' . $e->getMessage());
+        }
+    }
 } catch (Exception $e) {
     error_log('users_edit fetch user error: ' . $e->getMessage());
     $error = __('error.user_fetch_failed');
@@ -222,6 +261,22 @@ require_once __DIR__ . '/_header.php';
                 </select>
                 <small style="display:block; margin-top:4px; color:#666;"><?php echo __('form.preferred_language_help'); ?></small>
             </div>
+
+            <?php if ($can_manage_partners): ?>
+            <div class="form-group">
+                <label>Partner Bedrijf</label>
+                <select name="partner_company_id">
+                    <option value="">— Geen —</option>
+                    <?php foreach ($all_partner_companies as $pc): ?>
+                        <option value="<?php echo (int)$pc['id']; ?>"
+                            <?php echo $assigned_partner_company_id === (int)$pc['id'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($pc['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small style="display:block; margin-top:4px; color:#666;">Koppel dit account aan een partner bedrijf. Niet-Owner accounts zonder partner zien niets.</small>
+            </div>
+            <?php endif; ?>
 
             <button class="btn" type="submit"><?php echo __('button.save'); ?></button>
             <a class="btn" href="/admin/users.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
