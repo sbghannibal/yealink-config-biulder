@@ -466,6 +466,23 @@ function can_access($permission, $permission_map) {
         </div>
         <?php endif; ?>
 
+        <!-- PARTNERS (Owner or partners.manage) -->
+        <?php if (in_array('Owner', $user_roles) || can_access('partners.manage', $permission_map)): ?>
+        <div class="nav-dropdown">
+            <a class="<?php echo in_array($current_page, ['partners.php', 'partner_rights.php']) ? 'active' : ''; ?>">
+                🤝 Partners <span class="dropdown-arrow">▼</span>
+            </a>
+            <div class="nav-dropdown-content">
+                <a href="/admin/partners.php" class="<?php echo $current_page === 'partners.php' ? 'active' : ''; ?>">
+                    🏢 Partner Bedrijven
+                </a>
+                <a href="/admin/partner_rights.php" class="<?php echo $current_page === 'partner_rights.php' ? 'active' : ''; ?>">
+                    🔑 Partner Rechten
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- ACCOUNT REQUESTS (Owner only) -->
         <?php if (can_access('admin.accounts.manage', $permission_map)): ?>
         <a href="/admin/approve_account.php" class="<?php echo $current_page === 'approve_account.php' ? 'active' : ''; ?>">

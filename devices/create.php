@@ -3,6 +3,7 @@ $page_title = 'Nieuw device';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 require_once __DIR__ . '/../includes/i18n.php';
 
 // Ensure logged in
@@ -35,10 +36,14 @@ try {
     $types = [];
 }
 
-// Fetch customers
+// Fetch customers (tenant-aware)
 try {
-    $stmt = $pdo->query('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 AND deleted_at IS NULL ORDER BY company_name ASC');
-    $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $allowed_customers = get_allowed_customer_ids_for_admin($pdo, $admin_id);
+    $cust_params = [];
+    $cust_filter = build_customer_filter($allowed_customers, 'id', $cust_params);
+    $cust_stmt = $pdo->prepare('SELECT id, customer_code, company_name FROM customers WHERE is_active = 1 AND deleted_at IS NULL' . $cust_filter . ' ORDER BY company_name ASC');
+    $cust_stmt->execute($cust_params);
+    $customers = $cust_stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('devices/create fetch customers error: ' . $e->getMessage());
     $customers = [];
@@ -57,6 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($name === '' || $device_type_id <= 0 || empty($customer_id) || $mac_raw === '') {
             $error = __('error.device_fields_required');
         } else {
+            // Verify customer is in allowed set
+            assert_customer_allowed($pdo, $admin_id, $customer_id);
             // Normalize MAC if provided
             $mac = null;
             if ($mac_raw !== '') {

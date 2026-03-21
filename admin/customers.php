@@ -3,6 +3,7 @@ $page_title = 'Klanten';
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -17,17 +18,26 @@ if (!has_permission($pdo, $admin_id, 'customers.view')) {
     exit;
 }
 
+// Require role + partner assignment (or be owner)
+require_any_role($pdo, $admin_id);
+require_partner_or_owner($pdo, $admin_id);
+
 $customers = [];
 $error = '';
 
 try {
-    $stmt = $pdo->query('
+    $allowed = get_allowed_customer_ids_for_admin($pdo, $admin_id);
+    $params  = [];
+    $filter  = build_customer_filter($allowed, 'c.id', $params);
+
+    $stmt = $pdo->prepare('
         SELECT c.*, 
                (SELECT COUNT(*) FROM devices d WHERE d.customer_id = c.id AND d.deleted_at IS NULL) as device_count
         FROM customers c
-        WHERE c.deleted_at IS NULL
+        WHERE c.deleted_at IS NULL' . $filter . '
         ORDER BY c.company_name ASC
     ');
+    $stmt->execute($params);
     $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('Failed to fetch customers: ' . $e->getMessage());

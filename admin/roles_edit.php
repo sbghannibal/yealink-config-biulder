@@ -46,6 +46,7 @@ $all_permissions = [
         'admin.tokens.manage',
         'admin.accounts.manage',
     ],
+    'partners'  => ['partners.manage'],
     'system'    => ['variables.manage'],
 ];
 

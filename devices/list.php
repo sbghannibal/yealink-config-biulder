@@ -3,6 +3,7 @@ $page_title = 'Devices';
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/partner_access.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -15,6 +16,10 @@ if (!has_permission($pdo, $admin_id, 'devices.manage')) {
     header('Location: /access_denied.php');
     exit;
 }
+
+// Require role + partner assignment (or be owner)
+require_any_role($pdo, $admin_id);
+require_partner_or_owner($pdo, $admin_id);
 
 $devices = [];
 $device_types = [];
@@ -36,6 +41,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["bulk_action"]) && $_P
         $device_ids = array_filter($device_ids, fn($id) => $id > 0);
         
         if (!empty($device_ids)) {
+            // Verify that all selected devices are in the allowed set for this admin
+            foreach ($device_ids as $did) {
+                assert_device_allowed($pdo, $admin_id, $did);
+            }
+
             try {
                 $pdo->beginTransaction();
                 
@@ -115,6 +125,9 @@ if (!in_array($sort_by, $allowed_sort)) {
 
 $total_count = 0;
 
+// Get allowed customer IDs for tenant filtering
+$allowed_customers = get_allowed_customer_ids_for_admin($pdo, $admin_id);
+
 try {
     // Count total devices matching filters
     $count_sql = "SELECT COUNT(*) as total
@@ -123,7 +136,10 @@ try {
         WHERE d.deleted_at IS NULL";
     
     $count_params = [];
-    
+
+    // Tenant filter (reuse helper)
+    $count_sql .= build_customer_filter($allowed_customers, 'd.customer_id', $count_params);
+
     if ($search_customer) {
         $count_sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ? OR REPLACE(REPLACE(UPPER(d.mac_address), ':', ''), '-', '') LIKE ?)";
         $search_param = '%' . $search_customer . '%';
@@ -162,7 +178,10 @@ try {
         WHERE d.deleted_at IS NULL";
     
     $params = [];
-    
+
+    // Tenant filter (reuse helper)
+    $sql .= build_customer_filter($allowed_customers, 'd.customer_id', $params);
+
     if ($search_customer) {
         $sql .= " AND (c.company_name LIKE ? OR c.customer_code LIKE ? OR REPLACE(REPLACE(UPPER(d.mac_address), ':', ''), '-', '') LIKE ?)";
         $search_param = '%' . $search_customer . '%';

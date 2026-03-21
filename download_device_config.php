@@ -13,6 +13,7 @@ session_start();
 require_once __DIR__ . '/settings/database.php';
 require_once __DIR__ . '/settings/generator.php';
 require_once __DIR__ . '/includes/rbac.php';
+require_once __DIR__ . '/includes/partner_access.php';
 
 // Ensure logged in
 if (!isset($_SESSION['admin_id'])) {
@@ -36,6 +37,9 @@ if (!$device_id || !$mac_param) {
     http_response_code(400);
     exit('Missing required parameters: device_id and mac');
 }
+
+// Tenant check: verify the device belongs to an allowed customer
+assert_device_allowed($pdo, $admin_id, $device_id);
 
 try {
     error_log("Download request: device_id=$device_id, mac=$mac_param");
