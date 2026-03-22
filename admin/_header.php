@@ -18,6 +18,16 @@ if (!isset($_SESSION['admin_id'])) {
 
 $admin_id = (int) $_SESSION['admin_id'];
 
+// Ensure language is initialized (session -> DB -> default)
+try {
+    $_SESSION['language'] = get_user_language($pdo, $admin_id);
+} catch (Exception $e) {
+    // keep existing session language or default
+    if (empty($_SESSION['language'])) {
+        $_SESSION['language'] = 'nl';
+    }
+}
+
 // Determine current page
 $current_page = basename($_SERVER['PHP_SELF']);
 
@@ -470,14 +480,14 @@ function can_access($permission, $permission_map) {
         <?php if (in_array('Owner', $user_roles) || can_access('partners.manage', $permission_map)): ?>
         <div class="nav-dropdown">
             <a class="<?php echo in_array($current_page, ['partners.php', 'partner_rights.php']) ? 'active' : ''; ?>">
-                🤝 Partners <span class="dropdown-arrow">▼</span>
+                🤝 <?php echo __('nav.partners'); ?> <span class="dropdown-arrow">▼</span>
             </a>
             <div class="nav-dropdown-content">
                 <a href="/admin/partners.php" class="<?php echo $current_page === 'partners.php' ? 'active' : ''; ?>">
-                    🏢 Partner Bedrijven
+                    🏢 <?php echo __('nav.partner_companies'); ?>
                 </a>
                 <a href="/admin/partner_rights.php" class="<?php echo $current_page === 'partner_rights.php' ? 'active' : ''; ?>">
-                    🔑 Partner Rechten
+                    🔑 <?php echo __('nav.partner_rights'); ?>
                 </a>
             </div>
         </div>

@@ -240,6 +240,14 @@ require_once __DIR__ . '/../admin/_header.php';
         .badge.success { background: #28a745; }
         .badge.warning { background: #ffc107; color: #000; }
         .badge.info { background: #17a2b8; }
+
+          .download-count{
+              display: inline-block;
+              white-space: nowrap;
+              min-width: 4ch;   /* ruimte voor 100x+ */
+              text-align: right;
+          }
+
         
         .btn {
             text-decoration: none !important;
@@ -659,14 +667,14 @@ require_once __DIR__ . '/../admin/_header.php';
                                         <br><small style="color: #6c757d;"><?php echo htmlspecialchars($d['customer_code']); ?></small>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <span style="color: #6c757d;">-</span>
+                                    <span class="download-count" style="color: #6c757d;">-</span>
                                 <?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($d['model_name']): ?>
                                     <span class="badge info"><?php echo htmlspecialchars($d['model_name']); ?></span>
                                 <?php else: ?>
-                                    <span style="color: #6c757d;">-</span>
+                                    <span class="download-count" style="color: #6c757d;">-</span>
                                 <?php endif; ?>
                             </td>
                             <td><code style="background: #f1f3f5; padding: 2px 6px; border-radius: 3px; font-size: 12px;"><?php echo htmlspecialchars($d['mac_address'] ?? '-'); ?></code></td>
@@ -678,7 +686,7 @@ require_once __DIR__ . '/../admin/_header.php';
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span style="color: #6c757d;">
+                                <span class="download-count" style="color: #6c757d;">
                                     <?php echo (int)($d['download_count'] ?? 0); ?>x
                                 </span>
                             </td>

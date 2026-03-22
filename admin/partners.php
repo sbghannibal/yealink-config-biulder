@@ -1,10 +1,17 @@
 <?php
-$page_title = 'Partner Bedrijven';
+// Bootstrap
 session_start();
 require_once __DIR__ . '/../settings/database.php';
 require_once __DIR__ . '/../includes/rbac.php';
 require_once __DIR__ . '/../includes/partner_access.php';
 require_once __DIR__ . '/../includes/i18n.php';
+
+// Initialize language for this admin (prevents fallback to nl)
+if (isset($_SESSION['admin_id'])) {
+    $_SESSION['language'] = get_user_language($pdo, (int)$_SESSION['admin_id']);
+}
+
+$page_title = __('nav.partner_companies');
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /login.php');
@@ -135,8 +142,8 @@ require_once __DIR__ . '/_header.php';
 </style>
 
 <div class="topbar">
-    <h2>🤝 Partner Bedrijven</h2>
-    <a class="btn" href="/admin/partner_rights.php" style="background:#007bff;color:#fff;">🔑 Partner Rechten</a>
+    <h2>🤝 <?php echo __('nav.partner_companies'); ?></h2>
+    <a class="btn" href="/admin/partner_rights.php" style="background:#007bff;color:#fff;">🔑 <?php echo __('nav.partner_rights'); ?></a>
 </div>
 
 <?php if ($error): ?><div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
@@ -145,7 +152,7 @@ require_once __DIR__ . '/_header.php';
 <!-- Create / Edit form -->
 <div class="card">
     <div class="card-body">
-        <h3 style="margin-top:0;"><?php echo $edit_partner ? '✏️ Partner Bewerken' : '➕ Nieuw Partner Bedrijf'; ?></h3>
+        <h3 style="margin-top:0;"><?php echo $edit_partner ? __('partners.edit_title') : __('partners.new_title'); ?></h3>
         <form method="post">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
             <input type="hidden" name="action"     value="<?php echo $edit_partner ? 'edit' : 'create'; ?>">
@@ -154,33 +161,33 @@ require_once __DIR__ . '/_header.php';
             <?php endif; ?>
 
             <div class="form-group">
-                <label>Naam *</label>
+                <label><?php echo __('form.name'); ?> *</label>
                 <input type="text" name="name" value="<?php echo htmlspecialchars($edit_partner['name'] ?? ''); ?>" required maxlength="255">
             </div>
 
               <div class="form-group">
                   <label>
                       <input type="checkbox" name="is_master" value="1" <?php echo (!empty($edit_partner) && (int)$edit_partner['is_master'] === 1) ? 'checked' : ''; ?>>
-                      Master partner (ziet alle klanten)
+                        <?php echo __('partners.master_partner_hint'); ?>
                   </label>
               </div>
 
 
             <?php if ($edit_partner): ?>
             <div class="form-group">
-                <label>Actief</label>
+                <label><?php echo __('form.active'); ?></label>
                 <select name="is_active">
-                    <option value="1" <?php echo $edit_partner['is_active'] ? 'selected' : ''; ?>>Ja</option>
-                    <option value="0" <?php echo !$edit_partner['is_active'] ? 'selected' : ''; ?>>Nee</option>
+                    <option value="1" <?php echo $edit_partner['is_active'] ? 'selected' : ''; ?>><?php echo __('common.yes'); ?></option>
+                    <option value="0" <?php echo !$edit_partner['is_active'] ? 'selected' : ''; ?>><?php echo __('common.no'); ?></option>
                 </select>
             </div>
             <?php endif; ?>
 
             <button type="submit" class="btn" style="background:#28a745;color:#fff;">
-                <?php echo $edit_partner ? '💾 Opslaan' : '➕ Aanmaken'; ?>
+                <?php echo $edit_partner ? __('button.save') : __('button.create'); ?>
             </button>
             <?php if ($edit_partner): ?>
-                <a class="btn" href="/admin/partners.php" style="background:#6c757d;color:#fff;">Annuleren</a>
+                <a class="btn" href="/admin/partners.php" style="background:#6c757d;color:#fff;"><?php echo __('button.cancel'); ?></a>
             <?php endif; ?>
         </form>
     </div>
@@ -189,17 +196,17 @@ require_once __DIR__ . '/_header.php';
 <!-- Partner list -->
 <div class="card">
     <?php if (empty($partners)): ?>
-        <div style="padding:40px;text-align:center;color:#6c757d;">Nog geen partner bedrijven aangemaakt.</div>
+        <div style="padding:40px;text-align:center;color:#6c757d;"><?php echo __('partners.none_created'); ?></div>
     <?php else: ?>
         <table>
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Naam</th>
-                    <th>Status</th>
-                      <th>Master</th>
-                      <th>Aangemaakt</th>
-                    <th>Acties</th>
+                    <th><?php echo __('form.name'); ?></th>
+                    <th><?php echo __('table.status'); ?></th>
+                    <th><?php echo __('partners.master'); ?></th>
+                    <th><?php echo __('table.created_at'); ?></th>
+                    <th><?php echo __('table.actions'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -209,16 +216,17 @@ require_once __DIR__ . '/_header.php';
                     <td><strong><?php echo htmlspecialchars($p['name']); ?></strong></td>
                     <td>
                         <?php if ($p['is_active']): ?>
-                            <span class="badge badge-success">✓ Actief</span>
+                            <span class="badge badge-success"><?php echo __('status.active'); ?></span>
                         <?php else: ?>
-                            <span class="badge badge-danger">✗ Inactief</span>
+                            <span class="badge badge-danger"><?php echo __('status.inactive'); ?></span>
                         <?php endif; ?>
                     </td>
+                    <td><?php echo ((int)$p['is_master'] === 1) ? '✓' : '—'; ?></td>
                     <td><?php echo htmlspecialchars($p['created_at']); ?></td>
                     <td>
                         <div class="action-buttons">
-                            <a class="btn" href="/admin/partners.php?edit=<?php echo (int)$p['id']; ?>" style="background:#007bff;color:#fff;font-size:12px;padding:6px 10px;">✏️ Bewerken</a>
-                            <a class="btn" href="/admin/partner_rights.php?partner_id=<?php echo (int)$p['id']; ?>" style="background:#6c757d;color:#fff;font-size:12px;padding:6px 10px;">🔑 Rechten</a>
+                            <a class="btn" href="/admin/partners.php?edit=<?php echo (int)$p['id']; ?>" style="background:#007bff;color:#fff;font-size:12px;padding:6px 10px;">✏️ <?php echo __('button.edit'); ?></a>
+                            <a class="btn" href="/admin/partner_rights.php?partner_id=<?php echo (int)$p['id']; ?>" style="background:#6c757d;color:#fff;font-size:12px;padding:6px 10px;">🔑 <?php echo __('nav.partner_rights'); ?></a>
                         </div>
                     </td>
                 </tr>

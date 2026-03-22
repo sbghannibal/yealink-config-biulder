@@ -33,6 +33,19 @@ try {
 } catch (Exception $e) {
     $all_roles = [];
     error_log('users_create fetch roles error: ' . $e->getMessage());
+
+
+}
+
+
+$partner_companies = [];
+try {
+    // Fetch active partner companies (for tenant assignment)
+    $stmt = $pdo->query('SELECT id, name FROM partner_companies WHERE is_active = 1 ORDER BY name ASC');
+    $partner_companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $partner_companies = [];
+    error_log('users_create fetch partner_companies error: ' . $e->getMessage());
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,8 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = trim($posted['username'] ?? '');
         $email = trim($posted['email'] ?? '');
         $password = $posted['password'] ?? '';
+
+
         $password_confirm = $posted['password_confirm'] ?? '';
         $role_id = isset($posted['role_id']) && $posted['role_id'] !== '' ? (int)$posted['role_id'] : null;
+        $partner_company_id = isset($posted['partner_company_id']) && $posted['partner_company_id'] !== '' ? (int)$posted['partner_company_id'] : 1;
 
         if ($username === '' || $email === '' || $password === '') {
             $error = 'Vul alle vereiste velden in.';
@@ -59,6 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare('INSERT INTO admins (username, password, email) VALUES (?, ?, ?)');
                 $stmt->execute([$username, $hash, $email]);
                 $newId = $pdo->lastInsertId();
+
+                // Assign partner company (each admin has exactly one due to uq_admin_id)
+                $stmt = $pdo->prepare('INSERT INTO admin_partner_company (admin_id, partner_company_id) VALUES (?, ?)');
+                $stmt->execute([$newId, $partner_company_id]);
                 
                 // Assign role if selected
                 if ($role_id !== null) {
@@ -122,6 +142,25 @@ require_once __DIR__ . '/_header.php';
                     </small>
                 <?php endif; ?>
             </div>
+            <div class="form-group">
+                <label>Partner company</label>
+                <?php if (empty($partner_companies)): ?>
+                    <p>Geen partner companies geconfigureerd.</p>
+                <?php else: ?>
+                    <select name="partner_company_id">
+                        <?php $selected_pc = isset($_POST['partner_company_id']) && $_POST['partner_company_id'] !== '' ? (int)$_POST['partner_company_id'] : 1; ?>
+                        <?php foreach ($partner_companies as $pc): ?>
+                            <option value="<?php echo (int)$pc['id']; ?>" <?php echo ((int)$pc['id'] === $selected_pc ? 'selected' : ''); ?>>
+                                <?php echo htmlspecialchars($pc['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small style="display: block; margin-top: 4px; color: #666;">
+                        Standaard is Proximus (master). Je kunt dit aanpassen per gebruiker.
+                    </small>
+                <?php endif; ?>
+            </div>
+
             <button class="btn" type="submit"><?php echo __('button.create'); ?></button>
             <a class="btn" href="/admin/users.php" style="background:#6c757d;"><?php echo __('button.cancel'); ?></a>
         </form>
