@@ -68,3 +68,6 @@ downloads/T33G/*
 
 # Environment
 .env
+
+# Local backup files created during hotfixes
+*.bak.*
