@@ -29,6 +29,29 @@ $csrf = $_SESSION['csrf_token'];
 $error = '';
 $success = '';
 
+  // Partner context for creating customer under a partner company
+  $active_partner = _get_active_partner_company($pdo, $admin_id); // ['partner_company_id'=>..,'is_master'=>..] or null
+  $is_partner_master = (!empty($active_partner) && (int)$active_partner['is_master'] === 1);
+
+  // Build partner company options for dropdown.
+  // - Non-master partner admins: only their own company (prevents mistakes).
+  // - Master partner admins / owners: can choose any; default to their own (master) company.
+  $partner_options = [];
+  try {
+      if (is_owner($pdo, $admin_id) || $is_partner_master) {
+          $stmt = $pdo->query('SELECT id, name, is_active, is_master FROM partner_companies WHERE is_active = 1 ORDER BY name ASC');
+          $partner_options = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      } else if (!empty($active_partner)) {
+          $stmt = $pdo->prepare('SELECT id, name, is_active, is_master FROM partner_companies WHERE id = ? LIMIT 1');
+          $stmt->execute([(int)$active_partner['partner_company_id']]);
+          $row = $stmt->fetch(PDO::FETCH_ASSOC);
+          if ($row) $partner_options = [$row];
+      }
+  } catch (Exception $e) {
+      error_log('admin/customers_add partner_options error: ' . $e->getMessage());
+  }
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf_token'] ?? '')) {
         $error = 'Ongeldige aanvraag (CSRF).';
@@ -126,6 +149,40 @@ require_once __DIR__ . '/_header.php';
             <div class="form-group">
                 <label><?php echo __('form.company_name'); ?> *</label>
                 <input name="company_name" type="text" required value="<?php echo htmlspecialchars($_POST['company_name'] ?? ''); ?>">
+
+              <!-- Partner company selection (master default; partners locked to own) -->
+              <div class="form-group">
+                  <label>Firma / Partner bedrijf</label>
+                  <select name="partner_company_id" <?php echo (!is_owner($pdo, $admin_id) && !$is_partner_master) ? 'disabled' : ''; ?>>
+                      <?php
+                      $default_partner_id = !empty($active_partner) ? (int)$active_partner['partner_company_id'] : null;
+                      $posted_partner_id = isset($_POST['partner_company_id']) ? (int)$_POST['partner_company_id'] : null;
+
+                      foreach ($partner_options as $po):
+                          $pid = (int)$po['id'];
+
+                          if ($posted_partner_id !== null && (is_owner($pdo, $admin_id) || $is_partner_master)) {
+                              $selected = ($pid === $posted_partner_id);
+                          } else {
+                              $selected = ($default_partner_id !== null && $pid === $default_partner_id);
+                          }
+
+                          $label = $po['name'] . (!empty($po['is_master']) ? ' (MASTER)' : '');
+                      ?>
+                          <option value="<?php echo $pid; ?>" <?php echo $selected ? 'selected' : ''; ?>>
+                              <?php echo htmlspecialchars($label); ?>
+                          </option>
+                      <?php endforeach; ?>
+                  </select>
+
+                  <?php if (!is_owner($pdo, $admin_id) && !$is_partner_master): ?>
+                      <input type="hidden" name="partner_company_id" value="<?php echo !empty($active_partner) ? (int)$active_partner['partner_company_id'] : 0; ?>">
+                      <small style="color:#6c757d;">Je kan enkel klanten aanmaken onder je eigen partner bedrijf.</small>
+                  <?php else: ?>
+                      <small style="color:#6c757d;">Standaard staat dit op je master bedrijf.</small>
+                  <?php endif; ?>
+              </div>
+
             </div>
 
             <div class="form-group">

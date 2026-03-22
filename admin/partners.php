@@ -40,8 +40,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Naam is verplicht.';
             } else {
                 try {
-                    $stmt = $pdo->prepare('INSERT INTO partner_companies (name, is_active) VALUES (?, 1)');
-                    $stmt->execute([$name]);
+                    $is_master = isset($_POST["is_master"]) ? 1 : 0;
+
+                    $stmt = $pdo->prepare('INSERT INTO partner_companies (name, is_active, is_master) VALUES (?, 1, ?)');
+                    $stmt->execute([$name, $is_master]);
+
+                    $new_id = (int)$pdo->lastInsertId();
+                    if ($is_master === 1 && $new_id > 0) {
+                        $stmt = $pdo->prepare('UPDATE partner_companies SET is_master = 0 WHERE id <> ?' );
+                        $stmt->execute([$new_id]);
+                    }
+
                     $success = 'Partner bedrijf aangemaakt.';
                 } catch (Exception $e) {
                     error_log('partners create error: ' . $e->getMessage());
@@ -58,8 +67,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Ongeldige invoer.';
             } else {
                 try {
-                    $stmt = $pdo->prepare('UPDATE partner_companies SET name = ?, is_active = ? WHERE id = ?');
-                    $stmt->execute([$name, $is_active, $pid]);
+                    $is_master = isset($_POST["is_master"]) ? 1 : 0;
+
+                    $stmt = $pdo->prepare('UPDATE partner_companies SET name = ?, is_active = ?, is_master = ? WHERE id = ?' );
+                    $stmt->execute([$name, $is_active, $is_master, $pid]);
+
+                    if ($is_master === 1) {
+                        $stmt = $pdo->prepare('UPDATE partner_companies SET is_master = 0 WHERE id <> ?' );
+                        $stmt->execute([$pid]);
+                    }
+
                     $success = 'Partner bedrijf bijgewerkt.';
                 } catch (Exception $e) {
                     error_log('partners edit error: ' . $e->getMessage());
@@ -73,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch all partners
 $partners = [];
 try {
-    $stmt = $pdo->query('SELECT id, name, is_active, created_at FROM partner_companies ORDER BY name ASC');
+    $stmt = $pdo->query('SELECT id, name, is_active, is_master, created_at FROM partner_companies ORDER BY name ASC');
     $partners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log('partners list error: ' . $e->getMessage());
@@ -141,6 +158,14 @@ require_once __DIR__ . '/_header.php';
                 <input type="text" name="name" value="<?php echo htmlspecialchars($edit_partner['name'] ?? ''); ?>" required maxlength="255">
             </div>
 
+              <div class="form-group">
+                  <label>
+                      <input type="checkbox" name="is_master" value="1" <?php echo (!empty($edit_partner) && (int)$edit_partner['is_master'] === 1) ? 'checked' : ''; ?>>
+                      Master partner (ziet alle klanten)
+                  </label>
+              </div>
+
+
             <?php if ($edit_partner): ?>
             <div class="form-group">
                 <label>Actief</label>
@@ -172,7 +197,8 @@ require_once __DIR__ . '/_header.php';
                     <th>#</th>
                     <th>Naam</th>
                     <th>Status</th>
-                    <th>Aangemaakt</th>
+                      <th>Master</th>
+                      <th>Aangemaakt</th>
                     <th>Acties</th>
                 </tr>
             </thead>

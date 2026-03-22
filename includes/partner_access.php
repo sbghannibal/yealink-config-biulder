@@ -103,6 +103,7 @@ function _get_active_partner_company(PDO $pdo, int $admin_id): ?array
         ');
         $stmt->execute([$admin_id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row && !isset($row["is_master"])) { $row["is_master"] = 0; }
         return $row ?: null;
     } catch (Exception $e) {
         error_log('_get_active_partner_company error: ' . $e->getMessage());
