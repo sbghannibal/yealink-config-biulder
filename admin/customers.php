@@ -22,26 +22,58 @@ if (!has_permission($pdo, $admin_id, 'customers.view')) {
 require_any_role($pdo, $admin_id);
 require_partner_or_owner($pdo, $admin_id);
 
+
 $customers = [];
 $error = '';
+
+// Pagination + search
+$q = trim((string)($_GET['q'] ?? ''));
+$per_page = (int)($_GET['per_page'] ?? 25);
+if (!in_array($per_page, [10, 25, 100], true)) $per_page = 25;
+
+$page = (int)($_GET['page'] ?? 1);
+if ($page < 1) $page = 1;
+
+$offset = ($page - 1) * $per_page;
+$total_customers = 0;
 
 try {
     $allowed = get_allowed_customer_ids_for_admin($pdo, $admin_id);
     $params  = [];
     $filter  = build_customer_filter($allowed, 'c.id', $params);
 
+    // Search filter (company_name, customer_code, contact_person, email, phone)
+    $search_sql = '';
+    if ($q !== '') {
+        $search_sql = " AND (c.company_name LIKE ? OR c.customer_code LIKE ? OR c.contact_person LIKE ? OR c.email LIKE ? OR c.phone LIKE ?)";
+        $like = '%' . $q . '%';
+        array_push($params, $like, $like, $like, $like, $like);
+    }
+
+    // Total count
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM customers c WHERE c.deleted_at IS NULL' . $filter . $search_sql);
+    $stmt->execute($params);
+    $total_customers = (int)$stmt->fetchColumn();
+
+    // Page rows
+    $params_page = $params;
+    $params_page[] = $per_page;
+    $params_page[] = $offset;
+
     $stmt = $pdo->prepare('
-        SELECT c.*, 
+        SELECT c.*,
                (SELECT COUNT(*) FROM devices d WHERE d.customer_id = c.id AND d.deleted_at IS NULL) as device_count
         FROM customers c
-        WHERE c.deleted_at IS NULL' . $filter . '
+        WHERE c.deleted_at IS NULL' . $filter . $search_sql . '
         ORDER BY c.company_name ASC
+        LIMIT ? OFFSET ?
     ');
-    $stmt->execute($params);
+    $stmt->execute($params_page);
     $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (Exception $e) {
-    error_log('Failed to fetch customers: ' . $e->getMessage());
-    $error = 'Kon klanten niet ophalen: ' . $e->getMessage();
+    error_log("Failed to fetch customers: " . $e->getMessage());
+    $error = "Kon klanten niet ophalen: " . $e->getMessage();
 }
 
 require_once __DIR__ . '/_header.php';
@@ -164,6 +196,70 @@ require_once __DIR__ . '/_header.php';
         <a class="btn" href="/admin/customers_add.php" style="background: #28a745; color: white;">➕ <?php echo __('page.customers.create'); ?></a>
     </div>
 <?php endif; ?>
+
+
+<form method="get" style="margin-bottom:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <input type="text"
+           name="q"
+           value="<?php echo htmlspecialchars($q); ?>"
+           placeholder="<?php echo __('common.search'); ?>..."
+           style="padding:8px 10px; min-width:260px; border:1px solid #ced4da; border-radius:4px;">
+
+    <label style="display:flex; gap:8px; align-items:center;">
+        <span><?php echo __('common.per_page'); ?></span>
+        <select name="per_page" onchange="this.form.submit()" style="padding:7px 10px; border:1px solid #ced4da; border-radius:4px;">
+            <?php foreach ([10,25,100] as $n): ?>
+                <option value="<?php echo $n; ?>" <?php echo ($per_page === $n) ? 'selected' : ''; ?>><?php echo $n; ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+
+    <button class="btn" type="submit" style="background:#007bff;color:#fff;">
+        <?php echo __('common.search'); ?>
+    </button>
+
+    <?php if ($q !== ''): ?>
+        <a class="btn" href="/admin/customers.php?per_page=<?php echo (int)$per_page; ?>" style="background:#6c757d;color:#fff;">
+            <?php echo __('common.clear'); ?>
+        </a>
+    <?php endif; ?>
+
+    <input type="hidden" name="page" value="1">
+</form>
+
+<?php
+$total_pages = (int)ceil(($total_customers ?: 0) / $per_page);
+if ($total_pages < 1) $total_pages = 1;
+if ($page > $total_pages) $page = $total_pages;
+
+$start = ($total_customers === 0) ? 0 : ($offset + 1);
+$end   = min($offset + $per_page, $total_customers);
+
+function build_customers_url($overrides = []) {
+    $params = array_merge($_GET, $overrides);
+    if (isset($params['q']) && trim((string)$params['q']) === '') unset($params['q']);
+    return '/admin/customers.php?' . http_build_query($params);
+}
+?>
+
+<div style="margin:10px 0; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; color:#6c757d;">
+    <div>
+        <?php echo $start; ?>-<?php echo $end; ?> <?php echo __('common.of'); ?> <?php echo (int)$total_customers; ?>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+        <a class="btn" href="<?php echo htmlspecialchars(build_customers_url(['page' => max(1, $page - 1)])); ?>"
+           style="background:#6c757d;color:#fff;<?php echo ($page <= 1) ? 'opacity:.5;pointer-events:none;' : ''; ?>">
+            ← <?php echo __('common.prev'); ?>
+        </a>
+
+        <span><?php echo __('common.page'); ?> <?php echo (int)$page; ?> <?php echo __('common.of'); ?> <?php echo (int)$total_pages; ?></span>
+
+        <a class="btn" href="<?php echo htmlspecialchars(build_customers_url(['page' => min($total_pages, $page + 1)])); ?>"
+           style="background:#6c757d;color:#fff;<?php echo ($page >= $total_pages) ? 'opacity:.5;pointer-events:none;' : ''; ?>">
+            <?php echo __('common.next'); ?> →
+        </a>
+    </div>
+</div>
 
 <div class="card">
     <?php if (empty($customers)): ?>
