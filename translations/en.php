@@ -689,4 +689,63 @@ return [
     'success.device_deleted_permanently'   => 'Device ":name" and all configs have been PERMANENTLY deleted! 🗑️',
     'error.device_not_found'               => 'Device not found.',
     'error.device_not_deleted'             => 'Device not found or is not deleted.',
+
+    // Partners
+    'nav.partners' => 'Partners',
+    'nav.partner_companies' => 'Partner Companies',
+    'nav.partner_rights' => 'Partner Rights',
+
+    'partners.new_title' => 'New Partner Company',
+    'partners.edit_title' => 'Edit Partner',
+    'partners.master' => 'Master',
+    'partners.master_partner_hint' => 'Master partner (sees all customers)',
+    'partners.none_created' => 'No partner companies have been created yet.',
+
+    'form.name' => 'Name',
+    'form.active' => 'Active',
+    'common.yes' => 'Yes',
+    'common.no' => 'No',
+    'button.save' => 'Save',
+    'button.cancel' => 'Cancel',
+    'button.edit' => 'Edit',
+    'table.status' => 'Status',
+    'table.created_at' => 'Created',
+    'table.actions' => 'Actions',
+    'status.active' => '✓ Active',
+    'status.inactive' => '✗ Inactive',
+
+    // Partner rights
+    'partner_rights.error_select_partner' => 'Please select a partner company first.',
+    'partner_rights.title_customers' => 'Partner Rights (Customers)',
+    'partner_rights.back_to_partners' => 'Back to Partners',
+    'partner_rights.partner_company' => 'Partner Company',
+    'partner_rights.select_partner_placeholder' => '— Select partner —',
+    'partner_rights.select_partner_help' => 'Select a partner company to manage rights.',
+
+    // Partner rights table
+    'partner_rights.can_view' => 'Can view',
+    'partner_rights.select_all' => 'Select all',
+    'partner_rights.deselect_all' => 'Deselect all',
+
+    'table.code' => 'Code',
+    'table.company_name' => 'Company name',
+    'table.devices' => 'Devices',
+
+    // Pagination/search
+    'common.search' => 'Search',
+    'common.per_page' => 'Per page',
+    'common.apply' => 'Apply',
+
+    // Partner rights
+    'partner_rights.search_placeholder' => 'Search by code or company name…',
+    'common.prev' => 'Previous',
+    'common.next' => 'Next',
+    'common.page' => 'Page',
+    'common.of' => 'of',
+    'common.total' => 'total',
+    'common.page' => 'Page',
+    'common.of' => 'of',
+    'common.total' => 'total',
+    'partner_rights.save_rights' => 'Save rights',
+    'partner_rights.selected' => 'selected',
 ];

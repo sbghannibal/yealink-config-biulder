@@ -689,4 +689,66 @@ return [
     'success.device_deleted_permanently'   => 'Apparaat ":name" en alle configs zijn DEFINITIEF verwijderd! 🗑️',
     'error.device_not_found'               => 'Apparaat niet gevonden.',
     'error.device_not_deleted'             => 'Apparaat niet gevonden of is niet verwijderd.',
+
+    // Partners
+    'nav.partners' => 'Partners',
+    'nav.partner_companies' => 'Partner Bedrijven',
+    'nav.partner_rights' => 'Partner Rechten',
+
+    'partners.new_title' => 'Nieuw Partner Bedrijf',
+    'partners.edit_title' => 'Partner Bewerken',
+    'partners.master' => 'Master',
+    'partners.master_partner_hint' => 'Master partner (ziet alle klanten)',
+    'partners.none_created' => 'Nog geen partner bedrijven aangemaakt.',
+
+    // Common / tables / status (used on partners pages)
+    'form.name' => 'Naam',
+    'form.active' => 'Actief',
+    'common.yes' => 'Ja',
+    'common.no' => 'Nee',
+    'button.save' => 'Opslaan',
+    'button.cancel' => 'Annuleren',
+    'button.edit' => 'Bewerken',
+    'table.status' => 'Status',
+    'table.created_at' => 'Aangemaakt',
+    'table.actions' => 'Acties',
+    'status.active' => '✓ Actief',
+    'status.inactive' => '✗ Inactief',
+
+    // Partner rights
+    'partner_rights.error_select_partner' => 'Selecteer eerst een partner bedrijf.',
+    'partner_rights.title_customers' => 'Partner Rechten (Klanten)',
+    'partner_rights.back_to_partners' => 'Terug naar Partners',
+    'partner_rights.partner_company' => 'Partner Bedrijf',
+    'partner_rights.select_partner_placeholder' => '— Selecteer partner —',
+    'partner_rights.select_partner_help' => 'Selecteer een partner bedrijf om rechten te beheren.',
+
+    // Partner rights table
+    'partner_rights.can_view' => 'Mag zien',
+    'partner_rights.select_all' => 'Alles selecteren',
+    'partner_rights.deselect_all' => 'Alles deselecteren',
+
+    'table.code' => 'Code',
+    'table.company_name' => 'Bedrijfsnaam',
+    'table.devices' => 'Devices',
+
+    // Common pagination/search
+    'common.search' => 'Zoeken',
+    'common.per_page' => 'Per pagina',
+    'common.apply' => 'Toepassen',
+
+    // Partner rights
+    'partner_rights.search_placeholder' => 'Zoek op code of bedrijfsnaam…',
+    'common.prev' => 'Vorige',
+    'common.next' => 'Volgende',
+    'common.page' => 'Pagina',
+    'common.of' => 'van',
+    'common.total' => 'totaal',
+    'common.prev' => 'Vorige',
+    'common.next' => 'Volgende',
+    'common.page' => 'Pagina',
+    'common.of' => 'van',
+    'common.total' => 'totaal',
+    'partner_rights.save_rights' => 'Rechten opslaan',
+    'partner_rights.selected' => 'geselecteerd',
 ];

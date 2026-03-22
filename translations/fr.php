@@ -692,4 +692,66 @@ return [
     'success.device_deleted_permanently'   => 'Appareil ":name" et toutes ses configurations ont été SUPPRIMÉS DÉFINITIVEMENT! 🗑️',
     'error.device_not_found'               => 'Appareil non trouvé.',
     'error.device_not_deleted'             => 'Appareil non trouvé ou non supprimé.',
+
+    // Partenaires
+    'nav.partners' => 'Partenaires',
+    'nav.partner_companies' => 'Entreprises partenaires',
+    'nav.partner_rights' => 'Droits partenaires',
+
+    'partners.new_title' => 'Nouvelle entreprise partenaire',
+    'partners.edit_title' => 'Modifier le partenaire',
+    'partners.master' => 'Maître',
+    'partners.master_partner_hint' => 'Partenaire maître (voit tous les clients)',
+    'partners.none_created' => 'Aucune entreprise partenaire n’a encore été créée.',
+
+    // Commun / tableaux / statut (utilisé sur les pages partenaires)
+    'form.name' => 'Nom',
+    'form.active' => 'Actif',
+    'common.yes' => 'Oui',
+    'common.no' => 'Non',
+    'button.save' => 'Enregistrer',
+    'button.cancel' => 'Annuler',
+    'button.edit' => 'Modifier',
+    'table.status' => 'Statut',
+    'table.created_at' => 'Créé le',
+    'table.actions' => 'Actions',
+    'status.active' => '✓ Actif',
+    'status.inactive' => '✗ Inactif',
+
+    // Partner rights
+    'partner_rights.error_select_partner' => 'Veuillez d’abord sélectionner une entreprise partenaire.',
+    'partner_rights.title_customers' => 'Droits partenaires (Clients)',
+    'partner_rights.back_to_partners' => 'Retour aux partenaires',
+    'partner_rights.partner_company' => 'Entreprise partenaire',
+    'partner_rights.select_partner_placeholder' => '— Sélectionner un partenaire —',
+    'partner_rights.select_partner_help' => 'Sélectionnez une entreprise partenaire pour gérer les droits.',
+
+    // Tableau des droits partenaires
+    'partner_rights.can_view' => 'Peut voir',
+    'partner_rights.select_all' => 'Tout sélectionner',
+    'partner_rights.deselect_all' => 'Tout désélectionner',
+
+    'table.code' => 'Code',
+    'table.company_name' => 'Nom de l’entreprise',
+    'table.devices' => 'Appareils',
+
+    // Recherche / pagination
+    'common.search' => 'Rechercher',
+    'common.per_page' => 'Par page',
+    'common.apply' => 'Appliquer',
+
+    // Droits partenaires
+    'partner_rights.search_placeholder' => 'Rechercher par code ou entreprise…',
+    'common.prev' => 'Précédent',
+    'common.next' => 'Suivant',
+    'common.page' => 'Page',
+    'common.of' => 'sur',
+    'common.total' => 'total',
+    'common.prev' => 'Précédent',
+    'common.next' => 'Suivant',
+    'common.page' => 'Page',
+    'common.of' => 'sur',
+    'common.total' => 'total',
+    'partner_rights.save_rights' => 'Enregistrer les droits',
+    'partner_rights.selected' => 'sélectionné(s)',
 ];
